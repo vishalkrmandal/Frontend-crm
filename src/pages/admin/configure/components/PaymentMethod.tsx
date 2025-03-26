@@ -71,14 +71,14 @@ const initialPaymentMethods = [
     },
 ]
 
-const initialGroups = [
-    { id: 1, name: "INR(India)", value: "Group-1", description: "Description 1" },
-    { id: 2, name: "EUR(Europe)", value: "Group-2", description: "Description 2" },
-    { id: 3, name: "USD(United State)", value: "Group-3", description: "Description 3" },
-    { id: 4, name: "GBP(British Pound)", value: "Group-4", description: "Description 4" },
-    { id: 5, name: "CNY(China)", value: "Group-5", description: "Description 5" },
-    { id: 6, name: "CAD(Canada)", value: "Group-6", description: "Description 6" },
-    { id: 7, name: "CHF(Switzerland)", value: "Group-7", description: "Description 7" },
+const initialexchanges = [
+    { id: 1, name: "INR(India)", value: "exchange-1", description: "Description 1" },
+    { id: 2, name: "EUR(Europe)", value: "exchange-2", description: "Description 2" },
+    { id: 3, name: "USD(United State)", value: "exchange-3", description: "Description 3" },
+    { id: 4, name: "GBP(British Pound)", value: "exchange-4", description: "Description 4" },
+    { id: 5, name: "CNY(China)", value: "exchange-5", description: "Description 5" },
+    { id: 6, name: "CAD(Canada)", value: "exchange-6", description: "Description 6" },
+    { id: 7, name: "CHF(Switzerland)", value: "exchange-7", description: "Description 7" },
 ]
 
 
@@ -88,10 +88,11 @@ export default function PaymentMethod() {
     const [currentMethod, setCurrentMethod] = useState<any>(null)
     const [dialogMode, setDialogMode] = useState<"update" | "add">("update")
     const [activeTab, setActiveTab] = useState("bank")
-    const [Groups, setGroups] = useState(initialGroups)
-    const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false)
-    const [currentGroup, setCurrentGroup] = useState<any>(null)
-    const [isGroupDeleteDialogOpen, setIsGroupDeleteDialogOpen] = useState(false)
+    const [isPaymentDeleteDialogOpen, setIsPaymentDeleteDialogOpen] = useState(false)
+    const [exchanges, setexchanges] = useState(initialexchanges)
+    const [isexchangeDialogOpen, setIsexchangeDialogOpen] = useState(false)
+    const [currentexchange, setCurrentexchange] = useState<any>(null)
+    const [isexchangeDeleteDialogOpen, setIsexchangeDeleteDialogOpen] = useState(false)
 
 
     const handleEdit = (method: any) => {
@@ -135,23 +136,34 @@ export default function PaymentMethod() {
         setIsDialogOpen(false)
     }
 
-
-    const handleSaveGroup = () => {
-        setGroups(Groups.map((d) => (d.id === currentGroup.id ? currentGroup : d)))
-        setIsGroupDialogOpen(false)
-    }
-    const handleEditGroup = (Group: any) => {
-        setCurrentGroup(Group)
-        setIsGroupDialogOpen(true)
-    }
-    const handleGroupDelete = (Groups: any) => {
-        setCurrentGroup(Groups)
-        setIsGroupDeleteDialogOpen(true)
+    const handlePaymentDelete = (method: any) => {
+        setCurrentMethod(method)
+        setIsPaymentDeleteDialogOpen(true)
     }
 
-    const confirmGroupDelete = () => {
-        setGroups(Groups.filter((l) => l.id !== currentGroup.id))
-        setIsGroupDeleteDialogOpen(false)
+    const confirmPaymentDelete = () => {
+        setPaymentMethods(paymentMethods.filter((m) => m.id !== currentMethod.id))
+        setIsPaymentDeleteDialogOpen(false)
+        console.log("Deleted:", currentMethod)
+    }
+
+
+    const handleSaveexchange = () => {
+        setexchanges(exchanges.map((d) => (d.id === currentexchange.id ? currentexchange : d)))
+        setIsexchangeDialogOpen(false)
+    }
+    const handleEditexchange = (exchange: any) => {
+        setCurrentexchange(exchange)
+        setIsexchangeDialogOpen(true)
+    }
+    const handleexchangeDelete = (exchanges: any) => {
+        setCurrentexchange(exchanges)
+        setIsexchangeDeleteDialogOpen(true)
+    }
+
+    const confirmexchangeDelete = () => {
+        setexchanges(exchanges.filter((l) => l.id !== currentexchange.id))
+        setIsexchangeDeleteDialogOpen(false)
     }
 
     return (
@@ -186,6 +198,9 @@ export default function PaymentMethod() {
                                     <div className="flex justify-end">
                                         <Button variant="outline" size="icon" onClick={() => handleEdit(method)}>
                                             <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="outline" size="icon" onClick={() => handlePaymentDelete(method)}>
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </TableCell>
@@ -394,12 +409,32 @@ export default function PaymentMethod() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+                {/* Delete Confirmation Dialog */}
+                <Dialog open={isPaymentDeleteDialogOpen} onOpenChange={setIsPaymentDeleteDialogOpen}>
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Confirm Delete</DialogTitle>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <p>Are you sure you want to delete this Payment? This action cannot be undone.</p>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsPaymentDeleteDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button variant="destructive" onClick={confirmPaymentDelete}>
+                                Delete
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
 
-            {/* Groups Table */}
+            {/* exchanges Table */}
             <div className="rounded-md border">
                 <div className="p-4 bg-muted/50">
-                    <h2 className="text-xl font-semibold">List of Groups</h2>
+                    <h2 className="text-xl font-semibold">List of exchanges</h2>
                 </div>
 
                 <Table>
@@ -413,17 +448,17 @@ export default function PaymentMethod() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {Groups.map((Group) => (
-                            <TableRow key={Group.id}>
-                                <TableCell>{Group.id}</TableCell>
-                                <TableCell>{Group.name}</TableCell>
-                                <TableCell>{Group.value}</TableCell>
-                                <TableCell>{Group.description}</TableCell>
+                        {exchanges.map((exchange) => (
+                            <TableRow key={exchange.id}>
+                                <TableCell>{exchange.id}</TableCell>
+                                <TableCell>{exchange.name}</TableCell>
+                                <TableCell>{exchange.value}</TableCell>
+                                <TableCell>{exchange.description}</TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="outline" size="icon" onClick={() => handleEditGroup(Group)}>
+                                    <Button variant="outline" size="icon" onClick={() => handleEditexchange(exchange)}>
                                         <Pencil className="h-4 w-4" />
                                     </Button>
-                                    <Button variant="outline" size="icon" onClick={() => handleGroupDelete(Group)}>
+                                    <Button variant="outline" size="icon" onClick={() => handleexchangeDelete(exchange)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </TableCell>
@@ -433,67 +468,67 @@ export default function PaymentMethod() {
                 </Table>
 
 
-                {/* Edit Group Dialog */}
-                <Dialog open={isGroupDialogOpen} onOpenChange={setIsGroupDialogOpen}>
+                {/* Edit exchange Dialog */}
+                <Dialog open={isexchangeDialogOpen} onOpenChange={setIsexchangeDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Update Group</DialogTitle>
+                            <DialogTitle>Update exchange</DialogTitle>
                         </DialogHeader>
 
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="Group-name" className="text-right">
+                                <Label htmlFor="exchange-name" className="text-right">
                                     Name
                                 </Label>
-                                <Input id="Group-name" value={currentGroup?.name || ""} className="col-span-3" readOnly />
+                                <Input id="exchange-name" value={currentexchange?.name || ""} className="col-span-3" readOnly />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="Group-value" className="text-right">
+                                <Label htmlFor="exchange-value" className="text-right">
                                     Value
                                 </Label>
                                 <Input
-                                    id="Group-value"
-                                    value={currentGroup?.value || ""}
-                                    onChange={(e) => setCurrentGroup({ ...currentGroup, value: e.target.value })}
+                                    id="exchange-value"
+                                    value={currentexchange?.value || ""}
+                                    onChange={(e) => setCurrentexchange({ ...currentexchange, value: e.target.value })}
                                     className="col-span-3"
                                 />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="Group-description" className="text-right">
+                                <Label htmlFor="exchange-description" className="text-right">
                                     Description
                                 </Label>
                                 <Textarea
-                                    id="Group-description"
-                                    value={currentGroup?.description || ""}
-                                    onChange={(e) => setCurrentGroup({ ...currentGroup, description: e.target.value })}
+                                    id="exchange-description"
+                                    value={currentexchange?.description || ""}
+                                    onChange={(e) => setCurrentexchange({ ...currentexchange, description: e.target.value })}
                                     className="col-span-3"
                                 />
                             </div>
                         </div>
 
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsGroupDialogOpen(false)}>
+                            <Button variant="outline" onClick={() => setIsexchangeDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleSaveGroup}>Save</Button>
+                            <Button onClick={handleSaveexchange}>Save</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
 
                 {/* Delete Confirmation Dialog */}
-                <Dialog open={isGroupDeleteDialogOpen} onOpenChange={setIsGroupDeleteDialogOpen}>
+                <Dialog open={isexchangeDeleteDialogOpen} onOpenChange={setIsexchangeDeleteDialogOpen}>
                     <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle>Confirm Delete</DialogTitle>
                         </DialogHeader>
                         <div className="py-4">
-                            <p>Are you sure you want to delete this Group? This action cannot be undone.</p>
+                            <p>Are you sure you want to delete this exchange? This action cannot be undone.</p>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsGroupDeleteDialogOpen(false)}>
+                            <Button variant="outline" onClick={() => setIsexchangeDeleteDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button variant="destructive" onClick={confirmGroupDelete}>
+                            <Button variant="destructive" onClick={confirmexchangeDelete}>
                                 Delete
                             </Button>
                         </DialogFooter>
