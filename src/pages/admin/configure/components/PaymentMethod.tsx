@@ -16,64 +16,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Eye, Pencil, Plus, Trash2 } from "lucide-react"
+import { Eye, Pencil, Plus, Trash2, X } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import axios from "axios"
 import { toast } from "sonner"
-
-
-// // Sample data
-// const initialPaymentMethods = [
-//     {
-//         id: 1,
-//         name: "Indian Cash",
-//         type: "Cash",
-//         accounts: "Cash payment at office",
-//         active: true,
-//     },
-//     {
-//         id: 2,
-//         name: "India Local Bank",
-//         type: "Bank Account",
-//         accounts: "HDFC Bank: XXXX1234",
-//         active: true,
-//     },
-//     {
-//         id: 3,
-//         name: "Bitcoin",
-//         type: "Crypto Wallet",
-//         accounts: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-//         active: false,
-//     },
-//     {
-//         id: 4,
-//         name: "Tether(TRC20)",
-//         type: "Crypto Wallet",
-//         accounts: "TJYeasTPa6gpEEiNBCY5TcNsj5mrqsNYEt",
-//         active: true,
-//     },
-//     {
-//         id: 5,
-//         name: "Etherium",
-//         type: "Crypto Wallet",
-//         accounts: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-//         active: true,
-//     },
-//     {
-//         id: 6,
-//         name: "India Net Banking",
-//         type: "Online Banking",
-//         accounts: "Multiple banks supported",
-//         active: false,
-//     },
-//     {
-//         id: 7,
-//         name: "TRON",
-//         type: "Crypto Wallet",
-//         accounts: "TJYeasTPa6gpEEiNBCY5TcNsj5mrqsNYEt",
-//         active: true,
-//     },
-// ]
 
 const initialexchanges = [
     { id: 1, name: "INR(India)", value: "exchange-1", description: "Description 1" },
@@ -92,20 +38,15 @@ export default function PaymentMethod() {
     const [currentMethod, setCurrentMethod] = useState<any>(null)
     const [dialogMode, setDialogMode] = useState<"update" | "add">("update")
     const [activeTab, setActiveTab] = useState("bank")
-    // const [isPaymentDeleteDialogOpen, setIsPaymentDeleteDialogOpen] = useState(false)
     const [exchanges, setexchanges] = useState(initialexchanges)
     const [isexchangeDialogOpen, setIsexchangeDialogOpen] = useState(false)
     const [currentexchange, setCurrentexchange] = useState<any>(null)
     const [isexchangeDeleteDialogOpen, setIsexchangeDeleteDialogOpen] = useState(false)
-    // Removed duplicate declaration of paymentMethods
-    // const [isDialogOpen, setIsDialogOpen] = useState(false)
-    // const [currentMethod, setCurrentMethod] = useState(null)
-    // const [dialogMode, setDialogMode] = useState("update")
-    // const [activeTab, setActiveTab] = useState("bank")
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
     const [selectedMethodDetails, setSelectedMethodDetails] = useState<{ accountHolderName?: string; type?: string; accountNumber?: string; ifsc_swift?: string; bankName?: string; qrCode?: string; paymentLink?: string; active?: boolean } | null>(null)
     const [qrFile, setQrFile] = useState<File | null>(null)
+    const [qrPreview, setQrPreview] = useState<string | null>(null)
 
 
     useEffect(() => {
@@ -143,22 +84,44 @@ export default function PaymentMethod() {
 
         setIsDialogOpen(true)
     }
-
     const handleSave = async () => {
         try {
             const token = localStorage.getItem('token')
+
+            // Create FormData to handle both text data and file upload
+            const formData = new FormData();
+
+            // Add all current method properties to FormData
+            Object.keys(currentMethod).forEach(key => {
+                if (currentMethod[key] !== null && currentMethod[key] !== undefined) {
+                    formData.append(key, currentMethod[key]);
+                }
+            });
+
+            // Add QR code file if exists
+            if (qrFile) {
+                formData.append('qrCode', qrFile);
+            }
+
             if (dialogMode === "update") {
-                await axios.put(`http://localhost:5000/api/payment-methods/${currentMethod._id}`, currentMethod, {
-                    headers: { Authorization: `Bearer ${token}` }
+                await axios.put(`http://localhost:5000/api/payment-methods/${currentMethod._id}`, formData, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
                 })
             } else {
-                await axios.post('http://localhost:5000/api/payment-methods', currentMethod, {
-                    headers: { Authorization: `Bearer ${token}` }
+                await axios.post('http://localhost:5000/api/payment-methods', formData, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
                 })
             }
 
             fetchPaymentMethods()
             setIsDialogOpen(false)
+            setQrFile(null) // Reset QR file state
             toast.success(dialogMode === "update"
                 ? "Payment method updated"
                 : "Payment method added"
@@ -183,32 +146,73 @@ export default function PaymentMethod() {
         }
     }
 
-    const handleUploadQR = async () => {
-        if (!qrFile) {
-            toast.error("Please select a QR code file")
-            return
-        }
+    const handleQRFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0]
 
-        try {
-            const token = localStorage.getItem('token')
-            const formData = new FormData()
-            formData.append('qrCode', qrFile)
-            formData.append('paymentLink', currentMethod.paymentLink || '')
+            // Validate file type and size
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif']
+            const maxSize = 5 * 1024 * 1024 // 5MB
 
-            await axios.post(`http://localhost:5000/api/payment-methods/${currentMethod._id}/upload-qr`, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
-                }
-            })
+            if (!validTypes.includes(file.type)) {
+                toast.error("Invalid file type. Please upload a JPEG, PNG, or GIF.")
+                return
+            }
 
-            fetchPaymentMethods()
-            setQrFile(null)
-            toast.success("QR code uploaded")
-        } catch (error) {
-            toast.error("Failed to upload QR code")
+            if (file.size > maxSize) {
+                toast.error("File is too large. Maximum size is 5MB.")
+                return
+            }
+
+            // Create preview
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setQrPreview(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+
+            setQrFile(file)
         }
     }
+
+    const removeQRFile = () => {
+        setQrFile(null)
+        setQrPreview(null)
+        // Reset file input
+        const fileInput = document.getElementById('qr-file-input') as HTMLInputElement
+        if (fileInput) {
+            fileInput.value = ''
+        }
+    }
+
+    // // Modify the existing handleUploadQR method if needed
+    // const handleUploadQR = async () => {
+    //     if (!qrFile) {
+    //         toast.error("Please select a QR code file")
+    //         return
+    //     }
+
+    //     try {
+    //         const token = localStorage.getItem('token')
+    //         const formData = new FormData()
+    //         formData.append('qrCode', qrFile)
+    //         formData.append('paymentLink', currentMethod.paymentLink || '')
+
+    //         await axios.post(`http://localhost:5000/api/payment-methods/${currentMethod._id}/upload-qr`, formData, {
+    //             headers: {
+    //                 Authorization: `Bearer ${token}`,
+    //                 'Content-Type': 'multipart/form-data'
+    //             }
+    //         })
+
+    //         fetchPaymentMethods()
+    //         setQrFile(null)
+    //         setQrPreview(null)
+    //         toast.success("QR code uploaded")
+    //     } catch (error) {
+    //         toast.error("Failed to upload QR code")
+    //     }
+    // }
 
     const viewMethodDetails = async (method: { id?: number; name?: string; type?: string; accounts?: string; active?: boolean; _id?: any }) => {
         try {
@@ -232,22 +236,6 @@ export default function PaymentMethod() {
         setIsDialogOpen(true);
     };
 
-    // const toggleActive = (id: number) => {
-    //     setPaymentMethods(paymentMethods.map((m) => (m.id === id ? { ...m, active: !m.active } : m)))
-    // }
-
-
-    // const handlePaymentDelete = (method: any) => {
-    //     setCurrentMethod(method)
-    //     setIsPaymentDeleteDialogOpen(true)
-    // }
-
-    // const confirmPaymentDelete = () => {
-    //     setPaymentMethods(paymentMethods.filter((m) => m.id !== currentMethod.id))
-    //     setIsPaymentDeleteDialogOpen(false)
-    //     console.log("Deleted:", currentMethod)
-    // }
-
 
     const handleSaveexchange = () => {
         setexchanges(exchanges.map((d) => (d.id === currentexchange.id ? currentexchange : d)))
@@ -269,24 +257,7 @@ export default function PaymentMethod() {
 
     return (
         <>
-            {/* Your existing component JSX
-            <Toaster
-                position="top-right"
-                toastOptions={{
-                    success: {
-                        style: {
-                            background: 'green',
-                            color: 'white',
-                        },
-                    },
-                    error: {
-                        style: {
-                            background: 'red',
-                            color: 'white',
-                        },
-                    },
-                }}
-            /> */}
+
             <div className="space-y-8">
                 <div className="rounded-md border">
                     <div className="p-4 bg-muted/50 flex justify-between items-center">
@@ -486,22 +457,33 @@ export default function PaymentMethod() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label>QR Code</Label>
-                                                <Input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={(e) => {
-                                                        if (e.target.files && e.target.files[0]) {
-                                                            setQrFile(e.target.files[0])
-                                                        }
-                                                    }}
-                                                />
-                                                {qrFile && (
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={handleUploadQR}
-                                                    >
-                                                        Upload QR
-                                                    </Button>
+                                                <div className="flex items-center space-x-2">
+                                                    <Input
+                                                        id="qr-file-input"
+                                                        type="file"
+                                                        accept="image/jpeg,image/png,image/gif"
+                                                        onChange={handleQRFileChange}
+                                                    />
+                                                    {qrFile && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={removeQRFile}
+                                                            title="Remove file"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+
+                                                {qrPreview && (
+                                                    <div className="mt-2 relative">
+                                                        <img
+                                                            src={qrPreview}
+                                                            alt="QR Code Preview"
+                                                            className="max-w-full h-auto max-h-48 object-contain border rounded"
+                                                        />
+                                                    </div>
                                                 )}
                                             </div>
                                             <div className="space-y-2">
