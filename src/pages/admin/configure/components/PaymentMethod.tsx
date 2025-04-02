@@ -20,33 +20,62 @@ import { Eye, Pencil, Plus, Trash2, X } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import axios from "axios"
 import { toast } from "sonner"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const initialexchanges = [
-    { id: 1, name: "INR(India)", value: "exchange-1", description: "Description 1" },
-    { id: 2, name: "EUR(Europe)", value: "exchange-2", description: "Description 2" },
-    { id: 3, name: "USD(United State)", value: "exchange-3", description: "Description 3" },
-    { id: 4, name: "GBP(British Pound)", value: "exchange-4", description: "Description 4" },
-    { id: 5, name: "CNY(China)", value: "exchange-5", description: "Description 5" },
-    { id: 6, name: "CAD(Canada)", value: "exchange-6", description: "Description 6" },
-    { id: 7, name: "CHF(Switzerland)", value: "exchange-7", description: "Description 7" },
-]
+// Define the currency type
+interface Currency {
+    code: string;
+    name: string;
+    symbol: string;
+    country: string;
+    flag: string;
+    rate: number;
+}
+
+// Define the exchange type
+interface Exchange {
+    _id: string;
+    baseCurrency: string;
+    targetCurrency: string;
+    rate: number;
+    type: string;
+    isCustomRate: boolean;
+    lastUpdated: string;
+}
+
 
 
 export default function PaymentMethod() {
-    const [paymentMethods, setPaymentMethods] = useState<{ _id: string; accountHolderName?: string; type: string; accountNumber?: string; active?: boolean }[]>([])
+    const [paymentMethods, setPaymentMethods] = useState<{ _id: string; accountHolderName?: string; type: string; accountNumber?: string; active?: boolean; walletName?: string }[]>([])
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [currentMethod, setCurrentMethod] = useState<any>(null)
     const [dialogMode, setDialogMode] = useState<"update" | "add">("update")
     const [activeTab, setActiveTab] = useState("bank")
-    const [exchanges, setexchanges] = useState(initialexchanges)
-    const [isexchangeDialogOpen, setIsexchangeDialogOpen] = useState(false)
-    const [currentexchange, setCurrentexchange] = useState<any>(null)
-    const [isexchangeDeleteDialogOpen, setIsexchangeDeleteDialogOpen] = useState(false)
+    // const [exchanges, setexchanges] = useState(initialexchanges)
+    // const [isexchangeDialogOpen, setIsexchangeDialogOpen] = useState(false)
+    // const [currentexchange, setCurrentexchange] = useState<any>(null)
+    // const [isexchangeDeleteDialogOpen, setIsexchangeDeleteDialogOpen] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
-    const [selectedMethodDetails, setSelectedMethodDetails] = useState<{ accountHolderName?: string; type?: string; accountNumber?: string; ifsc_swift?: string; bankName?: string; qrCode?: string; paymentLink?: string; active?: boolean } | null>(null)
+    const [selectedMethodDetails, setSelectedMethodDetails] = useState<{ accountHolderName?: string; type?: string; accountNumber?: string; ifsc_swift?: string; bankName?: string; qrCode?: string; paymentLink?: string; active?: boolean; walletName?: string; walletAddress?: string } | null>(null)
     const [qrFile, setQrFile] = useState<File | null>(null)
     const [qrPreview, setQrPreview] = useState<string | null>(null)
+
+    const [exchanges, setExchanges] = useState<Exchange[]>([]);
+    const [currencies, setCurrencies] = useState<Currency[]>([]);
+    const [isExchangeDialogOpen, setIsExchangeDialogOpen] = useState(false);
+    const [isExchangeDeleteDialogOpen, setIsExchangeDeleteDialogOpen] = useState(false);
+    const [currentExchange, setCurrentExchange] = useState<Exchange | null>(null);
+    const [formData, setFormData] = useState({
+        baseCurrency: "USD",
+        targetCurrency: "INR",
+        rate: 0,
+        type: "deposit",
+    });
+    const [liveRate, setLiveRate] = useState<number | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [baseSearchTerm, setBaseSearchTerm] = useState("");
+    const [targetSearchTerm, setTargetSearchTerm] = useState("");
 
 
     useEffect(() => {
@@ -185,34 +214,7 @@ export default function PaymentMethod() {
         }
     }
 
-    // // Modify the existing handleUploadQR method if needed
-    // const handleUploadQR = async () => {
-    //     if (!qrFile) {
-    //         toast.error("Please select a QR code file")
-    //         return
-    //     }
 
-    //     try {
-    //         const token = localStorage.getItem('token')
-    //         const formData = new FormData()
-    //         formData.append('qrCode', qrFile)
-    //         formData.append('paymentLink', currentMethod.paymentLink || '')
-
-    //         await axios.post(`http://localhost:5000/api/payment-methods/${currentMethod._id}/upload-qr`, formData, {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //                 'Content-Type': 'multipart/form-data'
-    //             }
-    //         })
-
-    //         fetchPaymentMethods()
-    //         setQrFile(null)
-    //         setQrPreview(null)
-    //         toast.success("QR code uploaded")
-    //     } catch (error) {
-    //         toast.error("Failed to upload QR code")
-    //     }
-    // }
 
     const viewMethodDetails = async (method: { id?: number; name?: string; type?: string; accounts?: string; active?: boolean; _id?: any }) => {
         try {
@@ -237,23 +239,200 @@ export default function PaymentMethod() {
     };
 
 
-    const handleSaveexchange = () => {
-        setexchanges(exchanges.map((d) => (d.id === currentexchange.id ? currentexchange : d)))
-        setIsexchangeDialogOpen(false)
-    }
-    const handleEditexchange = (exchange: any) => {
-        setCurrentexchange(exchange)
-        setIsexchangeDialogOpen(true)
-    }
-    const handleexchangeDelete = (exchanges: any) => {
-        setCurrentexchange(exchanges)
-        setIsexchangeDeleteDialogOpen(true)
-    }
 
-    const confirmexchangeDelete = () => {
-        setexchanges(exchanges.filter((l) => l.id !== currentexchange.id))
-        setIsexchangeDeleteDialogOpen(false)
-    }
+
+
+    //EXCHANGE RATE LOGIC
+    useEffect(() => {
+        fetchExchanges();
+        fetchCurrencies();
+    }, []);
+
+    // Fetch exchanges from API
+    const fetchExchanges = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem("token");
+            const response = await axios.get("http://localhost:5000/api/exchanges", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log(response.data.data);
+            setExchanges(response.data.data);
+        } catch (error) {
+            toast.error("Failed to fetch exchange rates");
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch currencies with flags
+    const fetchCurrencies = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get("http://localhost:5000/api/exchanges/currencies", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log(response.data.data);
+            setCurrencies(response.data.data);
+        } catch (error) {
+            toast.error("Failed to fetch currencies");
+            console.error(error);
+        }
+    };
+
+    // Handle form input changes
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData({
+            ...formData,
+            [name]: name === "rate" ? parseFloat(value) : value,
+        });
+    };
+
+    // Handle select changes
+    const handleSelectChange = (name: string, value: string) => {
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+
+        // If either currency changes, update the live rate
+        if (name === "baseCurrency" || name === "targetCurrency") {
+            fetchLiveRate(
+                name === "baseCurrency" ? value : formData.baseCurrency,
+                name === "targetCurrency" ? value : formData.targetCurrency
+            );
+        }
+    };
+
+    // Fetch live rate for selected currencies
+    const fetchLiveRate = async (base: string, target: string) => {
+        try {
+            // Find the base currency in our currencies list
+            const baseCurrency = currencies.find(c => c.code === base);
+            const targetCurrency = currencies.find(c => c.code === target);
+
+            if (baseCurrency && targetCurrency) {
+                // Calculate rate based on USD rates from our currencies list
+                const baseRate = baseCurrency.rate;
+                const targetRate = targetCurrency.rate;
+
+                // Calculate cross rate
+                const calculatedRate = targetRate / baseRate;
+                setLiveRate(calculatedRate);
+
+                // Update form data with the live rate
+                setFormData({
+                    ...formData,
+                    baseCurrency: base,
+                    targetCurrency: target,
+                    rate: calculatedRate,
+                });
+            }
+        } catch (error) {
+            console.error("Failed to fetch live rate:", error);
+            setLiveRate(null);
+        }
+    };
+
+    // Add/update exchange rate
+    const handleExchangeSave = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
+
+            if (currentExchange && currentExchange._id) {
+                // Update existing exchange
+                await axios.put(
+                    `http://localhost:5000/api/exchanges/${currentExchange._id}`,
+                    { rate: formData.rate, type: formData.type },
+                    { headers }
+                );
+                toast.success("Exchange rate updated");
+            } else {
+                // Create new exchange
+                await axios.post("http://localhost:5000/api/exchanges", formData, { headers });
+                toast.success("Exchange rate added");
+            }
+
+            // Refresh exchanges list
+            fetchExchanges();
+            setIsExchangeDialogOpen(false);
+        } catch (error) {
+            toast.error("Failed to save exchange rate");
+            console.error(error);
+        }
+    };
+
+    // Handle delete
+    const handleExchangeDelete = async () => {
+        try {
+            if (!currentExchange || !currentExchange._id) return;
+
+            const token = localStorage.getItem("token");
+            await axios.delete(`http://localhost:5000/api/exchanges/${currentExchange._id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            fetchExchanges();
+            setIsExchangeDeleteDialogOpen(false);
+            toast.success("Exchange rate deleted");
+        } catch (error) {
+            toast.error("Failed to delete exchange rate");
+            console.error(error);
+        }
+    };
+
+    // Handle edit button
+    const handleExchangeEdit = (exchange: Exchange) => {
+        setCurrentExchange(exchange);
+        setFormData({
+            baseCurrency: exchange.baseCurrency,
+            targetCurrency: exchange.targetCurrency,
+            rate: exchange.rate,
+            type: exchange.type,
+        });
+        // Fetch the current live rate for reference
+        fetchLiveRate(exchange.baseCurrency, exchange.targetCurrency);
+        setIsExchangeDialogOpen(true);
+    };
+
+    // Get currency flag by code
+    const getCurrencyFlag = (code: string) => {
+        const currency = currencies.find(c => c.code === code);
+        return currency?.flag || "";
+    };
+
+    // Get currency name by code
+    const getCurrencyName = (code: string) => {
+        const currency = currencies.find(c => c.code === code);
+        return currency?.name || code;
+    };
+
+    // Open add dialog
+    const handleAddClick = () => {
+        setCurrentExchange(null);
+        setFormData({
+            baseCurrency: "USD",
+            targetCurrency: "INR",
+            rate: 0,
+            type: "deposit",
+        });
+        fetchLiveRate("USD", "INR");
+        setIsExchangeDialogOpen(true);
+    };
+
+    const getFilteredCurrencies = (searchTerm: string) => {
+        if (!searchTerm) return currencies; // Show all if no search input
+
+        return currencies.filter(currency =>
+            currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            currency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            currency.country.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    };
+
 
     return (
         <>
@@ -295,7 +474,11 @@ export default function PaymentMethod() {
                             {paymentMethods.map((method, index) => (
                                 <TableRow key={method._id}>
                                     <TableCell>{index + 1}</TableCell>
-                                    <TableCell>{method.accountHolderName}</TableCell>
+                                    <TableCell>
+                                        {method.type === "Crypto Wallet"
+                                            ? method.walletName
+                                            : method.accountHolderName}
+                                    </TableCell>
                                     <TableCell>{method.type}</TableCell>
                                     <TableCell>
                                         <Button
@@ -348,9 +531,8 @@ export default function PaymentMethod() {
                             ))}
                         </TableBody>
                     </Table>
-
-                    <div className="p-4 flex justify-end">
-                        <div className="flex gap-2">
+                    <div className="p-4 flex justify-end border min-w-full">
+                        <div className=" grid grid-cols-1 md:grid-cols-3 gap-2">
                             <Button
                                 variant="outline"
                                 onClick={() => handleAdd({ name: "India Local Bank", type: "Bank Account", active: false })}
@@ -374,6 +556,8 @@ export default function PaymentMethod() {
                             </Button>
                         </div>
                     </div>
+
+
 
                     {/* Payment Method Dialog */}
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -633,31 +817,10 @@ export default function PaymentMethod() {
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <Label>Account Holder Name</Label>
-                                            <p>{selectedMethodDetails.accountHolderName}</p>
-                                        </div>
-                                        <div>
                                             <Label>Payment Type</Label>
                                             <p>{selectedMethodDetails.type}</p>
                                         </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>Account Number</Label>
-                                            <p>{selectedMethodDetails.accountNumber}</p>
-                                        </div>
-                                        <div>
-                                            <Label>IFSC/SWIFT Code</Label>
-                                            <p>{selectedMethodDetails.ifsc_swift}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>Bank Name</Label>
-                                            <p>{selectedMethodDetails.bankName}</p>
-                                        </div>
+                                        {/* Status for all payment types */}
                                         <div>
                                             <Label>Active/Status</Label>
                                             <p style={{ color: selectedMethodDetails.active ? "green" : "red", fontWeight: "bold" }}>
@@ -666,6 +829,62 @@ export default function PaymentMethod() {
                                         </div>
                                     </div>
 
+                                    {/* Bank Account Fields */}
+                                    {selectedMethodDetails.type === 'Bank Account' && (
+                                        <>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label>Account Holder Name</Label>
+                                                    <p>{selectedMethodDetails.accountHolderName}</p>
+                                                </div>
+                                                <div>
+                                                    <Label>Account Number</Label>
+                                                    <p>{selectedMethodDetails.accountNumber}</p>
+                                                </div>
+
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label>IFSC/SWIFT Code</Label>
+                                                    <p>{selectedMethodDetails.ifsc_swift}</p>
+                                                </div>
+
+                                                <div>
+                                                    <Label>Bank Name</Label>
+                                                    <p>{selectedMethodDetails.bankName}</p>
+                                                </div>
+                                            </div>
+
+                                        </>
+                                    )}
+
+                                    {/* Crypto Wallet Fields */}
+                                    {selectedMethodDetails.type === 'Crypto Wallet' && (
+                                        <>
+
+                                            <div>
+                                                <Label>Wallet Address</Label>
+                                                <p>{selectedMethodDetails.walletAddress}</p>
+                                            </div>
+                                            <div>
+                                                <Label>Wallet Name</Label>
+                                                <p>{selectedMethodDetails.walletName}</p>
+                                            </div>
+
+
+                                        </>
+                                    )}
+
+                                    {/* Other Payment Type Fields */}
+                                    {selectedMethodDetails.type === 'Other' && (
+                                        <div>
+                                            <Label>Payment Details</Label>
+                                            <p>{selectedMethodDetails.accountNumber}</p>
+                                        </div>
+                                    )}
+
+
+                                    {/* QR Code for all payment types if available */}
                                     {selectedMethodDetails.qrCode && (
                                         <div className="space-y-2">
                                             <Label>QR Code</Label>
@@ -677,6 +896,7 @@ export default function PaymentMethod() {
                                         </div>
                                     )}
 
+                                    {/* Payment Link for all payment types if available */}
                                     {selectedMethodDetails.paymentLink && (
                                         <div className="space-y-2">
                                             <Label>Payment Link</Label>
@@ -698,102 +918,263 @@ export default function PaymentMethod() {
 
                 {/* exchanges Table */}
                 <div className="rounded-md border">
-                    <div className="p-4 bg-muted/50">
-                        <h2 className="text-xl font-semibold">List of exchanges</h2>
+                    <div className="p-4 bg-muted/50 flex justify-between items-center">
+                        <h2 className="text-xl font-semibold">List of Exchanges</h2>
+                        <Button
+                            variant="outline"
+                            onClick={handleAddClick}
+                            className="flex items-center gap-1"
+                        >
+                            <Plus className="h-4 w-4" /> Add Exchange Rate
+                        </Button>
                     </div>
 
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-16">S.No.</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Value</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead className="text-right">Update</TableHead>
+                                <TableHead>Base Currency</TableHead>
+                                <TableHead>Target Currency</TableHead>
+                                <TableHead>Rate</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Last Updated</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {exchanges.map((exchange) => (
-                                <TableRow key={exchange.id}>
-                                    <TableCell>{exchange.id}</TableCell>
-                                    <TableCell>{exchange.name}</TableCell>
-                                    <TableCell>{exchange.value}</TableCell>
-                                    <TableCell>{exchange.description}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="outline" size="icon" onClick={() => handleEditexchange(exchange)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="outline" size="icon" onClick={() => handleexchangeDelete(exchange)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </TableCell>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center py-4">Loading...</TableCell>
                                 </TableRow>
-                            ))}
+                            ) : exchanges.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center py-4">No exchange rates found</TableCell>
+                                </TableRow>
+                            ) : (
+                                exchanges.map((exchange, index) => (
+                                    <TableRow key={exchange._id}>
+                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell >
+                                            <div className="flex items-center gap-2">
+                                                {getCurrencyFlag(exchange.baseCurrency) && (
+                                                    <img
+                                                        src={getCurrencyFlag(exchange.baseCurrency)}
+                                                        alt={exchange.baseCurrency}
+                                                        className="w-5 h-5 rounded-full object-cover"
+                                                    />
+                                                )}
+                                                {exchange.baseCurrency} ({getCurrencyName(exchange.baseCurrency)})
+                                            </div>
+                                        </TableCell>
+                                        <TableCell >
+                                            <div className="flex items-center gap-2">
+                                                {getCurrencyFlag(exchange.targetCurrency) && (
+                                                    <img
+                                                        src={getCurrencyFlag(exchange.targetCurrency)}
+                                                        alt={exchange.targetCurrency}
+                                                        className="w-5 h-5 rounded-full object-cover"
+                                                    />
+                                                )}
+                                                {exchange.targetCurrency} ({getCurrencyName(exchange.targetCurrency)})
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{exchange.rate.toFixed(4)}</TableCell>
+                                        <TableCell>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${exchange.type === 'deposit' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                                                }`}>
+                                                {exchange.type.charAt(0).toUpperCase() + exchange.type.slice(1)}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            {new Date(exchange.lastUpdated).toLocaleString()}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => handleExchangeEdit(exchange)}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        setCurrentExchange(exchange);
+                                                        setIsExchangeDeleteDialogOpen(true);
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
 
 
-                    {/* Edit exchange Dialog */}
-                    <Dialog open={isexchangeDialogOpen} onOpenChange={setIsexchangeDialogOpen}>
-                        <DialogContent>
+                    {/* Add/Edit Exchange Dialog */}
+                    <Dialog open={isExchangeDialogOpen} onOpenChange={setIsExchangeDialogOpen}>
+                        <DialogContent className="max-w-md">
                             <DialogHeader>
-                                <DialogTitle>Update exchange</DialogTitle>
+                                <DialogTitle>
+                                    {currentExchange ? "Update Exchange Rate" : "Add Exchange Rate"}
+                                </DialogTitle>
                             </DialogHeader>
 
-                            <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="exchange-name" className="text-right">
-                                        Name
-                                    </Label>
-                                    <Input id="exchange-name" value={currentexchange?.name || ""} className="col-span-3" readOnly />
+                            <div className="grid gap-4 py-2">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="baseCurrency">Base Currency</Label>
+                                        <Select
+                                            value={formData.baseCurrency}
+                                            onValueChange={(value) => handleSelectChange("baseCurrency", value)}
+                                            disabled={!!currentExchange}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select base currency" />
+                                            </SelectTrigger>
+                                            <SelectContent className="max-h-96">
+                                                <div className="p-2 sticky top-0 bg-white z-10">
+                                                    <Input
+                                                        placeholder="Search currencies..."
+                                                        className="mb-2"
+                                                        value={baseSearchTerm}
+                                                        onChange={(e) => {
+                                                            e.stopPropagation(); // Prevent event bubbling
+                                                            setBaseSearchTerm(e.target.value);
+                                                        }}
+                                                        onClick={(e) => e.stopPropagation()} // Prevent closing on click
+                                                    />
+                                                </div>
+                                                <div className="overflow-y-auto max-h-64">
+                                                    <SelectGroup>
+                                                        <SelectLabel>Currencies</SelectLabel>
+                                                        {getFilteredCurrencies(baseSearchTerm).map((currency) => (
+                                                            <SelectItem key={`base-${currency.code}`} value={currency.code}>
+                                                                <div className="flex items-center gap-2">
+                                                                    <img
+                                                                        src={currency.flag}
+                                                                        alt={currency.code}
+                                                                        className="w-4 h-4 rounded-full object-cover"
+                                                                    />
+                                                                    <span>{currency.code} ({currency.name})</span>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectGroup>
+                                                </div>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="targetCurrency">Target Currency</Label>
+                                        <Select
+                                            value={formData.targetCurrency}
+                                            onValueChange={(value) => handleSelectChange("targetCurrency", value)}
+                                            disabled={!!currentExchange}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select target currency" />
+                                            </SelectTrigger>
+                                            <SelectContent className="max-h-96">
+                                                <div className="p-2 sticky top-0 bg-white z-10">
+                                                    <Input
+                                                        placeholder="Search currencies..."
+                                                        className="mb-2"
+                                                        value={targetSearchTerm}
+                                                        onChange={(e) => setTargetSearchTerm(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="overflow-y-auto max-h-64">
+                                                    <SelectGroup>
+                                                        <SelectLabel>Currencies</SelectLabel>
+                                                        {getFilteredCurrencies(targetSearchTerm).map((currency) => (
+                                                            <SelectItem key={`target-${currency.code}`} value={currency.code}>
+                                                                <div className="flex items-center gap-2">
+                                                                    <img
+                                                                        src={currency.flag}
+                                                                        alt={currency.code}
+                                                                        className="w-4 h-4 rounded-full object-cover"
+                                                                    />
+                                                                    <span>{currency.code} ({currency.name})</span>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectGroup>
+                                                </div>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="exchange-value" className="text-right">
-                                        Value
-                                    </Label>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <Label htmlFor="rate">Exchange Rate</Label>
+                                        {liveRate !== null && (
+                                            <span className="text-sm text-muted-foreground">
+                                                Live rate: {liveRate.toFixed(4)}
+                                            </span>
+                                        )}
+                                    </div>
                                     <Input
-                                        id="exchange-value"
-                                        value={currentexchange?.value || ""}
-                                        onChange={(e) => setCurrentexchange({ ...currentexchange, value: e.target.value })}
-                                        className="col-span-3"
+                                        id="rate"
+                                        name="rate"
+                                        type="number"
+                                        step="0.0001"
+                                        value={formData.rate}
+                                        onChange={handleInputChange}
+                                        placeholder="Exchange rate"
                                     />
+                                    <div className="text-sm text-muted-foreground">
+                                        1 {formData.baseCurrency} = {formData.rate.toFixed(4)} {formData.targetCurrency}
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="exchange-description" className="text-right">
-                                        Description
-                                    </Label>
-                                    <Textarea
-                                        id="exchange-description"
-                                        value={currentexchange?.description || ""}
-                                        onChange={(e) => setCurrentexchange({ ...currentexchange, description: e.target.value })}
-                                        className="col-span-3"
-                                    />
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="type">Type</Label>
+                                    <Select
+                                        value={formData.type}
+                                        onValueChange={(value) => handleSelectChange("type", value)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="deposit">Deposit</SelectItem>
+                                            <SelectItem value="withdrawal">Withdrawal</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 
                             <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsexchangeDialogOpen(false)}>
+                                <Button variant="outline" onClick={() => setIsExchangeDialogOpen(false)}>
                                     Cancel
                                 </Button>
-                                <Button onClick={handleSaveexchange}>Save</Button>
+                                <Button onClick={handleExchangeSave}>
+                                    {currentExchange ? "Update" : "Add"}
+                                </Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
-
                     {/* Delete Confirmation Dialog */}
-                    <Dialog open={isexchangeDeleteDialogOpen} onOpenChange={setIsexchangeDeleteDialogOpen}>
+                    <Dialog open={isExchangeDeleteDialogOpen} onOpenChange={setIsExchangeDeleteDialogOpen}>
                         <DialogContent className="max-w-md">
                             <DialogHeader>
                                 <DialogTitle>Confirm Delete</DialogTitle>
+                                <DialogDescription>
+                                    Are you sure you want to delete this exchange rate? This action cannot be undone.
+                                </DialogDescription>
                             </DialogHeader>
-                            <div className="py-4">
-                                <p>Are you sure you want to delete this exchange? This action cannot be undone.</p>
-                            </div>
                             <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsexchangeDeleteDialogOpen(false)}>
+                                <Button variant="outline" onClick={() => setIsExchangeDeleteDialogOpen(false)}>
                                     Cancel
                                 </Button>
-                                <Button variant="destructive" onClick={confirmexchangeDelete}>
+                                <Button variant="destructive" onClick={handleExchangeDelete}>
                                     Delete
                                 </Button>
                             </DialogFooter>
