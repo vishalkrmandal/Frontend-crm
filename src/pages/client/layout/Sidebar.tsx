@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
   ChevronDown,
@@ -63,7 +63,6 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
     {
       title: "My Account",
       icon: User,
-      path: "/client/account/new",
       submenu: [
         { title: "Open New Account", path: "/client/account/new" },
         { title: "Account List", path: "/client/account/list" },
@@ -126,14 +125,13 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
 
   return (
     <aside
-      className={`${open ? "w-64" : "w-20"
-        } flex-shrink-0 overflow-y-auto border-r bg-sidebar transition-all duration-300 ease-in-out`}
+      className={`${open ? "w-64" : "w-20"} flex-shrink-0 overflow-y-auto border-r bg-white dark:bg-gray-900 transition-all duration-300 ease-in-out`}
     >
-      <div className="flex h-16 items-center justify-center border-b px-4">
+      <div className="flex h-16 items-center justify-center border-b px-4 dark:border-gray-700">
         {open ? (
-          <h2 className="text-xl font-bold text-sidebar-primary">TestCRM</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white">TestCRM</h2>
         ) : (
-          <BarChart2 className="h-8 w-8 text-sidebar-primary" />
+          <BarChart2 className="h-8 w-8 text-gray-800 dark:text-white" />
         )}
       </div>
       <nav className="mt-2 px-2">
@@ -144,10 +142,15 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                 <div>
                   <button
                     onClick={() => toggleMenu(item.title)}
-                    className={`flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${open ? "" : "justify-center"
-                      }`}
+                    className={`flex w-full items-center rounded-md px-3 py-2 text-sm font-medium ${item.path && isActive(item.path)
+                      ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      } ${open ? "" : "justify-center"}`}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className={`h-5 w-5 ${item.path && isActive(item.path)
+                      ? "text-white dark:text-gray-900"
+                      : "text-gray-500 dark:text-gray-400"
+                      }`} />
                     {open && (
                       <>
                         <span className="ml-3 flex-1 text-left">{item.title}</span>
@@ -166,8 +169,8 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                           <Link
                             to={subItem.path}
                             className={`block rounded-md px-3 py-2 text-sm font-medium ${isActive(subItem.path)
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                              ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                               }`}
                           >
                             {subItem.title}
@@ -181,11 +184,14 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                 <Link
                   to={item.path || "#"}
                   className={`flex items-center rounded-md px-3 py-2 text-sm font-medium ${isActive(item.path || "")
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                     } ${open ? "" : "justify-center"}`}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className={`h-5 w-5 ${isActive(item.path || "")
+                    ? "text-white dark:text-gray-900"
+                    : "text-gray-500 dark:text-gray-400"
+                    }`} />
                   {open && <span className="ml-3">{item.title}</span>}
                 </Link>
               )}

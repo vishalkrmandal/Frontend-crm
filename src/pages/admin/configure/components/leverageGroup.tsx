@@ -14,20 +14,6 @@ import axios from "axios"
 import { toast } from "react-hot-toast"
 
 
-// // Sample data
-// const initialLeverages = [
-//     { id: 1, value: "100", name: "1:100", active: true },
-//     { id: 2, value: "200", name: "1:200", active: true },
-//     { id: 3, value: "300", name: "1:300", active: false },
-//     { id: 4, value: "400", name: "1:400", active: true },
-//     { id: 5, value: "500", name: "1:500", active: true },
-//     { id: 6, value: "600", name: "1:600", active: true },
-//     { id: 7, value: "700", name: "1:700", active: false },
-//     { id: 8, value: "800", name: "1:800", active: true },
-//     { id: 9, value: "900", name: "1:900", active: true },
-//     { id: 10, value: "1000", name: "1:1000", active: true },
-// ]
-
 
 export default function LeverageAndGroup() {
     const [leverages, setLeverages] = useState<{ _id: number; value: string; name: string; active: boolean }[]>([])
@@ -224,27 +210,12 @@ export default function LeverageAndGroup() {
         }
     }
 
-    // const handleGroupAddNew = () => {
-    //     setCurrentGroup({ id: Groups.length + 1, name: "", value: "", description: "" })
-    //     setIsGroupDialogOpen(true)
-    // }
-    // const handleSaveGroup = () => {
-    //     setGroups(Groups.map((d) => (d.id === currentGroup.id ? currentGroup : d)))
-    //     setIsGroupDialogOpen(false)
-    // }
-    // const handleEditGroup = (Group: any) => {
-    //     setCurrentGroup(Group)
-    //     setIsGroupDialogOpen(true)
-    // }
+
     const handleGroupDelete = (Groups: any) => {
         setCurrentGroup(Groups)
         setIsGroupDeleteDialogOpen(true)
     }
 
-    // const confirmGroupDelete = () => {
-    //     setGroups(Groups.filter((l) => l.id !== currentGroup.id))
-    //     setIsGroupDeleteDialogOpen(false)
-    // }
     return (
         <div className="space-y-8">
             <div className="rounded-md border">
@@ -405,12 +376,14 @@ export default function LeverageAndGroup() {
                                 <TableCell>{Group.value}</TableCell>
                                 <TableCell>{Group.description}</TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="outline" size="icon" onClick={() => handleEditGroup(Group)}>
-                                        <Pencil className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="outline" size="icon" onClick={() => handleGroupDelete(Group)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                    <div className="flex justify-end gap-2">
+                                        <Button variant="outline" size="icon" onClick={() => handleEditGroup(Group)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="outline" size="icon" onClick={() => handleGroupDelete(Group)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}

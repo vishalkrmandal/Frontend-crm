@@ -1,4 +1,5 @@
-import { CreditCard, DollarSign, Wallet, ArrowRight } from "lucide-react"
+//Frontend\src\pages\client\financial\Deposit.tsx
+import { DollarSign, Wallet, ArrowRight } from "lucide-react"
 
 export default function Deposit() {
   return (
@@ -14,16 +15,7 @@ export default function Deposit() {
         <div className="rounded-lg border bg-card p-6 shadow-sm">
           <h2 className="text-lg font-medium">Select Payment Method</h2>
           <div className="mt-4 grid gap-4">
-            <div className="flex cursor-pointer items-center rounded-lg border p-4 hover:border-primary">
-              <div className="mr-4 rounded-full bg-primary/10 p-2 text-primary">
-                <CreditCard className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-medium">Credit/Debit Card</h3>
-                <p className="text-sm text-muted-foreground">Instant deposit with Visa, Mastercard</p>
-              </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
-            </div>
+
             <div className="flex cursor-pointer items-center rounded-lg border p-4 hover:border-primary">
               <div className="mr-4 rounded-full bg-primary/10 p-2 text-primary">
                 <Wallet className="h-6 w-6" />
@@ -114,7 +106,7 @@ export default function Deposit() {
               {[
                 {
                   date: "Mar 15, 2023",
-                  method: "Credit Card",
+                  method: "Bank Transfer",
                   amount: "$1,000.00",
                   account: "MT4-12345",
                   status: "Completed",

@@ -1,8 +1,147 @@
-//Frontend\src\pages\client\account\OpenNewAccount.tsx
+import { AlertCircle, Check, ChevronLeft, ChevronRight } from "lucide-react"
+import { useEffect, useState } from "react"
+import axios from "axios"
+import { toast } from "sonner";
 
-import { AlertCircle, Check } from "lucide-react"
+// Define the Leverage type
+interface Leverage {
+  _id: string
+  value: string
+  name: string
+  active: boolean
+}
+
+interface AccountGroup {
+  _id: string;
+  value: string;
+  name: string;
+  description?: string;
+  features?: string[];
+}
 
 export default function OpenNewAccount() {
+  const [groups, setGroups] = useState<AccountGroup[]>([]);
+  const [leverages, setLeverages] = useState<Leverage[]>([])
+  const [selectedGroup, setSelectedGroup] = useState<AccountGroup | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [formValues, setFormValues] = useState({
+    leverage: "",
+    accountType: "",
+    platform: "MetaTrader 5"
+  })
+
+
+  useEffect(() => {
+    // Fetch groups data
+    const fetchGroups = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/groups")
+        if (response.data.success) {
+          setGroups(response.data.data)
+        }
+      } catch (error) {
+        console.error("Error fetching groups:", error);
+        toast.error("Failed to fetch account types");
+      }
+    }
+
+    // Fetch leverages data
+    const fetchLeverages = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/leverages")
+        if (response.data.success) {
+          setLeverages(response.data.data.filter((item: Leverage) => item.active))
+        }
+      } catch (error) {
+        console.error("Error fetching leverages:", error)
+        toast.error("Failed to fetch leverage options");
+      }
+    }
+
+    fetchGroups()
+    fetchLeverages()
+  }, [])
+
+  const handlePrevious = () => {
+    setCurrentIndex(prev => {
+      if (prev === 0) return Math.max(0, groups.length - 3)
+      return prev - 1
+    })
+  }
+
+  const handleNext = () => {
+    setCurrentIndex(prev => {
+      if (prev >= groups.length - 3) return 0
+      return prev + 1
+    })
+  }
+
+  const handleSelect = (group: AccountGroup) => {
+    setSelectedGroup(group);
+    setFormValues({
+      ...formValues,
+      accountType: group.value
+    });
+    toast.success(`${group.name} selected`);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormValues({
+      ...formValues,
+      [e.target.id]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    if (!formValues.accountType) {
+      toast.error("Please select an account type");
+      return;
+    }
+
+    if (!formValues.leverage) {
+      toast.error("Please select leverage");
+      return;
+    }
+
+    try {
+      // Create new account
+      const response = await axios.post("http://localhost:5000/api/accounts/create", {
+        ...formValues,
+        platform: "MetaTrader 5"
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      if (response.data.success) {
+        toast.success("Account created successfully!");
+      }
+    } catch (error) {
+      console.error("Error creating account:", error)
+      toast.error("Failed to create account. Please try again.");
+    }
+  }
+
+  // Auto slideshow effect
+  useEffect(() => {
+    const interval = setInterval(handleNext, 3000);
+    return () => clearInterval(interval);
+  }, [currentIndex, groups.length]);
+
+  // Parse description field into separate features
+  const parseFeatures = (description?: string) => {
+    if (!description) return [];
+
+    // Split by newlines or commas
+    return description
+      .split(/[\n,]/)
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -10,160 +149,128 @@ export default function OpenNewAccount() {
         <p className="text-muted-foreground">Create a new trading account to diversify your trading strategy.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">Basic Account</h3>
-            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Popular</span>
+      {/* Account Type Carousel */}
+      <div className="relative">
+        {/* Header */}
+        {/* <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-medium P-[20px]">Account Types</h2>
+        </div> */}
+
+        <div className="flex justify-between items-center ">
+          <div className="p-2 cursor-pointer" onClick={handlePrevious}>
+            <ChevronLeft className="h-6 w-6" />
           </div>
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Spreads from 1.6 pips</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Leverage up to 1:500</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Min deposit $100</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">All major currency pairs</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">MT4 & MT5 platforms</span>
-            </div>
+          {/* Carousel */}
+          <div className="grid gap-6 md:grid-cols-3 flex-grow ">
+            {/* Slides */}
+            {groups.slice(currentIndex, currentIndex + 3).map((group) => (
+              <div
+                key={group._id}
+                className={`rounded-lg border p-6 shadow-sm ${selectedGroup?.value === group.value
+                  ? "ring-2 ring-blue-500"
+                  : "hover:border-blue-300"
+                  }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium">{group.name}</h3>
+                  {group.name === "BASIC" && (
+                    <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">
+                      Popular
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2 min-h-36">
+                  {parseFeatures(group.description).map((feature, idx) => (
+                    <div key={idx} className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+
+                <button
+                  onClick={() => handleSelect(group)}
+                  className={`mt-4 w-full rounded py-2 px-4 transition-colors ${selectedGroup?.value === group.value
+                    ? "bg-blue-600 text-white"
+                    : "border border-blue-600 text-blue-600 hover:bg-blue-50"
+                    }`}
+                >
+                  {selectedGroup?.value === group.value ? "Selected" : "Select"}
+                </button>
+              </div>
+            ))}
           </div>
-          <button className="mt-6 w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90">
-            Select
-          </button>
+
+          <div className="p-2 cursor-pointer" onClick={handleNext}>
+            <ChevronRight className="h-6 w-6" />
+          </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">Elite Account</h3>
-          </div>
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Spreads from 0.0 pips</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Leverage up to 1:200</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Min deposit $500</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Direct market access</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Commission-based pricing</span>
-            </div>
-          </div>
-          <button className="mt-6 w-full rounded-md border border-primary bg-transparent px-4 py-2 text-primary hover:bg-primary/10">
-            Select
-          </button>
-        </div>
-
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">ECN Account</h3>
-          </div>
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Premium spreads</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Leverage up to 1:100</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Min deposit $10,000</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Dedicated account manager</span>
-            </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-600" />
-              <span className="text-sm">Premium trading signals</span>
-            </div>
-          </div>
-          <button className="mt-6 w-full rounded-md border border-primary bg-transparent px-4 py-2 text-primary hover:bg-primary/10">
-            Select
-          </button>
+        {/* Bottom Indicators */}
+        <div className="flex justify-center mt-4 space-x-2">
+          {Array.from({ length: Math.ceil(groups.length / 3) }).map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx * 3)}
+              className={`h-2 rounded-full transition-all ${Math.floor(currentIndex / 3) === idx
+                ? "w-6 bg-blue-600"
+                : "w-2 bg-gray-300"
+                }`}
+            />
+          ))}
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card p-6 shadow-sm">
-        <h2 className="text-lg font-medium">Account Details</h2>
-        <form className="mt-4 space-y-4">
+      {/* Account Details Form */}
+      <div className="border rounded-lg p-6 shadow-sm">
+        <h2 className="text-lg font-medium mb-4">Account Details</h2>
+        <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
           <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium" htmlFor="platform">
-                Trading Platform
-              </label>
-              <select id="platform" className="w-full rounded-md border border-input bg-background px-3 py-2">
-                <option>MetaTrader 4</option>
-                <option>MetaTrader 5</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium" htmlFor="account-type">
-                Account Type
-              </label>
-              <select id="account-type" className="w-full rounded-md border border-input bg-background px-3 py-2">
-                <option value="">Select Account Type</option>
-                <option>BASIC</option>
-                <option>CLASSIC</option>
-                <option>ECN ACCOUNT</option>
-                <option>ELITE</option>
-                <option>RAW ACCOUNT</option>
-                <option>STOCK TRADING</option>
-                <option>LOT WISE</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium" htmlFor="currency">
-                Base Currency
-              </label>
-              <select id="currency" className="w-full rounded-md border border-input bg-background px-3 py-2">
-                <option>INR</option>
-                <option>USD</option>
-                <option>EUR</option>
-                <option>GBP</option>
-                <option>JPY</option>
-              </select>
-            </div>
             <div>
               <label className="mb-2 block text-sm font-medium" htmlFor="leverage">
                 Leverage
               </label>
-              <select id="leverage" className="w-full rounded-md border border-input bg-background px-3 py-2">
+              <select
+                id="leverage"
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+                value={formValues.leverage}
+                onChange={handleInputChange}
+                required
+              >
                 <option value="">Select Leverage</option>
-                <option>1:50</option>
-                <option>1:100</option>
-                <option>1:200</option>
-                <option>1:300</option>
-                <option>1:400</option>
-                <option>1:500</option>
-                <option>1:600</option>
-                <option>1:700</option>
-                <option>1:800</option>
-                <option>1:900</option>
-                <option>1:1000</option>
+                {leverages.map(leverage => (
+                  <option key={leverage._id} value={leverage.value}>{leverage.name}</option>
+                ))}
               </select>
+            </div>
+            <div>
+              <label htmlFor="accountType" className="block text-sm font-medium mb-1">
+                Account Type
+              </label>
+              <select
+                id="accountType"
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+                value={formValues.accountType}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select Account Type</option>
+                {groups.map((group) => (
+                  <option key={group._id} value={group.value}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium" htmlFor="platform">
+                Trading Platform
+              </label>
+              <div className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                MetaTrader 5
+              </div>
             </div>
           </div>
 
@@ -190,4 +297,3 @@ export default function OpenNewAccount() {
     </div>
   )
 }
-

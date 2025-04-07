@@ -1,5 +1,5 @@
 import { useTheme } from "@/context/ThemeContext"
-import { Menu, Moon, Sun, Bell } from "lucide-react"
+import { Menu, Moon, Sun, Bell, User } from "lucide-react"
 import { useState, useEffect } from "react"
 import NotificationCard from "./components/NotificationCard"
 
@@ -100,10 +100,32 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         <div className="relative">
           <button
             onClick={toggleUserMenu}
+            className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            aria-label="User profile"
+          >
+            <User className="h-5 w-5" />
+          </button>
+          {/* <button
+            onClick={toggleUserMenu}
             className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border bg-primary hover:opacity-90"
             aria-label="User profile"
           >
             <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-user-icon lucide-user"
+            >
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg> */}
+          {/* <svg
               viewBox="0 0 482.9 482.9"
               className={`h-6 w-6 ${profileIconColor}`}
               aria-hidden="true"
@@ -124,8 +146,8 @@ export default function Header({ toggleSidebar }: HeaderProps) {
                   c1,2.6,2.8,4.8,5.2,6.3c3,2,74.9,47.8,195.2,47.8s192.2-45.9,195.2-47.8c2.3-1.5,4.2-3.7,5.2-6.3
                   C447,415.5,446.9,388.8,446.8,383.6z"/>
               </g>
-            </svg>
-          </button>
+            </svg> */}
+          {/* </button> */}
 
           {showUserMenu && (
             <div className="absolute right-0 mt-2 w-64 rounded-md border bg-background shadow-lg">
