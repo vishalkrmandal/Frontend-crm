@@ -24,6 +24,7 @@ export default function OpenNewAccount() {
   const [leverages, setLeverages] = useState<Leverage[]>([])
   const [selectedGroup, setSelectedGroup] = useState<AccountGroup | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formValues, setFormValues] = useState({
     leverage: "",
     accountType: "",
@@ -92,8 +93,19 @@ export default function OpenNewAccount() {
     });
   };
 
+  // Function to reset the form
+  const resetForm = () => {
+    setFormValues({
+      leverage: "",
+      accountType: "",
+      platform: "MetaTrader 5"
+    });
+    setSelectedGroup(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setIsSubmitting(true);
 
     if (!formValues.accountType) {
       toast.error("Please select an account type");
@@ -107,7 +119,7 @@ export default function OpenNewAccount() {
 
     try {
       // Create new account
-      const response = await axios.post("http://localhost:5000/api/accounts/create", {
+      await axios.post("http://localhost:5000/api/accounts/create", {
         ...formValues,
         platform: "MetaTrader 5"
       }, {
@@ -115,13 +127,18 @@ export default function OpenNewAccount() {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       })
-
-      if (response.data.success) {
+      setTimeout(() => {
         toast.success("Account created successfully!");
-      }
+        setIsSubmitting(false);
+      }, 1500);
+      resetForm(); // Reset the form after successful submission
     } catch (error) {
       console.error("Error creating account:", error)
       toast.error("Failed to create account. Please try again.");
+    } finally {
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 1000);
     }
   }
 
@@ -288,9 +305,10 @@ export default function OpenNewAccount() {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+            disabled={isSubmitting}
+            className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Account
+            {isSubmitting ? "Processing..." : "Create Account"}
           </button>
         </form>
       </div>

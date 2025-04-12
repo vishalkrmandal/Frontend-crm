@@ -108,7 +108,7 @@ export default function Deposit() {
   const fetchPaymentMethods = async () => {
     setIsLoading(prev => ({ ...prev, methods: true }));
     try {
-      const response = await axios.get(`${API_BASE_URL}/deposits/payment-methods`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE_URL}/clientdeposits/payment-methods`, getAuthHeaders());
       setPaymentMethods(response.data.data || {});
     } catch (error) {
       toast.error("Failed to fetch payment methods");
@@ -122,7 +122,7 @@ export default function Deposit() {
   const fetchDeposits = async () => {
     setIsLoading(prev => ({ ...prev, deposits: true }));
     try {
-      const response = await axios.get(`${API_BASE_URL}/deposits`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE_URL}/clientdeposits`, getAuthHeaders());
       setDeposits(response.data.data || []);
     } catch (error) {
       toast.error("Failed to fetch deposit history");
@@ -288,22 +288,22 @@ export default function Deposit() {
         formData.append('notes', notes);
       }
 
-      await axios.post(`${API_BASE_URL}/deposits`, formData, {
+      await axios.post(`${API_BASE_URL}/clientdeposits`, formData, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           'Content-Type': 'multipart/form-data'
         }
       });
 
+
       setTimeout(() => {
         toast.success("Deposit request submitted successfully");
 
         // Reset form and refresh deposits list
-        resetForm();
         fetchDeposits();
         setIsSubmitting(false);
       }, 1500);
-
+      resetForm();
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data?.message) {
         toast.error(error.response.data.message);

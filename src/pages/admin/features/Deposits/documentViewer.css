@@ -1,0 +1,14 @@
+/* Frontend/src/styles/documentViewer.css */
+
+.document-viewer-fullscreen {
+    max-width: 95vw !important;
+    margin: 0 !important;
+}
+
+.document-viewer-fullscreen .modal-content {
+    height: 90vh;
+}
+
+.document-viewer-fullscreen .modal-body {
+    max-height: calc(90vh - 130px);
+}
