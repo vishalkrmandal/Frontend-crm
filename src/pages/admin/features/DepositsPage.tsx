@@ -38,116 +38,10 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import axios from "axios";
-
-// // Sample data (this would come from API in a real application)
-// const deposits = [
-//     {
-//         id: 1,
-//         user: {
-//             name: "John Smith",
-//             email: "john@example.com",
-//             avatar: "/placeholder.svg",
-//         },
-//         accountNumber: "ACC10023",
-//         amount: 5000,
-//         planType: "Standard",
-//         paymentMethod: "Bank Transfer",
-//         bonus: 250,
-//         document: "/path/to/document.pdf",
-//         requestedOn: "2025-03-10T14:30:00",
-//         approvedOn: "2025-03-11T09:20:00",
-//         status: "Approved",
-//         remarks: "Congratulations! Your deposit has been processed."
-//     },
-//     {
-//         id: 2,
-//         user: {
-//             name: "Emily Johnson",
-//             email: "emily@example.com",
-//             avatar: "/placeholder.svg",
-//         },
-//         accountNumber: "ACC10024",
-//         amount: 10000,
-//         planType: "Premium",
-//         paymentMethod: "Credit Card",
-//         bonus: 0,
-//         document: "/path/to/document.jpg",
-//         requestedOn: "2025-03-11T09:15:00",
-//         status: "Pending",
-//     },
-//     {
-//         id: 3,
-//         user: {
-//             name: "Michael Chen",
-//             email: "michael@example.com",
-//             avatar: "/placeholder.svg",
-//         },
-//         accountNumber: "ACC10025",
-//         amount: 2500,
-//         planType: "Basic",
-//         paymentMethod: "Cryptocurrency",
-//         bonus: 0,
-//         document: null,
-//         requestedOn: "2025-03-11T16:45:00",
-//         status: "Pending",
-//     },
-//     {
-//         id: 4,
-//         user: {
-//             name: "Sarah Williams",
-//             email: "sarah@example.com",
-//             avatar: "/placeholder.svg",
-//         },
-//         accountNumber: "ACC10026",
-//         amount: 7500,
-//         planType: "Standard",
-//         paymentMethod: "Bank Transfer",
-//         bonus: 375,
-//         document: "/path/to/document.png",
-//         requestedOn: "2025-03-09T11:20:00",
-//         approvedOn: "2025-03-10T14:35:00",
-//         status: "Approved",
-//         remarks: "Congratulations! Your deposit has been processed."
-//     },
-//     {
-//         id: 5,
-//         user: {
-//             name: "David Rodriguez",
-//             email: "david@example.com",
-//             avatar: "/placeholder.svg",
-//         },
-//         accountNumber: "ACC10027",
-//         amount: 15000,
-//         planType: "Premium",
-//         paymentMethod: "Credit Card",
-//         bonus: 0,
-//         document: "/path/to/document.jpg",
-//         requestedOn: "2025-03-12T08:30:00",
-//         status: "Pending",
-//     },
-//     {
-//         id: 6,
-//         user: {
-//             name: "Lisa Kim",
-//             email: "lisa@example.com",
-//             avatar: "/placeholder.svg",
-//         },
-//         accountNumber: "ACC10028",
-//         amount: 3000,
-//         planType: "Basic",
-//         paymentMethod: "E-Wallet",
-//         bonus: 0,
-//         document: null,
-//         requestedOn: "2025-03-10T13:10:00",
-//         rejectedOn: "2025-03-11T16:20:00",
-//         status: "Rejected",
-//         remarks: "Transaction could not be verified. Please provide a valid proof of payment."
-//     },
-// ]
-
+import { toast } from "sonner"
 
 interface Deposit {
-    id: number;
+    id: string;
     user: {
         name: string;
         email: string;
@@ -194,6 +88,11 @@ const DepositsPage = () => {
     const [remarks, setRemarks] = useState("Congratulations")
     const [rejectRemarks, setRejectRemarks] = useState("")
     const [zoomLevel, setZoomLevel] = useState(100)
+
+    //Filters states
+    const [statusOptions, setStatusOptions] = useState<string[]>([]);
+    const [planTypeOptions, setPlanTypeOptions] = useState<string[]>([]);
+    const [paymentMethodOptions, setPaymentMethodOptions] = useState<string[]>([]);
 
     // Get token from localStorage
     const getToken = () => localStorage.getItem('token');
@@ -260,7 +159,21 @@ const DepositsPage = () => {
             setLoading(false);
         }
     };
+    useEffect(() => {
+        if (deposits.length > 0) {
+            // Extract unique statuses
+            const uniqueStatus = [...new Set(deposits.map(deposit => deposit.status))];
+            setStatusOptions(uniqueStatus);
 
+            // Extract unique plan types
+            const uniquePlanTypes = [...new Set(deposits.map(deposit => deposit.planType))];
+            setPlanTypeOptions(uniquePlanTypes);
+
+            // Extract unique payment methods
+            const uniquePaymentMethods = [...new Set(deposits.map(deposit => deposit.paymentMethod))];
+            setPaymentMethodOptions(uniquePaymentMethods);
+        }
+    }, [deposits]);
     // Filter deposits based on search and filters
     const filteredDeposits = deposits.filter((deposit) => {
         // Search filter
@@ -336,7 +249,7 @@ const DepositsPage = () => {
             case "Approved":
                 return (
                     <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">
-                        {/* <Check className="mr-1 h-3 w-3" />*/} Approved
+                        {/* <Check className="mr-1 h-3 w-3" /> */}Approved
                     </Badge>
                 )
             case "Pending":
@@ -348,7 +261,7 @@ const DepositsPage = () => {
             case "Rejected":
                 return (
                     <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100">
-                        {/* <X className="mr-1 h-3 w-3" />*/} Rejected
+                        {/*<X className="mr-1 h-3 w-3" />*/}Rejected
                     </Badge>
                 )
             default:
@@ -359,24 +272,47 @@ const DepositsPage = () => {
 
 
     // Handle export
-    const handleExport = (format: string) => {
-        // Build query parameters for filtering
-        const params = new URLSearchParams();
-        if (searchTerm) params.append('search', searchTerm);
-        if (selectedStatus) params.append('status', selectedStatus);
-        if (selectedPlanType) params.append('planType', selectedPlanType);
-        if (selectedPaymentMethod) params.append('paymentMethod', selectedPaymentMethod);
-        if (startDate) params.append('startDate', startDate.toISOString());
-        if (endDate) params.append('endDate', endDate.toISOString());
-        params.append('format', format);
+    const handleExport = async (format: string) => {
+        try {
+            // Build query parameters for filtering
+            const params = new URLSearchParams();
+            if (searchTerm) params.append('search', searchTerm);
+            if (selectedStatus) params.append('status', selectedStatus);
+            if (selectedPlanType) params.append('planType', selectedPlanType);
+            if (selectedPaymentMethod) params.append('paymentMethod', selectedPaymentMethod);
+            if (startDate) params.append('startDate', startDate.toISOString());
+            if (endDate) params.append('endDate', endDate.toISOString());
+            params.append('format', format);
 
-        // Create export URL
-        const exportUrl = `http://localhost:5000/api/admindeposits/export?${params.toString()}`;
+            // Create export URL
+            const exportUrl = `http://localhost:5000/api/admindeposits/export?${params.toString()}`;
 
-        // Open in new tab or trigger download
-        window.open(exportUrl, '_blank');
+            // Make authenticated request
+            const response = await axios.get(exportUrl, {
+                responseType: 'blob', // Important for file downloads
+                ...getAuthHeaders() // This adds your Authorization: Bearer token header
+            });
+
+            // Get filename from content-disposition header or use default
+            const contentDisposition = response.headers['content-disposition'];
+            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            const matches = filenameRegex.exec(contentDisposition);
+            const filename = matches && matches[1] ? matches[1].replace(/['"]/g, '') : `deposits.${format.toLowerCase()}`;
+
+            // Create a download link and trigger it
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Export failed:', error);
+            // Handle error (show notification, etc.)
+        }
     };
-
     // Open details dialog
     const openDetails = (deposit: Deposit) => {
         setSelectedDeposit(deposit)
@@ -414,7 +350,7 @@ const DepositsPage = () => {
                 console.error("No deposit selected for approval.");
                 return;
             }
-            const response = await axios.put(`http://localhost:5000/api/admindeposits/${selectedDeposit.id}/approve`, {
+            const response = await axios.post(`http://localhost:5000/api/admindeposits/${selectedDeposit.id}/approve`, {
                 bonus,
                 remarks
             }, getAuthHeaders());
@@ -441,7 +377,13 @@ const DepositsPage = () => {
                 console.error("No deposit selected for rejection.");
                 return;
             }
-            const response = await axios.put(`http://localhost:5000/api/admindeposits/${selectedDeposit.id}/reject`, {
+
+            if (!rejectRemarks.trim()) {
+                // Show error toast or alert
+                toast.error("Please provide a reason for rejection.");
+                return;
+            }
+            const response = await axios.post(`http://localhost:5000/api/admindeposits/${selectedDeposit.id}/reject`, {
                 remarks: rejectRemarks
             }, getAuthHeaders());
 
@@ -453,10 +395,11 @@ const DepositsPage = () => {
             );
 
             setRejectOpen(false);
-            // Show success message
+            toast.success("Deposit rejected successfully.");
         } catch (error) {
             console.error('Error rejecting deposit:', error);
-            // Show error message
+            toast.error("Failed to reject deposit. Please try again.");
+
         }
     };
 
@@ -506,52 +449,63 @@ const DepositsPage = () => {
                                             <ChevronDown className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-[240px]">
+                                    <DropdownMenuContent align="end" className="w-[320px]">
                                         <DropdownMenuLabel>Filter by</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
 
                                         <div className="p-2">
                                             <p className="text-xs font-medium mb-1">Status</p>
-                                            <Select value={selectedStatus || ""} onValueChange={setSelectedStatus}>
+                                            {/* Status Filter */}
+                                            <Select
+                                                value={selectedStatus || "all"}
+                                                onValueChange={(value) => setSelectedStatus(value === "all" ? null : value)}
+                                            >
                                                 <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="All Statuses" />
+                                                    <SelectValue placeholder="All Status" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="">All Statuses</SelectItem>
-                                                    <SelectItem value="Approved">Approved</SelectItem>
-                                                    <SelectItem value="Pending">Pending</SelectItem>
-                                                    <SelectItem value="Rejected">Rejected</SelectItem>
+                                                    <SelectItem value="all">All Statuses</SelectItem>
+                                                    {statusOptions.map(status => (
+                                                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
                                         <div className="p-2">
                                             <p className="text-xs font-medium mb-1">Plan Type</p>
-                                            <Select value={selectedPlanType || ""} onValueChange={setSelectedPlanType}>
+                                            {/* Plan Type Filter */}
+                                            <Select
+                                                value={selectedPlanType || "all"}
+                                                onValueChange={(value) => setSelectedPlanType(value === "all" ? null : value)}
+                                            >
                                                 <SelectTrigger className="w-full">
                                                     <SelectValue placeholder="All Plans" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="">All Plans</SelectItem>
-                                                    <SelectItem value="Basic">Basic</SelectItem>
-                                                    <SelectItem value="Standard">Standard</SelectItem>
-                                                    <SelectItem value="Premium">Premium</SelectItem>
+                                                    <SelectItem value="all">All Plans</SelectItem>
+                                                    {planTypeOptions.map(planType => (
+                                                        <SelectItem key={planType} value={planType}>{planType}</SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
                                         <div className="p-2">
                                             <p className="text-xs font-medium mb-1">Payment Method</p>
-                                            <Select value={selectedPaymentMethod || ""} onValueChange={setSelectedPaymentMethod}>
+                                            {/* Payment Method Filter */}
+                                            <Select
+                                                value={selectedPaymentMethod || "all"}
+                                                onValueChange={(value) => setSelectedPaymentMethod(value === "all" ? null : value)}
+                                            >
                                                 <SelectTrigger className="w-full">
                                                     <SelectValue placeholder="All Methods" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="">All Methods</SelectItem>
-                                                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                                                    <SelectItem value="Credit Card">Credit Card</SelectItem>
-                                                    <SelectItem value="Cryptocurrency">Cryptocurrency</SelectItem>
-                                                    <SelectItem value="E-Wallet">E-Wallet</SelectItem>
+                                                    <SelectItem value="all">All Methods</SelectItem>
+                                                    {paymentMethodOptions.map(method => (
+                                                        <SelectItem key={method} value={method}>{method}</SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -626,7 +580,7 @@ const DepositsPage = () => {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleExport('excel')}>
+                                        <DropdownMenuItem onClick={() => handleExport('xlsx')}>
                                             Export as Excel
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleExport('pdf')}>
@@ -634,6 +588,9 @@ const DepositsPage = () => {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleExport('docx')}>
                                             Export as DOCX
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleExport('csv')}>
+                                            Export as CSV
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -729,7 +686,7 @@ const DepositsPage = () => {
                                             Requested On
                                             <SortIndicator field="requestedOn" />
                                         </TableHead>
-                                        <TableHead onClick={() => handleSort("status")} className="cursor-pointer text-center">
+                                        <TableHead onClick={() => handleSort("status")} className="cursor-pointer ">
                                             Status
                                             <SortIndicator field="status" />
                                         </TableHead>
@@ -743,7 +700,7 @@ const DepositsPage = () => {
                                                 <div className="flex items-center gap-3">
                                                     <Avatar>
                                                         <AvatarImage src={deposit.user.avatar} alt={deposit.user.name} />
-                                                        <AvatarFallback>{deposit.user.name.charAt(0)}</AvatarFallback>
+                                                        <AvatarFallback>{deposit.user.name?.charAt(0)}</AvatarFallback>
                                                     </Avatar>
                                                     <div>
                                                         <div className="font-medium">{deposit.user.name}</div>
@@ -846,7 +803,7 @@ const DepositsPage = () => {
                                         <div className="flex items-center gap-3 mb-2">
                                             <Avatar className="h-10 w-10">
                                                 <AvatarImage src={selectedDeposit.user.avatar} alt={selectedDeposit.user.name} />
-                                                <AvatarFallback>{selectedDeposit.user.name.charAt(0)}</AvatarFallback>
+                                                <AvatarFallback>{selectedDeposit.user.name?.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div>
                                                 <div className="font-medium">{selectedDeposit.user.name}</div>
@@ -986,10 +943,24 @@ const DepositsPage = () => {
                                     id="bonus"
                                     type="number"
                                     min="0"
-                                    value={bonus}
-                                    onChange={(e) => setBonus(Number(e.target.value))}
+                                    value={bonus === 0 ? "" : bonus}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setBonus(val === "" ? 0 : Number(val));
+                                    }}
                                 />
                             </div>
+                            {/* <div className="space-y-2">
+                                <Label htmlFor="bonus">Bonus Amount</Label>
+                                <Input
+                                    id="bonus"
+                                    type="number"
+                                    // placeholder="0"  // Change minimum value here
+                                    value={bonus}
+                                    onChange={(e) => setBonus(Number(e.target.value))}
+                                // Add other properties here like placeholder, step, max, etc.
+                                />
+                            </div> */}
 
                             <div className="space-y-2">
                                 <Label htmlFor="remarks">Remarks</Label>
@@ -1042,7 +1013,7 @@ const DepositsPage = () => {
 
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={handleReject}>Reject</Button>
+                        <Button variant="destructive" onClick={handleReject} disabled={!rejectRemarks.trim()}>Reject</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

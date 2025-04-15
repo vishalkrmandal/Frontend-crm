@@ -239,8 +239,8 @@ export default function Deposit() {
       return false;
     }
 
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) < 100) {
-      toast.error("Minimum deposit amount is $100");
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) < 0) {
+      toast.error("Please enter a valid amount");
       return false;
     }
 
@@ -331,7 +331,7 @@ export default function Deposit() {
   // Get status badge class
   const getStatusBadgeClass = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'completed':
+      case 'approved':
         return 'bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400';
       case 'rejected':
         return 'bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400';
@@ -662,13 +662,13 @@ export default function Deposit() {
                     id="amount"
                     type="number"
                     placeholder="Enter amount"
-                    min="100"
+                    min="0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="pl-8"
                   />
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">Minimum deposit: $100</p>
+                <p className="mt-1 text-xs text-muted-foreground">No Minimum deposit</p>
               </div>
 
               <div>
@@ -731,7 +731,6 @@ export default function Deposit() {
                   isSubmitting ||
                   !selectedAccount ||
                   !amount ||
-                  parseFloat(amount) < 100 ||
                   !selectedMethod ||
                   !proofFile
                 }
