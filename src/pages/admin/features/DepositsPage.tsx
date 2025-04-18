@@ -1,3 +1,5 @@
+// Frontend\src\pages\admin\features\DepositsPage.tsx
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -440,6 +442,7 @@ const DepositsPage = () => {
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
+
                             <div className="flex flex-wrap gap-2">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>

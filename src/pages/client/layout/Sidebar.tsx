@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
   ChevronDown,
@@ -36,13 +36,12 @@ interface MenuItem {
 
 export default function Sidebar({ open, setOpen }: SidebarProps) {
   const location = useLocation()
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
-    "Financial Operations": true,
-    "My Account": true,
-    "Partner Zone": true,
-    "Customer Support": true,
-    "Copy Trading": true,
-  })
+  // Initialize expandedMenus as empty object (all menus collapsed by default)
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({})
+  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null)
+
+  // Add timeout ref to handle hover delay
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const menuItems: MenuItem[] = [
     {
@@ -112,6 +111,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
     },
   ]
 
+  // Function to toggle menu expansion
   const toggleMenu = (title: string) => {
     setExpandedMenus((prev) => ({
       ...prev,
@@ -119,9 +119,48 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
     }))
   }
 
+  // Check if a path is active
   const isActive = (path: string) => {
     return location.pathname === path
   }
+
+  // Check if any submenu item is active
+  const isSubmenuActive = (submenu: { title: string; path: string }[]) => {
+    return submenu.some(item => isActive(item.path))
+  }
+
+  // Handle mouse enter for hover effect with delay
+  const handleMouseEnter = (title: string) => {
+    if (!open) {
+      // Clear any existing timeout
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+      // Set a small delay to prevent accidental triggers
+      hoverTimeoutRef.current = setTimeout(() => {
+        setHoveredMenu(title)
+      }, 50)
+    }
+  }
+
+  // Handle mouse leave for hover effect with delay
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredMenu(null)
+    }, 300) // Longer delay when leaving to make it easier to move to submenu
+  }
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
     <aside
@@ -137,19 +176,24 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
       <nav className="mt-2 px-2">
         <ul className="space-y-1">
           {menuItems.map((item) => (
-            <li key={item.title}>
+            <li
+              key={item.title}
+              className="relative group"
+              onMouseEnter={() => handleMouseEnter(item.title)}
+              onMouseLeave={handleMouseLeave}
+            >
               {item.submenu ? (
                 <div>
                   <button
                     onClick={() => toggleMenu(item.title)}
-                    className={`flex w-full items-center rounded-md px-3 py-2 text-sm font-medium ${item.path && isActive(item.path)
-                      ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    className={`flex w-full items-center rounded-md px-3 py-2 text-sm font-medium ${isSubmenuActive(item.submenu)
+                        ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                       } ${open ? "" : "justify-center"}`}
                   >
-                    <item.icon className={`h-5 w-5 ${item.path && isActive(item.path)
-                      ? "text-white dark:text-gray-900"
-                      : "text-gray-500 dark:text-gray-400"
+                    <item.icon className={`h-5 w-5 ${isSubmenuActive(item.submenu)
+                        ? "text-white dark:text-gray-900"
+                        : "text-gray-500 dark:text-gray-400"
                       }`} />
                     {open && (
                       <>
@@ -162,15 +206,26 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                       </>
                     )}
                   </button>
-                  {open && expandedMenus[item.title] && (
-                    <ul className="mt-1 space-y-1 pl-8">
+
+                  {/* Show submenu either when expanded in open state or when hovered in collapsed state */}
+                  {((open && expandedMenus[item.title]) || (!open && hoveredMenu === item.title)) && (
+                    <ul
+                      className={`${open
+                          ? "mt-1 space-y-1 pl-8"
+                          : "absolute left-full top-0 z-50 mt-0 ml-1 min-w-48 rounded-md border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                        }`}
+                      style={{
+                        // Ensure the popup menu is positioned correctly
+                        display: (!open && hoveredMenu === item.title) ? 'block' : '',
+                      }}
+                    >
                       {item.submenu.map((subItem) => (
                         <li key={subItem.title}>
                           <Link
                             to={subItem.path}
                             className={`block rounded-md px-3 py-2 text-sm font-medium ${isActive(subItem.path)
-                              ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
+                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                               }`}
                           >
                             {subItem.title}
@@ -184,13 +239,13 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                 <Link
                   to={item.path || "#"}
                   className={`flex items-center rounded-md px-3 py-2 text-sm font-medium ${isActive(item.path || "")
-                    ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                     } ${open ? "" : "justify-center"}`}
                 >
                   <item.icon className={`h-5 w-5 ${isActive(item.path || "")
-                    ? "text-white dark:text-gray-900"
-                    : "text-gray-500 dark:text-gray-400"
+                      ? "text-white dark:text-gray-900"
+                      : "text-gray-500 dark:text-gray-400"
                     }`} />
                   {open && <span className="ml-3">{item.title}</span>}
                 </Link>

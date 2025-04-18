@@ -39,7 +39,7 @@ interface WithdrawalHistory {
   paymentMethod: string;
   amount: number;
   accountNumber: string;
-  status: "Pending" | "Completed" | "Rejected";
+  status: "Pending" | "Approved" | "Rejected";
 }
 
 interface PaymentMethod {
@@ -93,6 +93,7 @@ export default function Withdrawal() {
       try {
         const response = await axios.get(`${API_BASE_URL}/accounts`, getAuthHeaders());
         setAccounts(response.data.data || []);
+        console.log("Accounts fetched:", response.data.data);
         if (response.data.data.length > 0) {
           setSelectedAccount(response.data.data[0]._id);
         }
@@ -299,7 +300,7 @@ export default function Withdrawal() {
   // Get status badge class
   const getStatusBadgeClass = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'completed':
+      case 'approved':
         return 'bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400';
       case 'rejected':
         return 'bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400';
@@ -342,11 +343,13 @@ export default function Withdrawal() {
                       <SelectValue placeholder="Select an account" />
                     </SelectTrigger>
                     <SelectContent>
-                      {accounts.map(account => (
-                        <SelectItem key={account._id} value={account._id}>
-                          {account.mt5Account} ({account.accountType}) - ${account.balance.toFixed(2)}
-                        </SelectItem>
-                      ))}
+                      {accounts
+                        .sort((a, b) => b.balance - a.balance) // Sort accounts by balance in descending order
+                        .map(account => (
+                          <SelectItem key={account._id} value={account._id}>
+                            {account.mt5Account} ({account.accountType}) - ${account.balance.toFixed(2)}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
