@@ -1,3 +1,5 @@
+// Frontend\src\pages\client\financial\TransactionHistory.tsx
+
 "use client"
 
 import { useState } from "react"
@@ -24,12 +26,6 @@ export default function TransactionHistory() {
                 className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2"
               />
             </div>
-            <button className="inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
-              <Filter className="mr-2 h-4 w-4" />
-              Filter
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
@@ -40,6 +36,13 @@ export default function TransactionHistory() {
               <option value="withdrawal">Withdrawals</option>
               <option value="transfer">Transfers</option>
             </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+              <Filter className="mr-2 h-4 w-4" />
+              Filter
+            </button>
+
             <button className="inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
               <Download className="mr-2 h-4 w-4" />
               Export
@@ -148,13 +151,12 @@ export default function TransactionHistory() {
                     <td className="py-3 text-sm">{transaction.date}</td>
                     <td className="py-3 text-sm">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          transaction.type === "Deposit"
-                            ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
-                            : transaction.type === "Withdrawal"
-                              ? "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400"
-                              : "bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-400"
-                        }`}
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.type === "Deposit"
+                          ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
+                          : transaction.type === "Withdrawal"
+                            ? "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-400"
+                          }`}
                       >
                         {transaction.type}
                       </span>
@@ -168,11 +170,10 @@ export default function TransactionHistory() {
                     <td className="py-3 text-sm">{transaction.account}</td>
                     <td className="py-3 text-sm">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          transaction.status === "Completed"
-                            ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
-                            : "bg-amber-100 text-amber-800 dark:bg-amber-800/20 dark:text-amber-400"
-                        }`}
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.status === "Completed"
+                          ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-800/20 dark:text-amber-400"
+                          }`}
                       >
                         {transaction.status}
                       </span>
