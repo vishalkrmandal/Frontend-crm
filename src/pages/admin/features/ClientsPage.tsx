@@ -170,10 +170,10 @@ const ClientsPage = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+            {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <h1 className="text-2xl font-bold">Clients</h1>
                 <Button>Add New Client</Button>
-            </div>
+            </div> */}
 
             <Card>
                 <CardHeader>
