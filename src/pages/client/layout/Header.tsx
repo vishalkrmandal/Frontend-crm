@@ -2,6 +2,7 @@ import { useTheme } from "@/context/ThemeContext"
 import { Menu, Moon, Sun, Bell, User } from "lucide-react"
 import { useState, useEffect } from "react"
 import NotificationCard from "./NotificationCard"
+import { useNavigate } from "react-router-dom"
 
 interface HeaderProps {
   toggleSidebar: () => void
@@ -57,6 +58,13 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
     // Redirect to login page
     window.location.href = '/';
+  };
+
+  const navigate = useNavigate();
+
+  const handleNavigateToProfile = () => {
+    navigate('profile/my-profile');
+    setShowUserMenu(false);
   };
 
   // Use the theme to set the SVG fill color
@@ -140,7 +148,10 @@ export default function Header({ toggleSidebar }: HeaderProps) {
               </div>
 
               <div className="py-1">
-                <button className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-accent">
+                <button
+                  className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-accent"
+                  onClick={handleNavigateToProfile}
+                >
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="7" r="4" />
                     <path d="M6 21V19C6 17.9391 6.42143 16.9217 7.17157 16.1716C7.92172 15.4214 8.93913 15 10 15H14C15.0609 15 16.0783 15.4214 16.8284 16.1716C17.5786 16.9217 18 17.9391 18 19V21" />

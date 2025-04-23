@@ -37,6 +37,7 @@ import IBPartnersPage from './pages/admin/features/IBPartnersPage';
 import ConfigurationPage from './pages/admin/configure/ConfigurePage';
 import ProtectedRoute from './ProtectedRoute';
 import ResetPassword from './pages/auth/sign-in/components/ResetPassword';
+import ProfilePage from './pages/client/layout/profile/ProfilePage';
 
 const routes: RouteObject[] = [
   {
@@ -65,7 +66,17 @@ const routes: RouteObject[] = [
             index: true,
             element: <Dashboard />
           },
-          // ...other client routes
+
+          // Profile
+          {
+            path: 'profile',
+            children: [
+              {
+                path: 'my-profile',
+                element: <ProfilePage />
+              }
+            ]
+          },
           // Financial Operations
           {
             path: 'financial',
