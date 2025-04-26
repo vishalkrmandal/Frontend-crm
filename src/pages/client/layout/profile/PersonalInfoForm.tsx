@@ -253,7 +253,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
                 ['idDocument', 'address1Document', 'address2Document'].forEach(field => {
                     if (updatedData[field]) {
                         const path = updatedData[field];
-                        const isServerPath = path.includes('/') || path.includes('\\');
+                        // const isServerPath = path.includes('/') || path.includes('\\');
                         const isPdf = path.toLowerCase().endsWith('.pdf');
 
                         // For PDF files, store the path in both formData and previews
