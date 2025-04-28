@@ -47,7 +47,7 @@ interface Deposit {
     user: {
         name: string;
         email: string;
-        avatar: string;
+        // avatar: string;
     };
     accountNumber: string;
     amount: number;
@@ -75,8 +75,9 @@ const DepositsPage = () => {
 
 
     const [deposits, setDeposits] = useState<Deposit[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Removed unused loading state
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
     // Dialog states
     const [detailsOpen, setDetailsOpen] = useState(false)
@@ -96,6 +97,10 @@ const DepositsPage = () => {
     const [planTypeOptions, setPlanTypeOptions] = useState<string[]>([]);
     const [paymentMethodOptions, setPaymentMethodOptions] = useState<string[]>([]);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+
     // Get token from localStorage
     const getToken = () => localStorage.getItem('token');
 
@@ -109,12 +114,13 @@ const DepositsPage = () => {
     // Fetch deposits on component mount and when filters/sort change
     useEffect(() => {
         fetchDeposits();
-    }, [selectedStatus, selectedPlanType, selectedPaymentMethod, startDate, endDate, sortField, sortOrder]);
+    }, [selectedStatus, selectedPlanType, selectedPaymentMethod, startDate, endDate, sortField, sortOrder, currentPage, itemsPerPage]);
 
     // Fetch deposits from API
     const fetchDeposits = async () => {
         try {
             setLoading(true);
+            setError(null); // Clear any previous errors
 
             // Build query params
             const params = new URLSearchParams();
@@ -127,6 +133,10 @@ const DepositsPage = () => {
             params.append('sortField', sortField);
             params.append('sortOrder', sortOrder);
 
+            // Add pagination parameters
+            params.append('page', currentPage.toString());
+            params.append('limit', itemsPerPage.toString());
+
             const response = await axios.get(`http://localhost:5000/api/admindeposits?${params.toString()}`, getAuthHeaders());
 
             // Transform the API response to match our expected format
@@ -135,11 +145,11 @@ const DepositsPage = () => {
                 user: {
                     name: item.user.name,
                     email: item.user.email,
-                    avatar: "/placeholder.svg" // Default avatar
+                    // avatar: "/placeholder.svg" // Default avatar
                 },
                 accountNumber: item.accountNumber,
                 amount: item.amount,
-                planType: item.planType, // Using paymentType as planType
+                planType: item.planType,
                 paymentMethod: item.paymentMethod,
                 bonus: item.bonus || 0,
                 document: item.proofOfPayment,
@@ -151,16 +161,21 @@ const DepositsPage = () => {
                 proofOfPayment: item.proofOfPayment
             }));
 
-            console.log("Deposits fetched:", response.data.data)
-
             setDeposits(transformedData);
+
+            // Set pagination info
+            setTotalPages(Math.ceil(response.data.total / itemsPerPage));
+
             setLoading(false);
         } catch (error) {
             console.error('Error fetching deposits:', error);
             setError('Failed to fetch deposits');
+            // Even if there's an error, we should end the loading state
             setLoading(false);
+            toast.error("Failed to load deposits. Please try refreshing the page.");
         }
     };
+
     useEffect(() => {
         if (deposits.length > 0) {
             // Extract unique statuses
@@ -338,37 +353,62 @@ const DepositsPage = () => {
 
     // Document dialog - modified to handle real file fetching
     const openDocument = (deposit: Deposit) => {
-        if (deposit.proofOfPayment) {
-            setSelectedDeposit(deposit);
+        // Check if either proofOfPayment or document exists
+        if (deposit.proofOfPayment || deposit.document) {
+            setSelectedDeposit({
+                ...deposit,
+                // Ensure both properties are set to the same value
+                proofOfPayment: deposit.proofOfPayment || deposit.document,
+                document: deposit.proofOfPayment || deposit.document
+            });
+
             setZoomLevel(100);
             setDocumentOpen(true);
+        } else {
+            toast.error("No document available for this deposit");
         }
     };
+
 
     // Approve deposit
     const handleApprove = async () => {
         try {
             if (!selectedDeposit) {
-                console.error("No deposit selected for approval.");
+                toast.error("No deposit selected for approval.");
                 return;
             }
+
+            // Add loading state
+            const loadingToast = toast.loading("Processing approval...");
+
             const response = await axios.post(`http://localhost:5000/api/admindeposits/${selectedDeposit.id}/approve`, {
                 bonus,
                 remarks
             }, getAuthHeaders());
 
-            // Update local state with the approved deposit
+            // Update the local state properly
+            const updatedDeposit = response.data.data;
             setDeposits(prevDeposits =>
                 prevDeposits.map(dep =>
-                    dep.id === selectedDeposit.id ? response.data.data : dep
+                    dep.id === selectedDeposit.id ? {
+                        ...dep,
+                        status: "Approved",
+                        approvedOn: updatedDeposit.approvedDate || new Date().toISOString(),
+                        bonus: bonus,
+                        remarks: remarks
+                    } : dep
                 )
             );
 
+            // Close the dialog and show success message
             setApproveOpen(false);
-            // Show success message
+            // Clear the selected deposit
+            setSelectedDeposit(null);
+            toast.dismiss(loadingToast);
+            toast.success("Deposit approved successfully");
         } catch (error) {
             console.error('Error approving deposit:', error);
-            // Show error message
+            toast.error("Failed to approve deposit");
         }
     };
 
@@ -381,27 +421,36 @@ const DepositsPage = () => {
             }
 
             if (!rejectRemarks.trim()) {
-                // Show error toast or alert
                 toast.error("Please provide a reason for rejection.");
                 return;
             }
-            const response = await axios.post(`http://localhost:5000/api/admindeposits/${selectedDeposit.id}/reject`, {
+
+            const loadingToast = toast.loading("Processing rejection...");
+
+            await axios.post(`http://localhost:5000/api/admindeposits/${selectedDeposit.id}/reject`, {
                 remarks: rejectRemarks
             }, getAuthHeaders());
 
-            // Update local state with the rejected deposit
+            // Update the local state properly
             setDeposits(prevDeposits =>
                 prevDeposits.map(dep =>
-                    dep.id === selectedDeposit.id ? response.data.data : dep
+                    dep.id === selectedDeposit.id ? {
+                        ...dep,
+                        status: "Rejected",
+                        rejectedOn: new Date().toISOString(),
+                        remarks: rejectRemarks
+                    } : dep
                 )
             );
 
             setRejectOpen(false);
+            // Clear the selected deposit
+            setSelectedDeposit(null);
+            toast.dismiss(loadingToast);
             toast.success("Deposit rejected successfully.");
         } catch (error) {
             console.error('Error rejecting deposit:', error);
             toast.error("Failed to reject deposit. Please try again.");
-
         }
     };
 
@@ -414,10 +463,21 @@ const DepositsPage = () => {
     }
 
     const openDocumentInNewTab = () => {
-        if (selectedDeposit && selectedDeposit.proofOfPayment) {
-            // Assuming your backend serves files at this URL
-            const url = `http://localhost:5000${selectedDeposit.proofOfPayment}`;
-            window.open(url, '_blank');
+        if (selectedDeposit && (selectedDeposit.proofOfPayment || selectedDeposit.document)) {
+            // Use a consistent document property
+            const documentPath = selectedDeposit.proofOfPayment || selectedDeposit.document;
+            // Make sure the URL is properly formed
+            const url = documentPath && documentPath.startsWith('http')
+                ? documentPath
+                : documentPath
+                    ? `http://localhost:5000${documentPath}`
+                    : '';
+
+            try {
+                window.open(url, '_blank');
+            } catch (error) {
+                toast.error("Failed to open document in new tab");
+            }
         }
     };
 
@@ -702,7 +762,7 @@ const DepositsPage = () => {
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     <Avatar>
-                                                        <AvatarImage src={deposit.user.avatar} alt={deposit.user.name} />
+                                                        <AvatarImage /*src={deposit.user.avatar}*/ alt={deposit.user.name} />
                                                         <AvatarFallback>{deposit.user.name?.charAt(0)}</AvatarFallback>
                                                     </Avatar>
                                                     <div>
@@ -772,15 +832,74 @@ const DepositsPage = () => {
                         {/* Pagination */}
                         <div className="flex items-center justify-between">
                             <div className="text-sm text-muted-foreground">
-                                Showing <strong>{filteredDeposits.length}</strong> of <strong>{deposits.length}</strong> deposits
+                                Showing <strong>{(currentPage - 1) * itemsPerPage + 1}</strong> to{" "}
+                                <strong>{Math.min(currentPage * itemsPerPage, deposits.length)}</strong> of{" "}
+                                <strong>{deposits.length}</strong> deposits
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <Button variant="outline" size="sm" disabled>
-                                    Previous
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                    Next
-                                </Button>
+                            <div className="flex items-center space-x-6">
+                                <Select
+                                    value={itemsPerPage.toString()}
+                                    onValueChange={(value) => {
+                                        setItemsPerPage(Number(value));
+                                        setCurrentPage(1); // Reset to first page when changing items per page
+                                    }}
+                                >
+                                    <SelectTrigger className="w-[80px]">
+                                        <SelectValue placeholder="10" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="20">20</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <div className="flex items-center space-x-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        Previous
+                                    </Button>
+
+                                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                                        // Show 5 page buttons at most
+                                        let pageToShow = currentPage;
+                                        if (currentPage < 3) {
+                                            pageToShow = i + 1;
+                                        } else if (currentPage > totalPages - 2) {
+                                            pageToShow = totalPages - 4 + i;
+                                        } else {
+                                            pageToShow = currentPage - 2 + i;
+                                        }
+
+                                        if (pageToShow > 0 && pageToShow <= totalPages) {
+                                            return (
+                                                <Button
+                                                    key={i}
+                                                    variant={pageToShow === currentPage ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(pageToShow)}
+                                                >
+                                                    {pageToShow}
+                                                </Button>
+                                            );
+                                        }
+                                        return null;
+                                    })}
+
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -788,7 +907,10 @@ const DepositsPage = () => {
             </Card>
 
             {/* Details Dialog */}
-            <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+            <Dialog open={detailsOpen} onOpenChange={(open) => {
+                setDetailsOpen(open);
+                if (!open) setSelectedDeposit(null);
+            }}>
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Deposit Details</DialogTitle>
@@ -805,7 +927,7 @@ const DepositsPage = () => {
                                         <div className="text-sm font-medium mb-1 text-muted-foreground">User Information</div>
                                         <div className="flex items-center gap-3 mb-2">
                                             <Avatar className="h-10 w-10">
-                                                <AvatarImage src={selectedDeposit.user.avatar} alt={selectedDeposit.user.name} />
+                                                <AvatarImage /*src={selectedDeposit.user.avatar}*/ alt={selectedDeposit.user.name} />
                                                 <AvatarFallback>{selectedDeposit.user.name?.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div>
@@ -924,7 +1046,15 @@ const DepositsPage = () => {
             </Dialog>
 
             {/* Approve Dialog */}
-            <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+            <Dialog open={approveOpen} onOpenChange={(open) => {
+                setApproveOpen(open);
+                if (!open) {
+                    // Don't reset selectedDeposit here to avoid conflicts
+                    setBonus(0);
+                    setRemarks("Congratulations");
+                }
+            }}>
+
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Approve Deposit</DialogTitle>
@@ -985,7 +1115,14 @@ const DepositsPage = () => {
             </Dialog>
 
             {/* Reject Dialog */}
-            <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+            <Dialog open={rejectOpen} onOpenChange={(open) => {
+                setRejectOpen(open);
+                if (!open) {
+                    // Don't reset selectedDeposit here to avoid conflicts
+                    setRejectRemarks("");
+                }
+            }}>
+
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Reject Deposit</DialogTitle>
@@ -1022,7 +1159,14 @@ const DepositsPage = () => {
             </Dialog>
 
             {/* Document Dialog */}
-            <Dialog open={documentOpen} onOpenChange={setDocumentOpen}>
+            <Dialog open={documentOpen} onOpenChange={(open) => {
+                setDocumentOpen(open);
+                if (!open) {
+                    setZoomLevel(100);
+                    // Don't reset selectedDeposit here to avoid conflicts
+                }
+            }}>
+
                 <DialogContent className="max-w-4xl max-h-[90vh]">
                     <DialogHeader>
                         <DialogTitle>Document Preview</DialogTitle>
@@ -1046,19 +1190,24 @@ const DepositsPage = () => {
                                     {/* Display document based on file type */}
                                     {selectedDeposit.proofOfPayment && (
                                         <div className="min-h-[500px] min-w-[500px] flex items-center justify-center">
-                                            {/* Determine file type and render appropriate preview */}
+                                            {/* Use proper error handling for image loading */}
                                             {selectedDeposit.proofOfPayment.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                                                 <img
-                                                    src={`http://localhost:5000${selectedDeposit.document}`}
+                                                    src={`http://localhost:5000${selectedDeposit.proofOfPayment}`}
                                                     alt="Document preview"
                                                     className="max-w-full"
+                                                    onError={(e) => {
+                                                        e.currentTarget.onerror = null;
+                                                        // e.currentTarget.src = "/placeholder.svg";
+                                                    }}
                                                 />
                                             ) : selectedDeposit.proofOfPayment.match(/\.(pdf)$/i) ? (
                                                 <iframe
-                                                    src={`http://localhost:5000/api/admindeposits/${selectedDeposit.document}`}
+                                                    src={`http://localhost:5000${selectedDeposit.proofOfPayment}`}
                                                     title="PDF Document"
                                                     width="100%"
                                                     height="500px"
+                                                    onError={() => toast.error("Failed to load PDF")}
                                                 />
                                             ) : (
                                                 <div className="text-center text-gray-500">

@@ -23,10 +23,10 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
+    // DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
+    // DialogTrigger,
 } from "@/components/ui/dialog"
 import {
     AlertDialog,
@@ -37,7 +37,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
+    // AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Textarea } from "@/components/ui/textarea"
 import withdrawalService from "@/pages/admin/features/WithdrawalService"
@@ -98,7 +98,7 @@ const WithdrawalsPage = () => {
     const [detailsOpen, setDetailsOpen] = useState(false)
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
     const [rejectRemarks, setRejectRemarks] = useState("")
-    const [approvalRemarks, setApprovalRemarks] = useState("Congratulations")
+    const [approvalRemarks] = useState("Congratulations")
 
     const [statusOptions, setStatusOptions] = useState<string[]>([])
     const [paymentMethodOptions, setPaymentMethodOptions] = useState<string[]>([])

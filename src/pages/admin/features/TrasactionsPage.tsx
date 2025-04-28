@@ -1,3 +1,4 @@
+// Frontend\src\pages\admin\features\TrasactionsPage.tsx
 "use client"
 
 import { useState } from "react"
@@ -123,6 +124,8 @@ const TransactionsPage = () => {
     const [selectedType, setSelectedType] = useState<string | null>(null)
     const [selectedPlanType, setSelectedPlanType] = useState<string | null>(null)
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null)
+    const [startDate, setStartDate] = useState<string | null>(null)
+    const [endDate, setEndDate] = useState<string | null>(null)
 
     // Filter transactions based on search and filters
     const filteredTransactions = transactions.filter((transaction) => {
@@ -188,10 +191,6 @@ const TransactionsPage = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                <h1 className="text-2xl font-bold">Transactions</h1>
-            </div>
-
             <Card>
                 <CardHeader>
                     <CardTitle>Transaction History</CardTitle>
@@ -220,7 +219,7 @@ const TransactionsPage = () => {
                                             <ChevronDown className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-[200px]">
+                                    <DropdownMenuContent align="end" className="w-[320px]">
                                         <DropdownMenuLabel>Filter by</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
 
@@ -269,6 +268,25 @@ const TransactionsPage = () => {
                                             </Select>
                                         </div>
 
+                                        <div className="p-2">
+                                            <p className="text-xs font-medium mb-1">Date Range</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <Input
+                                                    type="date"
+                                                    value={startDate || ""}
+                                                    onChange={(e) => setStartDate(e.target.value)}
+                                                    placeholder="Start Date"
+
+                                                />
+                                                <Input
+                                                    type="date"
+                                                    value={endDate || ""}
+                                                    onChange={(e) => setEndDate(e.target.value)}
+                                                    placeholder="End Date"
+                                                />
+                                            </div>
+                                        </div>
+
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem onClick={resetFilters}>
                                             <X className="mr-2 h-4 w-4" />
@@ -277,10 +295,22 @@ const TransactionsPage = () => {
                                     </DropdownMenuContent>
                                 </DropdownMenu>
 
-                                <Button variant="outline">
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Export
-                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline">
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Export
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem >
+                                            Export as PDF
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem >
+                                            Export as Excel
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </div>
 
