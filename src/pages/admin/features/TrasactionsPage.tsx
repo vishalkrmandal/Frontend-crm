@@ -1,8 +1,8 @@
-// Frontend\src\pages\admin\features\TrasactionsPage.tsx
+// Frontend\src\pages\admin\features\TransactionsPage.tsx
 "use client"
 
-import { useState } from "react"
-import { Search, Filter, Download, ChevronDown, X, MoreHorizontal, FileText } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, Filter, Download, ChevronDown, X, MoreHorizontal, ArrowUpDown } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,114 +18,101 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { format } from "date-fns"
+import axios from "axios"
 
-// Sample data
-const transactions = [
-    {
-        id: "TX12457",
-        user: {
-            name: "John Smith",
-            email: "john@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "ACC10023",
-        amount: 5000,
-        paymentMethod: "Bank Transfer",
-        type: "Deposit",
-        planType: "Standard",
-        document: true,
-        requestedOn: "2025-03-10T14:30:00",
-        completedOn: "2025-03-10T16:45:00",
-    },
-    {
-        id: "TX59774",
-        user: {
-            name: "Emily Johnson",
-            email: "emily@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "ACC10024",
-        amount: 10000,
-        paymentMethod: "Credit Card",
-        type: "Deposit",
-        planType: "Premium",
-        document: true,
-        requestedOn: "2025-03-11T09:15:00",
-        completedOn: "2025-03-11T10:30:00",
-    },
-    {
-        id: "TX22457",
-        user: {
-            name: "Michael Chen",
-            email: "michael@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "ACC10025",
-        amount: 1000,
-        paymentMethod: "Cryptocurrency",
-        type: "Withdrawal",
-        planType: "Basic",
-        document: false,
-        requestedOn: "2025-03-11T16:45:00",
-        completedOn: "2025-03-12T09:20:00",
-    },
-    {
-        id: "TX33689",
-        user: {
-            name: "Sarah Williams",
-            email: "sarah@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "ACC10026",
-        amount: 3500,
-        paymentMethod: "Bank Transfer",
-        type: "Withdrawal",
-        planType: "Standard",
-        document: true,
-        requestedOn: "2025-03-09T11:20:00",
-        completedOn: "2025-03-09T15:45:00",
-    },
-    {
-        id: "TX45872",
-        user: {
-            name: "David Rodriguez",
-            email: "david@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "ACC10027",
-        amount: 15000,
-        paymentMethod: "Credit Card",
-        type: "Deposit",
-        planType: "Premium",
-        document: true,
-        requestedOn: "2025-03-12T08:30:00",
-        completedOn: "2025-03-12T10:15:00",
-    },
-    {
-        id: "TX67123",
-        user: {
-            name: "Lisa Kim",
-            email: "lisa@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "ACC10028",
-        amount: 1200,
-        paymentMethod: "E-Wallet",
-        type: "Withdrawal",
-        planType: "Basic",
-        document: false,
-        requestedOn: "2025-03-10T13:10:00",
-        completedOn: "2025-03-11T09:30:00",
-    },
-]
+// Transaction type definition
+interface Transaction {
+    id: string
+    user: {
+        name: string
+        email: string
+        avatar?: string
+    }
+    accountNumber?: string
+    fromAccountNumber?: string
+    toAccountNumber?: string
+    amount: number
+    paymentMethod: string
+    type: 'Deposit' | 'Withdrawal' | 'Transfer'
+    planType: string
+    // document: boolean
+    requestedOn: string
+    completedOn?: string
+    status: string
+    bankDetails?: {
+        bankName: string
+        accountHolderName: string
+        accountNumber: string
+        ifscCode: string
+    }
+}
+
+// API response type
+interface ApiResponse {
+    success: boolean
+    count: number
+    data: Transaction[]
+}
 
 const TransactionsPage = () => {
+    const [transactions, setTransactions] = useState<Transaction[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedType, setSelectedType] = useState<string | null>(null)
     const [selectedPlanType, setSelectedPlanType] = useState<string | null>(null)
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null)
     const [startDate, setStartDate] = useState<string | null>(null)
     const [endDate, setEndDate] = useState<string | null>(null)
+    const [sortField, setSortField] = useState<string | null>(null)
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+
+    const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+    const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
+
+    // const closeButtonRef = useRef(null);
+
+    // Fetch transactions data
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            try {
+                setLoading(true)
+                // In a real implementation, this would be an API call
+                // For now, we'll use a simulated delay and sample data
+                const response = await axios.get<ApiResponse>('http://localhost:5000/api/admin/transactions', {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
+                })
+
+                // Extract the transactions array from the response data
+                setTransactions(response.data.data || [])
+                setLoading(false)
+            } catch (err) {
+                console.error('Error fetching transactions:', err)
+                setError('Failed to load transactions')
+                setLoading(false)
+            }
+        }
+
+        fetchTransactions()
+    }, [])
+
+    // Sort handler
+    const handleSort = (field: string) => {
+        if (sortField === field) {
+            // Toggle direction if clicking the same field
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+        } else {
+            // Set new field and default to descending
+            setSortField(field)
+            setSortDirection('desc')
+        }
+    }
 
     // Filter transactions based on search and filters
     const filteredTransactions = transactions.filter((transaction) => {
@@ -134,19 +121,63 @@ const TransactionsPage = () => {
             searchTerm === "" ||
             transaction.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             transaction.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            transaction.accountNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            transaction.id.toLowerCase().includes(searchTerm.toLowerCase())
+            (transaction.accountNumber && transaction.accountNumber.toLowerCase().includes(searchTerm.toLowerCase()))
+        // || transaction.id.toLowerCase().includes(searchTerm.toLowerCase())
 
         // Type filter
-        const matchesType = selectedType === null || transaction.type === selectedType
+        const matchesType = selectedType === null || selectedType === 'all' || transaction.type === selectedType
 
         // Plan Type filter
-        const matchesPlanType = selectedPlanType === null || transaction.planType === selectedPlanType
+        const matchesPlanType = selectedPlanType === null || selectedPlanType === 'all' ||
+            transaction.planType.toLowerCase().includes(selectedPlanType.toLowerCase())
 
         // Payment Method filter
-        const matchesPaymentMethod = selectedPaymentMethod === null || transaction.paymentMethod === selectedPaymentMethod
+        const matchesPaymentMethod = selectedPaymentMethod === null || selectedPaymentMethod === 'all' ||
+            transaction.paymentMethod.toLowerCase().includes(selectedPaymentMethod.toLowerCase())
 
-        return matchesSearch && matchesType && matchesPlanType && matchesPaymentMethod
+        // Date filter
+        let matchesDateRange = true
+        if (startDate && endDate) {
+            const transactionDate = new Date(transaction.requestedOn)
+            const start = new Date(startDate)
+            const end = new Date(endDate)
+            end.setHours(23, 59, 59) // Set to end of day
+            matchesDateRange = transactionDate >= start && transactionDate <= end
+        }
+
+        return matchesSearch && matchesType && matchesPlanType && matchesPaymentMethod && matchesDateRange
+    })
+
+    // Sort transactions
+    const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+        if (!sortField) return 0
+
+        let valueA, valueB
+
+        switch (sortField) {
+            case 'amount':
+                valueA = a.amount
+                valueB = b.amount
+                break
+            case 'requestedOn':
+                valueA = new Date(a.requestedOn).getTime()
+                valueB = new Date(b.requestedOn).getTime()
+                break
+            case 'completedOn':
+                valueA = a.completedOn ? new Date(a.completedOn).getTime() : 0
+                valueB = b.completedOn ? new Date(b.completedOn).getTime() : 0
+                break
+            case 'type':
+                valueA = a.type
+                valueB = b.type
+                break
+            default:
+                return 0
+        }
+
+        if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1
+        if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1
+        return 0
     })
 
     // Reset all filters
@@ -155,18 +186,20 @@ const TransactionsPage = () => {
         setSelectedType(null)
         setSelectedPlanType(null)
         setSelectedPaymentMethod(null)
+        setStartDate(null)
+        setEndDate(null)
+        setSortField(null)
     }
 
     // Format date
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString)
-        return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        })
+        if (!dateString) return 'N/A'
+        try {
+            const date = new Date(dateString)
+            return format(date, 'MMM d, yyyy h:mm a')
+        } catch (err) {
+            return 'Invalid Date'
+        }
     }
 
     // Get type badge
@@ -180,13 +213,52 @@ const TransactionsPage = () => {
                 )
             case "Withdrawal":
                 return (
-                    <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                    <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100">
                         Withdrawal
+                    </Badge>
+                )
+            case "Transfer":
+                return (
+                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                        Transfer
                     </Badge>
                 )
             default:
                 return <Badge variant="outline">{type}</Badge>
         }
+    }
+
+    // Format amount with color based on transaction type
+    const formatAmount = (amount: number, type: string) => {
+        switch (type) {
+            case "Deposit":
+                return <span className="text-green-600">+${amount.toLocaleString()}</span>
+            case "Withdrawal":
+                return <span className="text-red-600">-${amount.toLocaleString()}</span>
+            case "Transfer":
+                return <span className="text-yellow-600">${amount.toLocaleString()}</span>
+            default:
+                return <span>${amount.toLocaleString()}</span>
+        }
+    }
+
+    // Removed unused getAccountNumber function
+
+    // // Export handlers
+    // const exportAsExcel = () => {
+    //     // In a real implementation, this would generate an Excel file
+    //     alert('Exporting as Excel is not implemented in this demo')
+    // }
+
+    // const exportAsPDF = () => {
+    //     // In a real implementation, this would generate a PDF
+    //     alert('Exporting as PDF is not implemented in this demo')
+    // }
+
+    // View transaction details
+    const viewTransactionDetails = (transaction: Transaction) => {
+        setSelectedTransaction(transaction)
+        setDetailsDialogOpen(true)
     }
 
     return (
@@ -204,7 +276,7 @@ const TransactionsPage = () => {
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="search"
-                                    placeholder="Search by name, email, account, or transaction ID..."
+                                    placeholder="Search by name, email, account..."
                                     className="pl-8"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -233,6 +305,7 @@ const TransactionsPage = () => {
                                                     <SelectItem value="all">All Types</SelectItem>
                                                     <SelectItem value="Deposit">Deposit</SelectItem>
                                                     <SelectItem value="Withdrawal">Withdrawal</SelectItem>
+                                                    <SelectItem value="Transfer">Transfer</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -245,9 +318,10 @@ const TransactionsPage = () => {
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="all">All Plans</SelectItem>
-                                                    <SelectItem value="Basic">Basic</SelectItem>
-                                                    <SelectItem value="Standard">Standard</SelectItem>
-                                                    <SelectItem value="Premium">Premium</SelectItem>
+                                                    <SelectItem value="BASIC">Basic</SelectItem>
+                                                    <SelectItem value="STANDARD">Standard</SelectItem>
+                                                    <SelectItem value="CLASSIC">Classic</SelectItem>
+                                                    <SelectItem value="PREMIUM">Premium</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -260,10 +334,11 @@ const TransactionsPage = () => {
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="all">All Methods</SelectItem>
-                                                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                                                    <SelectItem value="Credit Card">Credit Card</SelectItem>
-                                                    <SelectItem value="Cryptocurrency">Cryptocurrency</SelectItem>
-                                                    <SelectItem value="E-Wallet">E-Wallet</SelectItem>
+                                                    <SelectItem value="bank">Bank Transfer</SelectItem>
+                                                    <SelectItem value="bitcoin">Bitcoin</SelectItem>
+                                                    <SelectItem value="usdt">USDT</SelectItem>
+                                                    <SelectItem value="ethereum">Ethereum</SelectItem>
+                                                    <SelectItem value="Internal Transfer">Internal Transfer</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -276,7 +351,6 @@ const TransactionsPage = () => {
                                                     value={startDate || ""}
                                                     onChange={(e) => setStartDate(e.target.value)}
                                                     placeholder="Start Date"
-
                                                 />
                                                 <Input
                                                     type="date"
@@ -295,7 +369,7 @@ const TransactionsPage = () => {
                                     </DropdownMenuContent>
                                 </DropdownMenu>
 
-                                <DropdownMenu>
+                                {/* <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline">
                                             <Download className="mr-2 h-4 w-4" />
@@ -303,21 +377,21 @@ const TransactionsPage = () => {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        <DropdownMenuItem >
+                                        <DropdownMenuItem onClick={exportAsPDF}>
                                             Export as PDF
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem >
+                                        <DropdownMenuItem onClick={exportAsExcel}>
                                             Export as Excel
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
-                                </DropdownMenu>
+                                </DropdownMenu> */}
                             </div>
                         </div>
 
                         {/* Applied filters */}
-                        {(selectedType || selectedPlanType || selectedPaymentMethod) && (
+                        {(selectedType || selectedPlanType || selectedPaymentMethod || startDate || endDate) && (
                             <div className="flex flex-wrap gap-2">
-                                {selectedType && (
+                                {selectedType && selectedType !== 'all' && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                         Type: {selectedType}
                                         <Button
@@ -330,7 +404,7 @@ const TransactionsPage = () => {
                                         </Button>
                                     </Badge>
                                 )}
-                                {selectedPlanType && (
+                                {selectedPlanType && selectedPlanType !== 'all' && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                         Plan: {selectedPlanType}
                                         <Button
@@ -343,7 +417,7 @@ const TransactionsPage = () => {
                                         </Button>
                                     </Badge>
                                 )}
-                                {selectedPaymentMethod && (
+                                {selectedPaymentMethod && selectedPaymentMethod !== 'all' && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                         Payment: {selectedPaymentMethod}
                                         <Button
@@ -356,101 +430,328 @@ const TransactionsPage = () => {
                                         </Button>
                                     </Badge>
                                 )}
+                                {startDate && endDate && (
+                                    <Badge variant="secondary" className="flex items-center gap-1">
+                                        Date: {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-4 w-4 ml-1 p-0"
+                                            onClick={() => {
+                                                setStartDate(null)
+                                                setEndDate(null)
+                                            }}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </Badge>
+                                )}
                                 <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={resetFilters}>
                                     Clear All
                                 </Button>
                             </div>
                         )}
 
+                        {/* Loading and error states */}
+                        {loading && (
+                            <div className="flex justify-center items-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="bg-red-50 p-4 rounded-md text-red-800 text-center">
+                                {error}
+                            </div>
+                        )}
+
                         {/* Table */}
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>User</TableHead>
-                                        <TableHead>Account Number</TableHead>
-                                        <TableHead>Amount</TableHead>
-                                        <TableHead>Payment Method</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Plan Type</TableHead>
-                                        <TableHead>Document</TableHead>
-                                        <TableHead>Requested On</TableHead>
-                                        <TableHead>Completed On</TableHead>
-                                        <TableHead></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredTransactions.map((transaction) => (
-                                        <TableRow key={transaction.id}>
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar>
-                                                        <AvatarImage src={transaction.user.avatar} alt={transaction.user.name} />
-                                                        <AvatarFallback>{transaction.user.name.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <div>
-                                                        <div className="font-medium">{transaction.user.name}</div>
-                                                        <div className="text-sm text-muted-foreground">{transaction.user.email}</div>
-                                                    </div>
+                        {!loading && !error && (
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>User</TableHead>
+                                            <TableHead>Account</TableHead>
+                                            <TableHead className="cursor-pointer" onClick={() => handleSort('amount')}>
+                                                <div className="flex items-center">
+                                                    Amount
+                                                    {sortField === 'amount' && (
+                                                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                                                    )}
                                                 </div>
-                                            </TableCell>
-                                            <TableCell>{transaction.accountNumber}</TableCell>
-                                            <TableCell>${transaction.amount.toLocaleString()}</TableCell>
-                                            <TableCell>{transaction.paymentMethod}</TableCell>
-                                            <TableCell>{getTypeBadge(transaction.type)}</TableCell>
-                                            <TableCell>{transaction.planType}</TableCell>
-                                            <TableCell>
-                                                {transaction.document ? (
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                        <FileText className="h-4 w-4" />
-                                                    </Button>
-                                                ) : (
-                                                    <span className="text-muted-foreground">None</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>{formatDate(transaction.requestedOn)}</TableCell>
-                                            <TableCell>{formatDate(transaction.completedOn)}</TableCell>
-                                            <TableCell>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                            <span className="sr-only">Open menu</span>
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                                                        <DropdownMenuItem>Download Receipt</DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
+                                            </TableHead>
+                                            <TableHead>Payment Method</TableHead>
+                                            <TableHead className="cursor-pointer" onClick={() => handleSort('type')}>
+                                                <div className="flex items-center">
+                                                    Type
+                                                    {sortField === 'type' && (
+                                                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                                                    )}
+                                                </div>
+                                            </TableHead>
+                                            <TableHead>Plan Type</TableHead>
+                                            {/* <TableHead>Document</TableHead> */}
+                                            <TableHead className="cursor-pointer" onClick={() => handleSort('requestedOn')}>
+                                                <div className="flex items-center">
+                                                    Requested On
+                                                    {sortField === 'requestedOn' && (
+                                                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                                                    )}
+                                                </div>
+                                            </TableHead>
+                                            <TableHead className="cursor-pointer" onClick={() => handleSort('completedOn')}>
+                                                <div className="flex items-center">
+                                                    Completed On
+                                                    {sortField === 'completedOn' && (
+                                                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                                                    )}
+                                                </div>
+                                            </TableHead>
+                                            <TableHead></TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {sortedTransactions.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                                                    No transactions found
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            sortedTransactions.map((transaction) => (
+                                                <TableRow key={transaction.id}>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar>
+                                                                <AvatarImage src={transaction.user.avatar || "/placeholder.svg"} alt={transaction.user.name} />
+                                                                <AvatarFallback>{transaction.user.name.charAt(0) || 'U'}</AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <div className="font-medium">{transaction.user.name || 'Unknown User'}</div>
+                                                                <div className="text-sm text-muted-foreground">{transaction.user.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {transaction.type === 'Transfer' ? (
+                                                            <div>
+                                                                <div className="font-medium">{(transaction as any).fromAccount?.accountNumber}</div>
+                                                                <div className="text-sm text-muted-foreground">→ {(transaction as any).toAccount?.accountNumber}</div>
+                                                            </div>
+                                                        ) : (
+                                                            transaction.accountNumber
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>{formatAmount(transaction.amount, transaction.type)}</TableCell>
+                                                    <TableCell>{transaction.paymentMethod}</TableCell>
+                                                    <TableCell>{getTypeBadge(transaction.type)}</TableCell>
+                                                    <TableCell>{transaction.planType}</TableCell>
+                                                    {/* <TableCell>
+                                                        {transaction.document ? (
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                <FileText className="h-4 w-4" />
+                                                            </Button>
+                                                        ) : (
+                                                            <span className="text-muted-foreground">None</span>
+                                                        )}
+                                                    </TableCell> */}
+                                                    <TableCell>{formatDate(transaction.requestedOn)}</TableCell>
+                                                    <TableCell>{transaction.completedOn ? formatDate(transaction.completedOn) : 'Pending'}</TableCell>
+                                                    <TableCell>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon">
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                    <span className="sr-only">Open menu</span>
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem onClick={() => viewTransactionDetails(transaction)}>
+                                                                    View Details
+                                                                </DropdownMenuItem>
+                                                                {/* {transaction.document && (
+                                                                    <DropdownMenuItem>
+                                                                        Download Receipt
+                                                                    </DropdownMenuItem>
+                                                                )} */}
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
 
                         {/* Pagination */}
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
-                                Showing <strong>{filteredTransactions.length}</strong> of <strong>{transactions.length}</strong>{" "}
-                                transactions
+                        {!loading && !error && (
+                            <div className="flex items-center justify-between">
+                                <div className="text-sm text-muted-foreground">
+                                    Showing <strong>{sortedTransactions.length}</strong> of <strong>{transactions.length}</strong>{" "}
+                                    transactions
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Button variant="outline" size="sm" disabled>
+                                        Previous
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                        Next
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <Button variant="outline" size="sm" disabled>
-                                    Previous
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Transaction Details Dialog */}
+            <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+                <DialogContent className="max-w-2xl" >
+                    {selectedTransaction && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>
+                                    {selectedTransaction.type} Details
+                                </DialogTitle>
+                                {/* <DialogDescription>
+                                    Complete information for {selectedTransaction.type.toLowerCase()} #{selectedTransaction.id}
+                                </DialogDescription> */}
+                            </DialogHeader>
+
+                            <Tabs defaultValue="details" className="mt-4">
+                                <TabsList className="grid w-full grid-cols-1">
+                                    <TabsTrigger value="details">Transaction Details</TabsTrigger>
+                                    {/* {selectedTransaction.type !== 'Transfer' && (
+                                        <TabsTrigger value="payment">Payment Information</TabsTrigger>
+                                    )} */}
+                                </TabsList>
+
+                                <TabsContent value="details" className="space-y-4 py-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">User Name</p>
+                                            <p className="font-medium">{selectedTransaction.user.name}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">Email</p>
+                                            <p>{selectedTransaction.user.email}</p>
+                                        </div>
+                                        {/* <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">Transaction ID</p>
+                                            <p className="font-mono text-sm">{selectedTransaction.id}</p>
+                                        </div> */}
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">Amount</p>
+                                            <p className="font-medium">{formatAmount(selectedTransaction.amount, selectedTransaction.type)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">Type</p>
+                                            <p>{getTypeBadge(selectedTransaction.type)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">Payment Method</p>
+                                            <p>{selectedTransaction.paymentMethod}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">Plan Type</p>
+                                            <p>{selectedTransaction.planType}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">Status</p>
+                                            <p>{selectedTransaction.status}</p>
+                                        </div>
+                                        {selectedTransaction.type === 'Transfer' ? (
+                                            <>
+                                                <div>
+                                                    <p className="text-sm font-medium text-muted-foreground mb-1">From Account</p>
+                                                    <p>{selectedTransaction.fromAccountNumber}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-muted-foreground mb-1">To Account</p>
+                                                    <p>{selectedTransaction.toAccountNumber}</p>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div>
+                                                <p className="text-sm font-medium text-muted-foreground mb-1">Account Number</p>
+                                                <p>{selectedTransaction.accountNumber}</p>
+                                            </div>
+                                        )}
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">Requested On</p>
+                                            <p>{formatDate(selectedTransaction.requestedOn)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground mb-1">Completed On</p>
+                                            <p>{selectedTransaction.completedOn ? formatDate(selectedTransaction.completedOn) : 'Pending'}</p>
+                                        </div>
+                                    </div>
+                                </TabsContent>
+
+                                {selectedTransaction.type !== 'Transfer' && (
+                                    <TabsContent value="payment" className="space-y-4 py-4">
+                                        {selectedTransaction.paymentMethod === 'bank' && selectedTransaction.bankDetails ? (
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Bank Name</p>
+                                                    <p>{selectedTransaction.bankDetails.bankName || 'N/A'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Account Holder</p>
+                                                    <p>{selectedTransaction.bankDetails.accountHolderName || 'N/A'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Account Number</p>
+                                                    <p>{selectedTransaction.bankDetails.accountNumber || 'N/A'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-muted-foreground mb-1">IFSC Code</p>
+                                                    <p>{selectedTransaction.bankDetails.ifscCode || 'N/A'}</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-6 text-muted-foreground">
+                                                {selectedTransaction.paymentMethod === 'bitcoin' ||
+                                                    selectedTransaction.paymentMethod === 'ethereum' ||
+                                                    selectedTransaction.paymentMethod === 'usdt' ? (
+                                                    <div className="space-y-4">
+                                                        <p>Transaction was processed via {selectedTransaction.paymentMethod}.</p>
+                                                        {/* {selectedTransaction.document && (
+                                                            <Button variant="outline">
+                                                                <FileText className="mr-2 h-4 w-4" />
+                                                                View Receipt
+                                                            </Button>
+                                                        )} */}
+                                                    </div>
+                                                ) : (
+                                                    <p>No payment details available</p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </TabsContent>
+                                )}
+                            </Tabs>
+
+                            {/* <div className="flex justify-end space-x-2 mt-6">
+                                {selectedTransaction.document && (
+                                    <Button variant="outline">
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download Receipt
+                                    </Button>
+                                )}
+                                <Button onClick={() => setDetailsDialogOpen(false)}>
+                                    Close
+                                </Button>
+                            </div> */}
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
-    )
-}
+    );
+};
 
-export default TransactionsPage
-
+export default TransactionsPage;

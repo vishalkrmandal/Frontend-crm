@@ -72,6 +72,17 @@ interface Client {
     };
 }
 
+interface Account {
+    _id: string;
+    mt5Account: string;
+    name: string;
+    accountType: string;
+    leverage: string;
+    balance: number;
+    equity: number;
+    profit: number;
+}
+
 const ClientsPage = () => {
     const [clients, setClients] = useState<Client[]>([])
     const [loading, setLoading] = useState(true)
@@ -88,6 +99,10 @@ const ClientsPage = () => {
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [editMode, setEditMode] = useState<Record<string, boolean>>({})
+
+    const [accountsDialogOpen, setAccountsDialogOpen] = useState(false)
+    const [clientAccounts, setClientAccounts] = useState<Account[]>([])
+    const [loadingAccounts, setLoadingAccounts] = useState(false)
 
     // List of unique countries, IB partners for filters
     const [countries, setCountries] = useState<string[]>([])
@@ -328,6 +343,22 @@ const ClientsPage = () => {
             return matchesSearch && matchesCountry && matchesKycStatus && matchesEmailStatus && matchesIbPartner;
         });
     }, [clients, searchTerm, selectedCountry, selectedKycStatus, selectedEmailStatus, selectedIbPartner]);
+
+    // Add this function to fetch user accounts
+    const handleViewAccounts = async (client: Client) => {
+        setSelectedClient(client)
+        setLoadingAccounts(true)
+        try {
+            const response = await clientService.getUserAccounts(client.id)
+            setClientAccounts(response.data)
+            setAccountsDialogOpen(true)
+        } catch (error) {
+            console.error("Error fetching user accounts:", error)
+            toast.error("Failed to fetch user accounts. Please try again.")
+        } finally {
+            setLoadingAccounts(false)
+        }
+    }
 
     // Reset all filters
     const resetFilters = () => {
@@ -622,6 +653,9 @@ const ClientsPage = () => {
                                                         <DropdownMenuContent align="end">
                                                             <DropdownMenuItem onClick={() => handleViewDetails(client)}>
                                                                 View Details
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleViewAccounts(client)}>
+                                                                View MT5 Accounts
                                                             </DropdownMenuItem>
                                                             {client.status === "activated" ? (
                                                                 <DropdownMenuItem
@@ -1575,6 +1609,83 @@ const ClientsPage = () => {
                             </DialogFooter>
                         </div>
                     )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Add this dialog to your JSX, right after the existing dialogs */}
+            <Dialog open={accountsDialogOpen} onOpenChange={setAccountsDialogOpen}>
+                <DialogContent className="max-w-3xl max-h-[80vh]">
+                    <DialogHeader>
+                        <DialogTitle>MT5 Accounts for {selectedClient?.firstname} {selectedClient?.lastname}</DialogTitle>
+                        <DialogDescription>
+                            Below are all MT5 trading accounts associated with this client.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {loadingAccounts ? (
+                        <div className="flex justify-center p-6">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+                        </div>
+                    ) : clientAccounts.length === 0 ? (
+                        <div className="text-center p-6">
+                            <p>No MT5 accounts found for this client.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-y-auto max-h-[50vh] overflow-x-auto">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-white z-10">
+                                    <TableRow>
+                                        <TableHead>Account Number</TableHead>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Leverage</TableHead>
+                                        <TableHead>Balance</TableHead>
+                                        <TableHead>Equity</TableHead>
+                                        <TableHead>Profit/Loss</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {clientAccounts
+                                        .slice() // Create a copy of the array to avoid mutating the original
+                                        .sort((a, b) => {
+                                            // Safely handle sorting with potentially undefined values
+                                            const balanceA = typeof a.balance === 'number' ? a.balance : 0;
+                                            const balanceB = typeof b.balance === 'number' ? b.balance : 0;
+                                            return balanceB - balanceA; // Sort in descending order
+                                        })
+                                        .map((account) => (
+                                            <TableRow key={account._id}>
+                                                <TableCell className="font-medium">{account.mt5Account}</TableCell>
+                                                <TableCell>{account.name}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={account.accountType === 'real' ? 'default' : 'outline'}>
+                                                        {account.accountType?.charAt(0).toUpperCase() + account.accountType?.slice(1) || 'N/A'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>{account.leverage || 'N/A'}</TableCell>
+                                                <TableCell>${typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}</TableCell>
+                                                <TableCell>${typeof account.equity === 'number' ? account.equity.toFixed(2) : '0.00'}</TableCell>
+                                                <TableCell className={
+                                                    account.profit > 0
+                                                        ? 'text-green-600'
+                                                        : account.profit < 0
+                                                            ? 'text-red-600'
+                                                            : ''
+                                                }>
+                                                    ${typeof account.profit === 'number' ? account.profit.toFixed(2) : '0.00'}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setAccountsDialogOpen(false)}>
+                            Close
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

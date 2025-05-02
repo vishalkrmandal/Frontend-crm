@@ -5,6 +5,7 @@ import axios from 'axios';
 const API_URL = 'http://localhost:5000/api';
 
 const clientService = {
+
     // Get all clients
     getAllClients: async () => {
         try {
@@ -104,6 +105,20 @@ const clientService = {
         }
     },
 
+    // Get all accounts for a specific user
+    getUserAccounts: async (userId: string) => {
+        try {
+            const response = await axios.get(`${API_URL}/clients/users/${userId}/accounts`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     // Export clients to Excel
     exportToExcel: async () => {
         try {
@@ -150,5 +165,7 @@ const clientService = {
         }
     }
 };
+
+
 
 export default clientService;

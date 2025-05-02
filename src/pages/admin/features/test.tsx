@@ -437,3 +437,149 @@ const ClientsPage = () => {
 
 export default ClientsPage
 
+
+
+
+{/* Transaction Details Dialog */ }
+<Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+    <DialogContent className="max-w-2xl">
+        {selectedTransaction && (
+            <>
+                <DialogHeader>
+                    <DialogTitle>
+                        {selectedTransaction.type} Details
+                    </DialogTitle>
+                    {/* <DialogDescription>
+                    Complete information for {selectedTransaction.type.toLowerCase()} #{selectedTransaction.id}
+                </DialogDescription> */}
+                </DialogHeader>
+
+                <Tabs defaultValue="details" className="mt-4">
+                    <TabsList className="grid w-full grid-cols-1">
+                        <TabsTrigger value="details">Transaction Details</TabsTrigger>
+                        {/* {selectedTransaction.type !== 'Transfer' && (
+                        <TabsTrigger value="payment">Payment Information</TabsTrigger>
+                    )} */}
+                    </TabsList>
+
+                    <TabsContent value="details" className="space-y-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">User Name</p>
+                                <p className="font-medium">{selectedTransaction.user.name}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Email</p>
+                                <p>{selectedTransaction.user.email}</p>
+                            </div>
+                            {/* <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Transaction ID</p>
+                            <p className="font-mono text-sm">{selectedTransaction.id}</p>
+                        </div> */}
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Amount</p>
+                                <p className="font-medium">{formatAmount(selectedTransaction.amount, selectedTransaction.type)}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Type</p>
+                                <p>{getTypeBadge(selectedTransaction.type)}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Payment Method</p>
+                                <p>{selectedTransaction.paymentMethod}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Plan Type</p>
+                                <p>{selectedTransaction.planType}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Status</p>
+                                <p>{selectedTransaction.status}</p>
+                            </div>
+                            {selectedTransaction.type === 'Transfer' ? (
+                                <>
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground mb-1">From Account</p>
+                                        <p>{selectedTransaction.fromAccountNumber}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground mb-1">To Account</p>
+                                        <p>{selectedTransaction.toAccountNumber}</p>
+                                    </div>
+                                </>
+                            ) : (
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground mb-1">Account Number</p>
+                                    <p>{selectedTransaction.accountNumber}</p>
+                                </div>
+                            )}
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Requested On</p>
+                                <p>{formatDate(selectedTransaction.requestedOn)}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Completed On</p>
+                                <p>{selectedTransaction.completedOn ? formatDate(selectedTransaction.completedOn) : 'Pending'}</p>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    {selectedTransaction.type !== 'Transfer' && (
+                        <TabsContent value="payment" className="space-y-4 py-4">
+                            {selectedTransaction.paymentMethod === 'bank' && selectedTransaction.bankDetails ? (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground mb-1">Bank Name</p>
+                                        <p>{selectedTransaction.bankDetails.bankName || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground mb-1">Account Holder</p>
+                                        <p>{selectedTransaction.bankDetails.accountHolderName || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground mb-1">Account Number</p>
+                                        <p>{selectedTransaction.bankDetails.accountNumber || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground mb-1">IFSC Code</p>
+                                        <p>{selectedTransaction.bankDetails.ifscCode || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-6 text-muted-foreground">
+                                    {selectedTransaction.paymentMethod === 'bitcoin' ||
+                                        selectedTransaction.paymentMethod === 'ethereum' ||
+                                        selectedTransaction.paymentMethod === 'usdt' ? (
+                                        <div className="space-y-4">
+                                            <p>Transaction was processed via {selectedTransaction.paymentMethod}.</p>
+                                            {/* {selectedTransaction.document && (
+                                            <Button variant="outline">
+                                                <FileText className="mr-2 h-4 w-4" />
+                                                View Receipt
+                                            </Button>
+                                        )} */}
+                                        </div>
+                                    ) : (
+                                        <p>No payment details available</p>
+                                    )}
+                                </div>
+                            )}
+                        </TabsContent>
+                    )}
+                </Tabs>
+
+                {/* <div className="flex justify-end space-x-2 mt-6">
+                {selectedTransaction.document && (
+                    <Button variant="outline">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Receipt
+                    </Button>
+                )}
+                <Button onClick={() => setDetailsDialogOpen(false)}>
+                    Close
+                </Button>
+            </div> */}
+            </>
+        )}
+    </DialogContent>
+</Dialog>
