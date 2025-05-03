@@ -43,7 +43,7 @@ const ProfilePage = () => {
     useEffect(() => {
         const fetchProfileData = async () => {
             try {
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem('clientToken');
 
                 if (!token) {
                     toast.error("Authentication Error: Please login to view your profile");

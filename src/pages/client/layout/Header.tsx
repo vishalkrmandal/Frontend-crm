@@ -3,6 +3,7 @@ import { Menu, Moon, Sun, Bell, User } from "lucide-react"
 import { useState, useEffect } from "react"
 import NotificationCard from "./NotificationCard"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "@/hooks/useAuth" // Import useAuth hook
 
 interface HeaderProps {
   toggleSidebar: () => void
@@ -24,22 +25,35 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     email: "user@example.com"
   })
 
+  // Import auth context
+  const { user, logout, activeRole } = useAuth()
+  const navigate = useNavigate()
+
   useEffect(() => {
-    // Get user data from localStorage
-    const userDataString = localStorage.getItem('user');
-    if (userDataString) {
-      try {
-        const parsedUserData = JSON.parse(userDataString);
-        setUserData({
-          firstname: parsedUserData.firstname || "User",
-          lastname: parsedUserData.lastname || "title",
-          email: parsedUserData.email || "user@example.com"
-        });
-      } catch (error) {
-        console.error("Error parsing user data:", error);
+    // If we have user data from auth context, use it
+    if (user) {
+      setUserData({
+        firstname: user.firstname || "User",
+        lastname: user.lastname || "Title",
+        email: user.email || "user@example.com"
+      });
+    } else {
+      // Fallback to localStorage if needed (legacy support)
+      const userDataString = localStorage.getItem('user');
+      if (userDataString) {
+        try {
+          const parsedUserData = JSON.parse(userDataString);
+          setUserData({
+            firstname: parsedUserData.firstname || "User",
+            lastname: parsedUserData.lastname || "Title",
+            email: parsedUserData.email || "user@example.com"
+          });
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+        }
       }
     }
-  }, []);
+  }, [user]);
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications)
@@ -52,15 +66,18 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   }
 
   const handleLogout = () => {
-    // Clear localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Use the logout function from auth context
+    // If activeRole is available, we'll log out of that specific role
+    if (activeRole) {
+      logout(activeRole, navigate);
+    } else {
+      // Fallback to full logout
+      logout(undefined, navigate);
+    }
 
-    // Redirect to login page
-    window.location.href = '/';
+    // Hide user menu
+    setShowUserMenu(false);
   };
-
-  const navigate = useNavigate();
 
   const handleNavigateToProfile = () => {
     navigate('profile/my-profile');

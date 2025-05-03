@@ -11,7 +11,7 @@ const clientService = {
         try {
             const response = await axios.get(`${API_URL}/clients`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
             });
             console.log("Client data response:", response.data);
@@ -26,7 +26,7 @@ const clientService = {
         try {
             const response = await axios.get(`${API_URL}/clients/${id}`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
             });
             return response.data;
@@ -54,7 +54,7 @@ const clientService = {
         try {
             const response = await axios.put(`${API_URL}/clients/${id}/update-password`, { password }, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
             });
             return response.data;
@@ -68,7 +68,7 @@ const clientService = {
         try {
             const response = await axios.get(`${API_URL}/clients/${id}/password`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
             });
             return response.data;
@@ -96,7 +96,7 @@ const clientService = {
         try {
             const response = await axios.put(`${API_URL}/clients/${id}/activate`, {}, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
             });
             return response.data;
@@ -110,7 +110,7 @@ const clientService = {
         try {
             const response = await axios.get(`${API_URL}/clients/users/${userId}/accounts`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
             });
             return response.data;
@@ -124,7 +124,7 @@ const clientService = {
         try {
             const response = await axios.get(`${API_URL}/clients/export/excel`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 },
                 responseType: 'blob'
             });
@@ -147,7 +147,7 @@ const clientService = {
         try {
             const response = await axios.get(`${API_URL}/clients/export/pdf`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 },
                 responseType: 'blob'
             });
@@ -163,6 +163,17 @@ const clientService = {
         } catch (error) {
             throw error;
         }
+    },
+
+
+    // In clientService.js, add this function:
+    impersonateClient: async (clientId: string) => {
+        const response = await axios.post(`${API_URL}/auth/admin/impersonate/${clientId}`, {}, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+            }
+        });
+        return response.data;
     }
 };
 

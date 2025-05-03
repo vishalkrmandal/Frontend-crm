@@ -102,7 +102,7 @@ const DepositsPage = () => {
     const [totalPages, setTotalPages] = useState(1);
 
     // Get token from localStorage
-    const getToken = () => localStorage.getItem('token');
+    const getToken = () => localStorage.getItem('adminToken');
 
     // API headers with auth token
     const getAuthHeaders = () => ({
@@ -907,17 +907,30 @@ const DepositsPage = () => {
             </Card>
 
             {/* Details Dialog */}
-            <Dialog open={detailsOpen} onOpenChange={(open) => {
-                setDetailsOpen(open);
-                if (!open) setSelectedDeposit(null);
-            }}>
-                <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Deposit Details</DialogTitle>
-                        <DialogDescription>
-                            Complete information about this deposit request
-                        </DialogDescription>
-                    </DialogHeader>
+            <div className={`fixed inset-0 z-50 ${detailsOpen ? 'flex' : 'hidden'} items-center justify-center`}>
+                {/* Backdrop overlay */}
+                <div className="absolute inset-0 bg-black/50" onClick={() => {
+                    setDetailsOpen(false);
+                    if (detailsOpen) setSelectedDeposit(null);
+                }}></div>
+
+                {/* Dialog content */}
+                <div className="relative bg-background max-w-3xl w-full max-h-[90vh] overflow-auto rounded-lg shadow-lg border border-border p-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 className="text-xl font-semibold">Deposit Details</h2>
+                            <p className="text-muted-foreground text-sm">Complete information about this deposit request</p>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setDetailsOpen(false);
+                                setSelectedDeposit(null);
+                            }}
+                            className="text-muted-foreground hover:text-foreground"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
 
                     {selectedDeposit && (
                         <div className="space-y-4">
@@ -927,7 +940,7 @@ const DepositsPage = () => {
                                         <div className="text-sm font-medium mb-1 text-muted-foreground">User Information</div>
                                         <div className="flex items-center gap-3 mb-2">
                                             <Avatar className="h-10 w-10">
-                                                <AvatarImage /*src={selectedDeposit.user.avatar}*/ alt={selectedDeposit.user.name} />
+                                                <AvatarImage alt={selectedDeposit.user.name} />
                                                 <AvatarFallback>{selectedDeposit.user.name?.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div>
@@ -1002,9 +1015,9 @@ const DepositsPage = () => {
                             {selectedDeposit.document && (
                                 <div>
                                     <div className="text-sm font-medium mb-2 text-muted-foreground">Document Preview</div>
-                                    <div className="border rounded-md p-2 h-40 relative bg-gray-50">
+                                    <div className="border rounded-md p-2 h-40 relative bg-muted">
                                         {/* Document preview taking full width */}
-                                        <div className="w-full h-full">  {/* Changed from w-xl to w-full */}
+                                        <div className="w-full h-full">
                                             {selectedDeposit.document.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                                                 <img
                                                     src={`http://localhost:5000${selectedDeposit.document}`}
@@ -1012,11 +1025,11 @@ const DepositsPage = () => {
                                                     className="w-full h-full object-contain"
                                                 />
                                             ) : selectedDeposit.document.match(/\.(pdf)$/i) ? (
-                                                <div className="w-full h-full flex items-center justify-center bg-white text-gray-500">
-                                                    <FileText className="h-10 w-10 text-gray-400" />
+                                                <div className="w-full h-full flex items-center justify-center bg-background text-muted-foreground">
+                                                    <FileText className="h-10 w-10" />
                                                 </div>
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-white text-gray-500">
+                                                <div className="w-full h-full flex items-center justify-center bg-background text-muted-foreground">
                                                     <FileText className="h-10 w-10" />
                                                 </div>
                                             )}
@@ -1027,7 +1040,7 @@ const DepositsPage = () => {
                                             <Button
                                                 variant="outline"
                                                 onClick={() => openDocument(selectedDeposit)}
-                                                className="bg-white bg-opacity-70 hover:bg-opacity-90 transition-all"
+                                                className="bg-background bg-opacity-70 hover:bg-opacity-90 transition-all"
                                             >
                                                 <FileText className="mr-2 h-4 w-4" />
                                                 View Document
@@ -1039,29 +1052,39 @@ const DepositsPage = () => {
                         </div>
                     )}
 
-                    <DialogFooter>
+                    <div className="flex justify-end mt-6">
                         <Button variant="outline" onClick={() => setDetailsOpen(false)}>Close</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </div>
+                </div>
+            </div>
 
             {/* Approve Dialog */}
-            <Dialog open={approveOpen} onOpenChange={(open) => {
-                setApproveOpen(open);
-                if (!open) {
-                    // Don't reset selectedDeposit here to avoid conflicts
+            <div className={`fixed inset-0 z-50 ${approveOpen ? 'flex' : 'hidden'} items-center justify-center`}>
+                {/* Backdrop overlay */}
+                <div className="absolute inset-0 bg-black/50" onClick={() => {
+                    setApproveOpen(false);
                     setBonus(0);
                     setRemarks("Congratulations");
-                }
-            }}>
+                }}></div>
 
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Approve Deposit</DialogTitle>
-                        <DialogDescription>
-                            Approve this deposit request and add an optional bonus
-                        </DialogDescription>
-                    </DialogHeader>
+                {/* Dialog content */}
+                <div className="relative bg-background w-full max-w-md rounded-lg shadow-lg border border-border p-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 className="text-xl font-semibold">Approve Deposit</h2>
+                            <p className="text-muted-foreground text-sm">Approve this deposit request and add an optional bonus</p>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setApproveOpen(false);
+                                setBonus(0);
+                                setRemarks("Congratulations");
+                            }}
+                            className="text-muted-foreground hover:text-foreground"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
 
                     {selectedDeposit && (
                         <div className="space-y-4">
@@ -1081,19 +1104,9 @@ const DepositsPage = () => {
                                         const val = e.target.value;
                                         setBonus(val === "" ? 0 : Number(val));
                                     }}
+                                    className="w-full"
                                 />
                             </div>
-                            {/* <div className="space-y-2">
-                                <Label htmlFor="bonus">Bonus Amount</Label>
-                                <Input
-                                    id="bonus"
-                                    type="number"
-                                    // placeholder="0"  // Change minimum value here
-                                    value={bonus}
-                                    onChange={(e) => setBonus(Number(e.target.value))}
-                                // Add other properties here like placeholder, step, max, etc.
-                                />
-                            </div> */}
 
                             <div className="space-y-2">
                                 <Label htmlFor="remarks">Remarks</Label>
@@ -1102,34 +1115,44 @@ const DepositsPage = () => {
                                     value={remarks}
                                     onChange={(e) => setRemarks(e.target.value)}
                                     rows={3}
+                                    className="w-full"
                                 />
                             </div>
                         </div>
                     )}
 
-                    <DialogFooter>
+                    <div className="flex justify-end gap-2 mt-6">
                         <Button variant="outline" onClick={() => setApproveOpen(false)}>Cancel</Button>
                         <Button onClick={handleApprove}>Approve</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </div>
+                </div>
+            </div>
 
             {/* Reject Dialog */}
-            <Dialog open={rejectOpen} onOpenChange={(open) => {
-                setRejectOpen(open);
-                if (!open) {
-                    // Don't reset selectedDeposit here to avoid conflicts
+            <div className={`fixed inset-0 z-50 ${rejectOpen ? 'flex' : 'hidden'} items-center justify-center`}>
+                {/* Backdrop overlay */}
+                <div className="absolute inset-0 bg-black/50" onClick={() => {
+                    setRejectOpen(false);
                     setRejectRemarks("");
-                }
-            }}>
+                }}></div>
 
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Reject Deposit</DialogTitle>
-                        <DialogDescription>
-                            Reject this deposit request and provide a reason
-                        </DialogDescription>
-                    </DialogHeader>
+                {/* Dialog content */}
+                <div className="relative bg-background w-full max-w-md rounded-lg shadow-lg border border-border p-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 className="text-xl font-semibold">Reject Deposit</h2>
+                            <p className="text-muted-foreground text-sm">Reject this deposit request and provide a reason</p>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setRejectOpen(false);
+                                setRejectRemarks("");
+                            }}
+                            className="text-muted-foreground hover:text-foreground"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
 
                     {selectedDeposit && (
                         <div className="space-y-4">
@@ -1146,31 +1169,41 @@ const DepositsPage = () => {
                                     onChange={(e) => setRejectRemarks(e.target.value)}
                                     rows={3}
                                     placeholder="Please provide a reason for rejection"
+                                    className="w-full"
                                 />
                             </div>
                         </div>
                     )}
 
-                    <DialogFooter>
+                    <div className="flex justify-end gap-2 mt-6">
                         <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
                         <Button variant="destructive" onClick={handleReject} disabled={!rejectRemarks.trim()}>Reject</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </div>
+                </div>
+            </div>
 
             {/* Document Dialog */}
-            <Dialog open={documentOpen} onOpenChange={(open) => {
-                setDocumentOpen(open);
-                if (!open) {
+            <div className={`fixed inset-0 z-50 ${documentOpen ? 'flex' : 'hidden'} items-center justify-center`}>
+                {/* Backdrop overlay */}
+                <div className="absolute inset-0 bg-black/50" onClick={() => {
+                    setDocumentOpen(false);
                     setZoomLevel(100);
-                    // Don't reset selectedDeposit here to avoid conflicts
-                }
-            }}>
+                }}></div>
 
-                <DialogContent className="max-w-4xl max-h-[90vh]">
-                    <DialogHeader>
-                        <DialogTitle>Document Preview</DialogTitle>
-                    </DialogHeader>
+                {/* Dialog content */}
+                <div className="relative bg-background w-full max-w-4xl max-h-[90vh] rounded-lg shadow-lg border border-border p-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold">Document Preview</h2>
+                        <button
+                            onClick={() => {
+                                setDocumentOpen(false);
+                                setZoomLevel(100);
+                            }}
+                            className="text-muted-foreground hover:text-foreground"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
 
                     {selectedDeposit && (
                         <div className="space-y-4">
@@ -1185,7 +1218,7 @@ const DepositsPage = () => {
                             </div>
 
                             {/* Document preview container */}
-                            <div className="border rounded-lg overflow-auto h-[60vh]">
+                            <div className="border rounded-lg overflow-auto h-[60vh] bg-muted">
                                 <div style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top left" }}>
                                     {/* Display document based on file type */}
                                     {selectedDeposit.proofOfPayment && (
@@ -1210,7 +1243,7 @@ const DepositsPage = () => {
                                                     onError={() => toast.error("Failed to load PDF")}
                                                 />
                                             ) : (
-                                                <div className="text-center text-gray-500">
+                                                <div className="text-center text-muted-foreground">
                                                     <FileText className="h-16 w-16 mx-auto mb-4" />
                                                     <p>File preview not available</p>
                                                     <p>Click "Open in New Tab" to view</p>
@@ -1229,8 +1262,8 @@ const DepositsPage = () => {
                             </div>
                         </div>
                     )}
-                </DialogContent>
-            </Dialog>
+                </div>
+            </div>
         </div>
     )
 }

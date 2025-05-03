@@ -1,45 +1,23 @@
 import { useTheme } from "@/context/ThemeContext"
 import { Menu, Moon, Sun, Bell, User } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import NotificationCard from "./NotificationCard"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "@/hooks/useAuth"  // Import useAuth hook
 
 interface HeaderProps {
   toggleSidebar: () => void
-}
-
-interface UserData {
-  firstname: string;
-  lastname: string;
-  email: string;
 }
 
 export default function Header({ toggleSidebar }: HeaderProps) {
   const { theme, toggleTheme } = useTheme()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [userData, setUserData] = useState<UserData>({
-    firstname: "User",
-    lastname: "Title",
-    email: "user@example.com"
-  })
 
-  useEffect(() => {
-    // Get user data from localStorage
-    const userDataString = localStorage.getItem('user');
-    if (userDataString) {
-      try {
-        const parsedUserData = JSON.parse(userDataString);
-        setUserData({
-          firstname: parsedUserData.firstname || "User",
-          lastname: parsedUserData.lastname || "title",
-          email: parsedUserData.email || "user@example.com"
-        });
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
-    }
-  }, []);
+  // Using the useAuth hook
+  const { user, logout, activeRole } = useAuth()
+
+  const navigate = useNavigate()
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications)
@@ -52,23 +30,18 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   }
 
   const handleLogout = () => {
-    // Clear localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-
-    // Redirect to login page
-    window.location.href = '/';
-  };
-
-  const navigate = useNavigate();
+    // Use the logout function from useAuth
+    logout(activeRole ?? undefined, navigate)
+    setShowUserMenu(false)
+  }
 
   const handleNavigateToProfile = () => {
-    navigate('profile/my-profile');
-    setShowUserMenu(false);
-  };
+    navigate('profile/my-profile')
+    setShowUserMenu(false)
+  }
 
   // Use the theme to set the SVG fill color
-  const profileIconColor = theme === "dark" ? "fill-gray-200" : "fill-gray-700";
+  const profileIconColor = theme === "dark" ? "fill-gray-200" : "fill-gray-700"
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-3 shadow-sm">
@@ -142,8 +115,8 @@ export default function Header({ toggleSidebar }: HeaderProps) {
                   </svg>
                 </div>
                 <div className="flex-1 text-sm">
-                  <h3 className="font-semibold">{userData.firstname} {userData.lastname}</h3>
-                  <p className="text-sm text-muted-foreground">{userData.email}</p>
+                  <h3 className="font-semibold">{user?.firstname} {user?.lastname}</h3>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
                 </div>
               </div>
 

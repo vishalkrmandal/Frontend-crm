@@ -30,7 +30,7 @@ export default function Transfer() {
         `${API_URL}/transfers/accounts`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
           },
         }
       );
@@ -40,7 +40,7 @@ export default function Transfer() {
         `${API_URL}/transfers`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
           },
         }
       );
@@ -110,7 +110,7 @@ export default function Transfer() {
         formData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
           },
         }
       );

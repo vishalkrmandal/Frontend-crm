@@ -87,7 +87,7 @@ export default function AccountList() {
     setError(null);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("clientToken");
       const response = await axios.get<ApiResponse>("http://localhost:5000/api/accounts", {
         headers: {
           Authorization: `Bearer ${token}`
@@ -139,7 +139,7 @@ export default function AccountList() {
   // Refresh account data
   const handleRefresh = async (accountId: string) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("clientToken");
       await axios.post(`http://localhost:5000/api/accounts/${accountId}/refresh`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -236,7 +236,7 @@ export default function AccountList() {
 
   const handlePasswordChange = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("clientToken");
       const payload: any = {};
       let hasChanges = false;
       let hasErrors = false;

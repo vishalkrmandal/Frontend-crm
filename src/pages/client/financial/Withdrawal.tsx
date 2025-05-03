@@ -77,7 +77,7 @@ export default function Withdrawal() {
   });
 
   // Get token from localStorage
-  const getToken = () => localStorage.getItem("token");
+  const getToken = () => localStorage.getItem("clientToken");
 
   // API headers with auth token
   const getAuthHeaders = () => ({

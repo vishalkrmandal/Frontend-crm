@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import clientService from "./clientService"
 import { toast } from "sonner"
+import { impersonateClient } from "@/utils/impersonation"
 
 interface Client {
     id: string;
@@ -139,6 +140,31 @@ const ClientsPage = () => {
             setLoading(false)
         }
     }
+
+    // Add this new function to handle client impersonation
+    const handleImpersonateClient = async (client: Client) => {
+        try {
+            // Show loading toast
+            toast.loading("Preparing client access...");
+
+            // Call the API to get impersonation token
+            const response = await clientService.impersonateClient(client.id);
+
+            if (response.success) {
+                // Dismiss the loading toast
+                toast.dismiss();
+                toast.success("Client access prepared successfully");
+
+                // Handle the impersonation - this will open a new tab
+                impersonateClient(response.clientToken, response.user);
+            } else {
+                toast.error("Failed to access client account");
+            }
+        } catch (error) {
+            console.error("Error impersonating client:", error);
+            toast.error("Failed to access client account. Please try again.");
+        }
+    };
 
     const getClientPassword = async (clientId: string) => {
         try {
@@ -581,7 +607,11 @@ const ClientsPage = () => {
                                             <TableRow key={client.id}>
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
-                                                        <Avatar>
+                                                        <Avatar
+                                                            className="cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                                                            onClick={() => handleImpersonateClient(client)}
+                                                            title="Login as this client"
+                                                        >
                                                             <AvatarImage src={client.avatar || "/placeholder.svg"} alt={client.name} />
                                                             <AvatarFallback>{client.firstname?.charAt(0) || "C"}</AvatarFallback>
                                                         </Avatar>
@@ -656,6 +686,9 @@ const ClientsPage = () => {
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem onClick={() => handleViewAccounts(client)}>
                                                                 View MT5 Accounts
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleImpersonateClient(client)}>
+                                                                Login as Client
                                                             </DropdownMenuItem>
                                                             {client.status === "activated" ? (
                                                                 <DropdownMenuItem

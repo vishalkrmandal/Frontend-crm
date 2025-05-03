@@ -42,7 +42,7 @@ export default function TransactionHistory() {
       setLoading(true)
       setError("")
 
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("clientToken")
       if (!token) {
         setError("Authentication required")
         setLoading(false)
@@ -121,7 +121,7 @@ export default function TransactionHistory() {
       if (search) params.append("search", search)
       params.append("format", "excel")
 
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("clientToken")
       const response = await axios.get(`${API_URL}/transactions/export?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -169,7 +169,7 @@ export default function TransactionHistory() {
       if (search) params.append("search", search)
       params.append("format", "pdf")
 
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("clientToken")
       const response = await axios.get(`${API_URL}/transactions/export?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`

@@ -17,7 +17,7 @@ if (typeof window !== 'undefined' && !window.Buffer) {
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 // Get token from localStorage
-const getToken = () => localStorage.getItem('token');
+const getToken = () => localStorage.getItem('adminToken') || localStorage.getItem('superadminToken');
 
 // API headers with auth token
 const getAuthHeaders = () => ({

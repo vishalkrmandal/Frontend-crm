@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Filter, Download, ChevronDown, X, MoreHorizontal, ArrowUpDown } from "lucide-react"
+import { Search, Filter, ChevronDown, X, MoreHorizontal, ArrowUpDown } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { format } from "date-fns"
 import axios from "axios"
@@ -85,7 +84,7 @@ const TransactionsPage = () => {
                 // For now, we'll use a simulated delay and sample data
                 const response = await axios.get<ApiResponse>('http://localhost:5000/api/admin/transactions', {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                        Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                     }
                 })
 
@@ -608,25 +607,34 @@ const TransactionsPage = () => {
             </Card>
 
             {/* Transaction Details Dialog */}
-            <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-                <DialogContent className="max-w-2xl" >
-                    {selectedTransaction && (
-                        <>
-                            <DialogHeader>
-                                <DialogTitle>
-                                    {selectedTransaction.type} Details
-                                </DialogTitle>
-                                {/* <DialogDescription>
-                                    Complete information for {selectedTransaction.type.toLowerCase()} #{selectedTransaction.id}
-                                </DialogDescription> */}
-                            </DialogHeader>
+            {detailsDialogOpen && selectedTransaction && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/50"
+                        onClick={() => setDetailsDialogOpen(false)}
+                    />
 
+                    {/* Dialog Content */}
+                    <div className="relative bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-auto">
+                        <div className="p-6">
+                            {/* Header */}
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                                    {selectedTransaction.type} Details
+                                </h2>
+                                <button
+                                    onClick={() => setDetailsDialogOpen(false)}
+                                    className="rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                >
+                                    <X className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+                                </button>
+                            </div>
+
+                            {/* Tabs */}
                             <Tabs defaultValue="details" className="mt-4">
                                 <TabsList className="grid w-full grid-cols-1">
                                     <TabsTrigger value="details">Transaction Details</TabsTrigger>
-                                    {/* {selectedTransaction.type !== 'Transfer' && (
-                                        <TabsTrigger value="payment">Payment Information</TabsTrigger>
-                                    )} */}
                                 </TabsList>
 
                                 <TabsContent value="details" className="space-y-4 py-4">
@@ -639,10 +647,6 @@ const TransactionsPage = () => {
                                             <p className="text-sm font-medium text-muted-foreground mb-1">Email</p>
                                             <p>{selectedTransaction.user.email}</p>
                                         </div>
-                                        {/* <div>
-                                            <p className="text-sm font-medium text-muted-foreground mb-1">Transaction ID</p>
-                                            <p className="font-mono text-sm">{selectedTransaction.id}</p>
-                                        </div> */}
                                         <div>
                                             <p className="text-sm font-medium text-muted-foreground mb-1">Amount</p>
                                             <p className="font-medium">{formatAmount(selectedTransaction.amount, selectedTransaction.type)}</p>
@@ -690,66 +694,21 @@ const TransactionsPage = () => {
                                         </div>
                                     </div>
                                 </TabsContent>
-
-                                {selectedTransaction.type !== 'Transfer' && (
-                                    <TabsContent value="payment" className="space-y-4 py-4">
-                                        {selectedTransaction.paymentMethod === 'bank' && selectedTransaction.bankDetails ? (
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Bank Name</p>
-                                                    <p>{selectedTransaction.bankDetails.bankName || 'N/A'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Account Holder</p>
-                                                    <p>{selectedTransaction.bankDetails.accountHolderName || 'N/A'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Account Number</p>
-                                                    <p>{selectedTransaction.bankDetails.accountNumber || 'N/A'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-muted-foreground mb-1">IFSC Code</p>
-                                                    <p>{selectedTransaction.bankDetails.ifscCode || 'N/A'}</p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-6 text-muted-foreground">
-                                                {selectedTransaction.paymentMethod === 'bitcoin' ||
-                                                    selectedTransaction.paymentMethod === 'ethereum' ||
-                                                    selectedTransaction.paymentMethod === 'usdt' ? (
-                                                    <div className="space-y-4">
-                                                        <p>Transaction was processed via {selectedTransaction.paymentMethod}.</p>
-                                                        {/* {selectedTransaction.document && (
-                                                            <Button variant="outline">
-                                                                <FileText className="mr-2 h-4 w-4" />
-                                                                View Receipt
-                                                            </Button>
-                                                        )} */}
-                                                    </div>
-                                                ) : (
-                                                    <p>No payment details available</p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </TabsContent>
-                                )}
                             </Tabs>
 
-                            {/* <div className="flex justify-end space-x-2 mt-6">
-                                {selectedTransaction.document && (
-                                    <Button variant="outline">
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Download Receipt
-                                    </Button>
-                                )}
-                                <Button onClick={() => setDetailsDialogOpen(false)}>
+                            {/* Footer */}
+                            <div className="mt-6 flex justify-end">
+                                <Button
+                                    onClick={() => setDetailsDialogOpen(false)}
+                                    className="ml-2"
+                                >
                                     Close
                                 </Button>
-                            </div> */}
-                        </>
-                    )}
-                </DialogContent>
-            </Dialog>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

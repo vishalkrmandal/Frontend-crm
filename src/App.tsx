@@ -1,17 +1,18 @@
 import { RouterProvider } from 'react-router-dom';
-import { ThemeProvider, useTheme } from "./context/ThemeContext"
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import router from './router';
 import { Toaster } from 'sonner';
+import { AuthProvider } from "./hooks/useAuth";
 
 function AppContent() {
-  const { theme } = useTheme(); // Get the current theme
+  const { theme } = useTheme(); // Get the current theme from context
 
   return (
     <>
       <Toaster
         richColors
         position="top-right"
-        theme={theme === 'dark' ? 'dark' : 'light'}
+        theme={theme === 'dark' ? 'dark' : 'light'} // Apply the theme from context
         toastOptions={{
           classNames: {
             success: 'bg-green-500 text-white dark:bg-green-700',
@@ -29,7 +30,9 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

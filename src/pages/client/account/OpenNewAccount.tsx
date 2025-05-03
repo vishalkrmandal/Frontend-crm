@@ -124,7 +124,7 @@ export default function OpenNewAccount() {
         platform: "MetaTrader 5"
       }, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('clientToken')}`
         }
       })
       setTimeout(() => {

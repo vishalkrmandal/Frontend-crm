@@ -33,7 +33,7 @@ export default function LeverageAndGroup() {
     }, [])
     const fetchLeverages = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("adminToken");
             if (!token) {
                 toast.error("Authentication token not found");
                 return;
@@ -57,7 +57,7 @@ export default function LeverageAndGroup() {
 
     const handleSave = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("adminToken");
             if (!token) {
                 toast.error("Authentication token not found");
                 return;
@@ -131,7 +131,7 @@ export default function LeverageAndGroup() {
 
     const fetchMt5Groups = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("adminToken");
             if (!token) {
                 toast.error("Authentication token not found");
                 return;
@@ -165,7 +165,7 @@ export default function LeverageAndGroup() {
                 // Update existing group
                 await axios.put(`http://localhost:5000/api/groups/${currentGroup._id}`, currentGroup, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                        Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                     }
                 })
                 toast.success('Group updated successfully')
@@ -173,7 +173,7 @@ export default function LeverageAndGroup() {
                 // Create new group
                 await axios.post('http://localhost:5000/api/groups', currentGroup, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                        Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                     }
                 })
                 toast.success('Group created successfully')
@@ -198,7 +198,7 @@ export default function LeverageAndGroup() {
         try {
             await axios.delete(`http://localhost:5000/api/groups/${currentGroup._id}`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
             })
             toast.success('Group deleted successfully')

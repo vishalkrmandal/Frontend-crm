@@ -1,4 +1,3 @@
-//Frontend\src\pages\auth\sign-in\components\SignInCard.tsx
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -12,6 +11,8 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -32,11 +33,28 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }));
 
 export default function SignInCard() {
+    const { login, hasMultipleRoles } = useAuth();
+    const navigate = useNavigate();
     const [emailError, setEmailError] = React.useState(false);
     const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
     const [passwordError, setPasswordError] = React.useState(false);
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [open, setOpen] = React.useState(false);
+
+    // Check if user already has active sessions
+    React.useEffect(() => {
+        // Check for existing auth tokens
+        const adminToken = localStorage.getItem('adminToken');
+        const clientToken = localStorage.getItem('clientToken');
+        const superadminToken = localStorage.getItem('superadminToken');
+
+        // If already logged in with some role, redirect accordingly
+        if (adminToken || superadminToken) {
+            navigate('/admin');
+        } else if (clientToken) {
+            navigate('/client');
+        }
+    }, [navigate]);
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -48,7 +66,7 @@ export default function SignInCard() {
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (emailError || passwordError) {
+        if (!validateInputs()) {
             return;
         }
 
@@ -67,20 +85,26 @@ export default function SignInCard() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Store token and user info in localStorage
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    const userRole = data.user.role;
+
+                    // Store token and user info in localStorage based on role
+                    localStorage.setItem(`${userRole}Token`, data.token);
+                    localStorage.setItem(`${userRole}User`, JSON.stringify(data.user));
+
+                    // Also store in generic token/user for backwards compatibility
+                    // localStorage.setItem('token', data.token);
+                    // localStorage.setItem('user', JSON.stringify(data.user));
 
                     console.log(data.user);
                     // Redirect based on role
                     if (data.user.isEmailVerified === true) {
-                        if (data.user.role === 'admin' || data.user.role === 'superadmin') {
+                        if (userRole === 'admin' || userRole === 'superadmin') {
                             window.location.href = '/admin';
                         } else {
                             window.location.href = '/client';
                         }
                     } else {
-                        alert('Please Verify Your Email')
+                        alert('Please Verify Your Email');
                     }
 
                 } else {
@@ -93,6 +117,7 @@ export default function SignInCard() {
                 alert('An error occurred during login');
             });
     };
+
     const validateInputs = () => {
         const email = document.getElementById('email') as HTMLInputElement;
         const password = document.getElementById('password') as HTMLInputElement;
@@ -120,11 +145,29 @@ export default function SignInCard() {
         return isValid;
     };
 
+    // Check if user has multiple roles already logged in
+    const multipleRoles = hasMultipleRoles();
+
     return (
         <Card variant="outlined">
             {/* <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
                 <SitemarkIcon />
             </Box> */}
+            {multipleRoles && (
+                <Typography
+                    variant="body2"
+                    color="primary"
+                    sx={{
+                        backgroundColor: theme => theme.palette.mode === 'dark'
+                            ? 'rgba(0, 100, 255, 0.1)'
+                            : 'rgba(0, 100, 255, 0.05)',
+                        padding: 1.5,
+                        borderRadius: 1
+                    }}
+                >
+                    You are already logged in with multiple accounts. You can switch between them in your profile.
+                </Typography>
+            )}
             <Typography
                 component="h1"
                 variant="h4"
@@ -188,7 +231,7 @@ export default function SignInCard() {
                     label="Remember me"
                 />
                 <ForgotPassword open={open} handleClose={handleClose} />
-                <Button type="submit" fullWidth variant="contained" onClick={validateInputs}>
+                <Button type="submit" fullWidth variant="contained" onClick={() => validateInputs()}>
                     Sign in
                 </Button>
                 <Typography sx={{ textAlign: 'center' }}>
