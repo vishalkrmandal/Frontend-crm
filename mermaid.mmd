@@ -1,0 +1,99 @@
+flowchart TD
+    %% Frontend Layer
+    subgraph "Browser (User Agent)" 
+        direction TB
+        Browser["Browser"]:::frontend
+        subgraph "React SPA" 
+            direction TB
+            Entry["Entry Point<br>src/main.tsx"]:::frontend
+            Styles["Global Styles<br>src/index.css, src/app.css"]:::frontend
+            Router["Router & Layout<br>src/router.tsx, src/App.tsx, src/ProtectedRoute.tsx"]:::frontend
+            UILib["Component Library (UI primitives)<br>src/components/ui/"]:::frontend
+            Theme["Theme Provider & Theming Primitives"]:::frontend
+            Context["Context & Hooks"]:::frontend
+            API["API Service Layer<br>src/api/hostelApi.ts, src/api/studentApi.ts"]:::frontend
+            subgraph "Pages (Features)" 
+                direction TB
+                AuthPage["Authentication Portal<br>src/pages/auth/"]:::frontend
+                ClientPage["Client Portal<br>src/pages/client/"]:::frontend
+                AdminPage["Admin Portal<br>src/pages/admin/"]:::frontend
+            end
+        end
+    end
+
+    %% Backend Services
+    subgraph "Backend Services" 
+        direction TB
+        AuthService["Authentication Service"]:::backend
+        ClientService["Client / Trading Service"]:::backend
+        AdminService["Admin Service"]:::backend
+        ExternalAPI["External Financial APIs"]:::external
+    end
+
+    %% Data Stores
+    subgraph "Data Stores"
+        direction TB
+        Database["Database (SQL/NoSQL)"]:::datastore
+        Cache["Cache / CDN"]:::datastore
+    end
+
+    %% DevOps / CI-CD
+    subgraph "DevOps & CI/CD"
+        direction TB
+        Git["Developer → Git"]:::devops
+        CI["CI/CD Pipeline"]:::devops
+        Build["Vite Build → Static Assets"]:::devops
+        Hosting["Hosting / CDN"]:::devops
+    end
+
+    %% Connections
+    Browser -->|loads| Entry
+    Entry --> Styles
+    Styles --> Router
+    Router --> UILib
+    UILib --> Theme
+    Theme --> Context
+    Context --> API
+    API -->|HTTPS requests| AuthService
+    API -->|HTTPS requests| ClientService
+    API -->|HTTPS requests| AdminService
+    ClientService -->|queries| Database
+    AuthService -->|queries| Database
+    AdminService -->|queries| Database
+    ExternalAPI -->|market data| ClientService
+    Database -->|cached| Cache
+
+    Git --> CI
+    CI --> Build
+    Build --> Hosting
+    Hosting --> Browser
+
+    %% Click Events
+    click Entry "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/main.tsx"
+    click Styles "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/index.css"
+    click Styles "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/app.css"
+    click Router "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/router.tsx"
+    click Router "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/App.tsx"
+    click Router "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/ProtectedRoute.tsx"
+    click UILib "https://github.com/vishalkrmandal/frontend-crm/tree/main/src/components/ui/"
+    click Theme "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/components/ui/theme-provider.tsx"
+    click Theme "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/Material/shared-theme/AppTheme.tsx"
+    click Theme "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/Material/shared-theme/ColorModeSelect.tsx"
+    click Theme "https://github.com/vishalkrmandal/frontend-crm/tree/main/src/Material/shared-theme/customizations/"
+    click Theme "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/Material/shared-theme/themePrimitives.ts"
+    click Context "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/context/ThemeContext.tsx"
+    click Context "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/hooks/useAuth.tsx"
+    click Context "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/hooks/use-mobile.tsx"
+    click Context "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/hooks/use-toast.ts"
+    click API "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/api/hostelApi.ts"
+    click API "https://github.com/vishalkrmandal/frontend-crm/blob/main/src/api/studentApi.ts"
+    click AuthPage "https://github.com/vishalkrmandal/frontend-crm/tree/main/src/pages/auth/"
+    click ClientPage "https://github.com/vishalkrmandal/frontend-crm/tree/main/src/pages/client/"
+    click AdminPage "https://github.com/vishalkrmandal/frontend-crm/tree/main/src/pages/admin/"
+
+    %% Styles
+    classDef frontend fill:#BBDEFB,stroke:#0D47A1,stroke-width:1px
+    classDef backend fill:#C8E6C9,stroke:#1B5E20,stroke-width:1px
+    classDef datastore fill:#FFE0B2,stroke:#E65100,stroke-width:1px
+    classDef devops fill:#E0E0E0,stroke:#424242,stroke-width:1px
+    classDef external fill:#F8BBD0,stroke:#880E4F,stroke-width:1px

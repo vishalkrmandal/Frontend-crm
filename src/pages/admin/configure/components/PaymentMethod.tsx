@@ -84,7 +84,7 @@ export default function PaymentMethod() {
 
     const fetchPaymentMethods = async () => {
         try {
-            const token = localStorage.getItem('token') // Assuming you store token in localStorage
+            const token = localStorage.getItem('adminToken') // Assuming you store token in localStorage
             const response = await axios.get('http://localhost:5000/api/payment-methods', {
                 headers: { Authorization: `Bearer ${token}` }
             })
@@ -115,7 +115,7 @@ export default function PaymentMethod() {
     }
     const handleSave = async () => {
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem('adminToken')
 
             // Create FormData to handle both text data and file upload
             const formData = new FormData();
@@ -162,7 +162,7 @@ export default function PaymentMethod() {
 
     const handleDelete = async () => {
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem('adminToken')
             await axios.delete(`http://localhost:5000/api/payment-methods/${currentMethod._id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
@@ -218,7 +218,7 @@ export default function PaymentMethod() {
 
     const viewMethodDetails = async (method: { id?: number; name?: string; type?: string; accounts?: string; active?: boolean; _id?: any }) => {
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem('adminToken')
             const response = await axios.get(`http://localhost:5000/api/payment-methods/${method._id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
@@ -252,7 +252,7 @@ export default function PaymentMethod() {
     const fetchExchanges = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("adminToken");
             const response = await axios.get("http://localhost:5000/api/exchanges", {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -269,7 +269,7 @@ export default function PaymentMethod() {
     // Fetch currencies with flags
     const fetchCurrencies = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("adminToken");
             const response = await axios.get("http://localhost:5000/api/exchanges/currencies", {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -339,7 +339,7 @@ export default function PaymentMethod() {
     // Add/update exchange rate
     const handleExchangeSave = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("adminToken");
             const headers = { Authorization: `Bearer ${token}` };
 
             if (currentExchange && currentExchange._id) {
@@ -370,7 +370,7 @@ export default function PaymentMethod() {
         try {
             if (!currentExchange || !currentExchange._id) return;
 
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("adminToken");
             await axios.delete(`http://localhost:5000/api/exchanges/${currentExchange._id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -494,7 +494,7 @@ export default function PaymentMethod() {
                                             checked={method.active}
                                             onCheckedChange={async (checked) => {
                                                 try {
-                                                    const token = localStorage.getItem('token')
+                                                    const token = localStorage.getItem('adminToken')
                                                     await axios.put(`http://localhost:5000/api/payment-methods/${method._id}`,
                                                         { active: checked },
                                                         { headers: { Authorization: `Bearer ${token}` } }

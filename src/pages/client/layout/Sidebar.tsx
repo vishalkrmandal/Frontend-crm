@@ -94,21 +94,21 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
       icon: HeadphonesIcon,
       submenu: [{ title: "My Enquiries", path: "/client/support/clientportal" }],
     },
-    {
-      title: "Copy Trading",
-      icon: Copy,
-      submenu: [
-        { title: "Rating", path: "/client/copy-trading/rating" },
-        { title: "Copier Area", path: "/client/copy-trading/copier-area" },
-        { title: "Master Area", path: "/client/copy-trading/master-area" },
-        { title: "Terms & Conditions", path: "/client/copy-trading/terms" },
-      ],
-    },
-    {
-      title: "Trading Signals",
-      icon: LineChart,
-      path: "/client/trading-signals",
-    },
+    // {
+    //   title: "Copy Trading",
+    //   icon: Copy,
+    //   submenu: [
+    //     { title: "Rating", path: "/client/copy-trading/rating" },
+    //     { title: "Copier Area", path: "/client/copy-trading/copier-area" },
+    //     { title: "Master Area", path: "/client/copy-trading/master-area" },
+    //     { title: "Terms & Conditions", path: "/client/copy-trading/terms" },
+    //   ],
+    // },
+    // {
+    //   title: "Trading Signals",
+    //   icon: LineChart,
+    //   path: "/client/trading-signals",
+    // },
   ]
 
   // Function to toggle menu expansion
@@ -187,13 +187,13 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                   <button
                     onClick={() => toggleMenu(item.title)}
                     className={`flex w-full items-center rounded-md px-3 py-2 text-sm font-medium ${isSubmenuActive(item.submenu)
-                        ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                       } ${open ? "" : "justify-center"}`}
                   >
                     <item.icon className={`h-5 w-5 ${isSubmenuActive(item.submenu)
-                        ? "text-white dark:text-gray-900"
-                        : "text-gray-500 dark:text-gray-400"
+                      ? "text-white dark:text-gray-900"
+                      : "text-gray-500 dark:text-gray-400"
                       }`} />
                     {open && (
                       <>
@@ -211,8 +211,8 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                   {((open && expandedMenus[item.title]) || (!open && hoveredMenu === item.title)) && (
                     <ul
                       className={`${open
-                          ? "mt-1 space-y-1 pl-8"
-                          : "absolute left-full top-0 z-50 mt-0 ml-1 min-w-48 rounded-md border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                        ? "mt-1 space-y-1 pl-8"
+                        : "absolute left-full top-0 z-50 mt-0 ml-1 min-w-48 rounded-md border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800"
                         }`}
                       style={{
                         // Ensure the popup menu is positioned correctly
@@ -224,8 +224,8 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                           <Link
                             to={subItem.path}
                             className={`block rounded-md px-3 py-2 text-sm font-medium ${isActive(subItem.path)
-                                ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
-                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                              ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                               }`}
                           >
                             {subItem.title}
@@ -239,13 +239,13 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                 <Link
                   to={item.path || "#"}
                   className={`flex items-center rounded-md px-3 py-2 text-sm font-medium ${isActive(item.path || "")
-                      ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                     } ${open ? "" : "justify-center"}`}
                 >
                   <item.icon className={`h-5 w-5 ${isActive(item.path || "")
-                      ? "text-white dark:text-gray-900"
-                      : "text-gray-500 dark:text-gray-400"
+                    ? "text-white dark:text-gray-900"
+                    : "text-gray-500 dark:text-gray-400"
                     }`} />
                   {open && <span className="ml-3">{item.title}</span>}
                 </Link>

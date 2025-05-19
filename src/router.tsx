@@ -27,6 +27,7 @@ import ClientPortal from './pages/client/support/app/client/ClientPortal';
 import AdminPortal from './pages/admin/support/admin/AdminPortal';
 import TicketDetail from './pages/client/support/app/client/ticket.tsx/TicketDetail';
 import AdminTicketDetail from './pages/admin/support/admin/ticket/AdminTicketDetail';
+import AdminNewTicket from './pages/admin/support/admin/CreateTicket';
 import AdminLayout from './pages/admin/layout/Layout';
 import AdminDashboard from './pages/admin/features/AdminDashboard';
 import ClientsPage from './pages/admin/features/ClientsPage';
@@ -267,6 +268,10 @@ const routes: RouteObject[] = [
                 path: 'ticket/:id',
                 element: <AdminTicketDetail />
               },
+              {
+                path: 'new-ticket',
+                element: <AdminNewTicket />
+              }
             ]
           }
         ]

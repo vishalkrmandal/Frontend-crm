@@ -14,7 +14,7 @@ if (typeof window !== 'undefined' && !window.Buffer) {
     });
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/'
 
 // Get token from localStorage
 const getToken = () => localStorage.getItem('adminToken') || localStorage.getItem('superadminToken');
@@ -28,14 +28,14 @@ const getAuthHeaders = () => ({
 
 const withdrawalService = {
     getAllWithdrawals: async () => {
-        const response = await axios.get(`${API_URL}/adminwithdrawals`, getAuthHeaders())
+        const response = await axios.get(`${API_URL}/api/adminwithdrawals`, getAuthHeaders())
         console.log('Withdrawals:', response.data)
         return response.data
     },
 
     approveWithdrawal: async (withdrawalId: string, data: any) => {
         const response = await axios.patch(
-            `${API_URL}/adminwithdrawals/${withdrawalId}/approve`,
+            `${API_URL}/api/adminwithdrawals/${withdrawalId}/approve`,
             data,
             getAuthHeaders()
         )
@@ -44,7 +44,7 @@ const withdrawalService = {
 
     rejectWithdrawal: async (withdrawalId: string, data: any) => {
         const response = await axios.patch(
-            `${API_URL}/adminwithdrawals/${withdrawalId}/reject`,
+            `${API_URL}/api/adminwithdrawals/${withdrawalId}/reject`,
             data,
             getAuthHeaders()
         )
