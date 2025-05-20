@@ -129,7 +129,7 @@ export default function NewTicket() {
         <div className="flex min-h-screen flex-col">
             <header className="border-b bg-background">
                 <div className="container mx-auto flex h-16 items-center px-4">
-                    <Link to="/support/admin" className="flex items-center gap-2">
+                    <Link to="/support/admin/portal" className="flex items-center gap-2">
                         <ChevronLeft className="h-4 w-4" />
                         <span>Back to Dashboard</span>
                     </Link>

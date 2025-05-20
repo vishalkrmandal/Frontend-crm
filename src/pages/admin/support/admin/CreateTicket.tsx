@@ -228,7 +228,7 @@ export default function CreateTicket() {
                 </div>
             </header>
             <main className="flex-1 py-8">
-                <div className="container mx-auto px-4 max-w-3xl">
+                <div className="container mx-auto px-4">
                     <Card>
                         <CardHeader>
                             <CardTitle>Create a New Ticket</CardTitle>

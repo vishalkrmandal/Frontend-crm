@@ -1,412 +1,302 @@
 "use client"
 
-import { useState } from "react"
-import { Search, Filter, Download, ChevronDown, X, MoreHorizontal, Check, Copy, LinkIcon } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { useState, useEffect } from "react"
+import { PlusCircle, Pencil } from "lucide-react"
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { toast } from "sonner" // Import Sonner's toast instead of the custom hook
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { toast } from "@/hooks/use-toast"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
-// Sample data
-const ibPartners = [
-    {
-        id: 1,
-        user: {
-            name: "John Smith",
-            email: "john@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "IB10023",
-        dateCreated: "2025-01-15T14:30:00",
-        kycVerified: true,
-        referralLink: "https://example.com/ref/john-smith",
-        status: "Active",
-    },
-    {
-        id: 2,
-        user: {
-            name: "Emily Johnson",
-            email: "emily@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "IB10024",
-        dateCreated: "2025-02-10T09:15:00",
-        kycVerified: true,
-        referralLink: "https://example.com/ref/emily-johnson",
-        status: "Active",
-    },
-    {
-        id: 3,
-        user: {
-            name: "Michael Chen",
-            email: "michael@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "IB10025",
-        dateCreated: "2025-02-25T16:45:00",
-        kycVerified: false,
-        referralLink: "https://example.com/ref/michael-chen",
-        status: "Pending",
-    },
-    {
-        id: 4,
-        user: {
-            name: "Sarah Williams",
-            email: "sarah@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "IB10026",
-        dateCreated: "2025-01-20T11:20:00",
-        kycVerified: true,
-        referralLink: "https://example.com/ref/sarah-williams",
-        status: "Active",
-    },
-    {
-        id: 5,
-        user: {
-            name: "David Rodriguez",
-            email: "david@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "IB10027",
-        dateCreated: "2025-03-05T08:30:00",
-        kycVerified: false,
-        referralLink: "https://example.com/ref/david-rodriguez",
-        status: "Pending",
-    },
-    {
-        id: 6,
-        user: {
-            name: "Lisa Kim",
-            email: "lisa@example.com",
-            avatar: "/placeholder.svg",
-        },
-        accountNumber: "IB10028",
-        dateCreated: "2025-02-18T13:10:00",
-        kycVerified: true,
-        referralLink: "https://example.com/ref/lisa-kim",
-        status: "Inactive",
-    },
-]
+// Import API functions and types
+import {
+    Group,
+    IBConfiguration,
+    getGroups,
+    getIBConfigurationsByGroup,
+    createIBConfiguration,
+    updateIBConfiguration
+} from "@/pages/admin/features/ibapi"
 
 const IBPartnersPage = () => {
-    const [searchTerm, setSearchTerm] = useState("")
-    const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
-    const [selectedKycStatus, setSelectedKycStatus] = useState<string | null>(null)
+    // State for Groups and IB Configuration
+    const [groups, setGroups] = useState<Group[]>([])
+    const [selectedGroup, setSelectedGroup] = useState<string>("")
+    const [ibConfigurations, setIbConfigurations] = useState<IBConfiguration[]>([])
+    const [loading, setLoading] = useState(true)
 
-    // Filter IB Partners based on search and filters
-    const filteredIBPartners = ibPartners.filter((partner) => {
-        // Search filter
-        const matchesSearch =
-            searchTerm === "" ||
-            partner.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            partner.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            partner.accountNumber.toLowerCase().includes(searchTerm.toLowerCase())
+    // State for dialog
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [isEditMode, setIsEditMode] = useState(false)
+    const [currentConfigId, setCurrentConfigId] = useState("")
+    const [newLevel, setNewLevel] = useState("")
+    const [newBonusPerLot, setNewBonusPerLot] = useState("")
 
-        // Status filter
-        const matchesStatus = selectedStatus === null || partner.status === selectedStatus
+    // Fetch data on component mount
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                setLoading(true);
 
-        // KYC filter
-        const matchesKyc =
-            selectedKycStatus === null ||
-            (selectedKycStatus === "Verified" && partner.kycVerified) ||
-            (selectedKycStatus === "Unverified" && !partner.kycVerified)
+                // Fetch groups from backend
+                const fetchedGroups = await getGroups();
+                setGroups(fetchedGroups);
 
-        return matchesSearch && matchesStatus && matchesKyc
-    })
+                // Set the first group as default selected if available
+                if (fetchedGroups.length > 0) {
+                    setSelectedGroup(fetchedGroups[0]._id);
+                    // Fetch IB configurations for this group
+                    const configs = await getIBConfigurationsByGroup(fetchedGroups[0]._id);
+                    setIbConfigurations(configs);
+                }
+            } catch (error: any) {
+                console.error('Error fetching initial data:', error);
+                toast.error("Error", {
+                    description: error.message || "Failed to load initial data"
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    // Reset all filters
-    const resetFilters = () => {
-        setSearchTerm("")
-        setSelectedStatus(null)
-        setSelectedKycStatus(null)
-    }
+        fetchInitialData();
+    }, []);
 
-    // Format date
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString)
-        return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        })
-    }
-
-    // Copy referral link
-    const copyReferralLink = (link: string) => {
-        navigator.clipboard.writeText(link)
-        toast({
-            title: "Copied to clipboard",
-            description: "Referral link has been copied to clipboard",
-        })
-    }
-
-    // Get status badge
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "Active":
-                return (
-                    <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">
-                        <Check className="mr-1 h-3 w-3" /> Active
-                    </Badge>
-                )
-            case "Pending":
-                return (
-                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                        Pending
-                    </Badge>
-                )
-            case "Inactive":
-                return (
-                    <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100">
-                        <X className="mr-1 h-3 w-3" /> Inactive
-                    </Badge>
-                )
-            default:
-                return <Badge variant="outline">{status}</Badge>
+    // Handle group change
+    const handleGroupChange = async (value: string) => {
+        setSelectedGroup(value);
+        try {
+            setLoading(true);
+            const configs = await getIBConfigurationsByGroup(value);
+            setIbConfigurations(configs);
+        } catch (error: any) {
+            toast.error("Error", {
+                description: error.message || "Failed to load configurations"
+            });
+        } finally {
+            setLoading(false);
         }
-    }
+    };
+
+    // Handle add new configuration
+    const handleAddConfig = () => {
+        setIsEditMode(false);
+        setCurrentConfigId("");
+        setNewLevel("");
+        setNewBonusPerLot("");
+        setIsDialogOpen(true);
+    };
+
+    // Handle edit configuration
+    const handleEditConfig = (config: IBConfiguration) => {
+        setIsEditMode(true);
+        setCurrentConfigId(config._id);
+        setNewLevel(config.level.toString());
+        setNewBonusPerLot(config.bonusPerLot.toString());
+        setIsDialogOpen(true);
+    };
+
+    // Submit configuration form
+    const handleSubmitConfig = async () => {
+        try {
+            if (newLevel.trim() === "" || newBonusPerLot.trim() === "") {
+                toast.error("Error", {
+                    description: "Please fill all fields"
+                });
+                return;
+            }
+
+            const level = parseInt(newLevel);
+            const bonusPerLot = parseFloat(newBonusPerLot);
+
+            if (level < 1 || level > 10) {
+                toast.error("Error", {
+                    description: "Level must be between 1 and 10"
+                });
+                return;
+            }
+
+            if (bonusPerLot < 0) {
+                toast.error("Error", {
+                    description: "Bonus per lot must be non-negative"
+                });
+                return;
+            }
+
+            if (isEditMode) {
+                // Update existing configuration
+                await updateIBConfiguration(currentConfigId, bonusPerLot);
+                toast.success("Success", {
+                    description: "IB configuration updated successfully"
+                });
+            } else {
+                // Create new configuration
+                await createIBConfiguration(selectedGroup, level, bonusPerLot);
+                toast.success("Success", {
+                    description: "IB configuration added successfully"
+                });
+            }
+
+            // Refresh configurations
+            const updatedConfigs = await getIBConfigurationsByGroup(selectedGroup);
+            setIbConfigurations(updatedConfigs);
+            setIsDialogOpen(false);
+        } catch (error: any) {
+            console.error('Error submitting configuration:', error);
+            toast.error("Error", {
+                description: error.response?.data?.message || "Failed to save configuration"
+            });
+        }
+    };
 
     return (
         <div className="space-y-6">
+
+            {/* IB Partner Header Section */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                <h1 className="text-2xl font-bold">IB Partners</h1>
-                <Button>Add New Partner</Button>
+                <CardHeader className="px-0">
+                    <CardTitle>IB Commission Configuration</CardTitle>
+                    <CardDescription>Manage commission rates for Introducing Broker partners</CardDescription>
+                </CardHeader>
+                <div className="w-full sm:w-1/3">
+                    <Select value={selectedGroup} onValueChange={handleGroupChange}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select Group" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {groups.map((group) => (
+                                <SelectItem key={group._id} value={group._id}>
+                                    {group.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>IB Partner List</CardTitle>
-                    <CardDescription>Manage and view all Introducing Broker partners</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col space-y-4">
-                        {/* Search and filters */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    type="search"
-                                    placeholder="Search by name, email, or account..."
-                                    className="pl-8"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="flex gap-1">
-                                            <Filter className="h-4 w-4" />
-                                            Filters
-                                            <ChevronDown className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-[200px]">
-                                        <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
+            {/* IB Configuration Section */}
+            <div className="rounded-md border shadow-sm">
+                <div className="flex justify-between items-center p-4 bg-muted/50">
+                    <h2 className="text-xl font-semibold">IB Configuration</h2>
+                    <Button className="flex items-center gap-1" onClick={handleAddConfig}>
+                        <PlusCircle className="h-4 w-4" /> Add New
+                    </Button>
+                </div>
 
-                                        <div className="p-2">
-                                            <p className="text-xs font-medium mb-1">Status</p>
-                                            <Select value={selectedStatus || ""} onValueChange={setSelectedStatus}>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="All Statuses" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">All Statuses</SelectItem>
-                                                    <SelectItem value="Active">Active</SelectItem>
-                                                    <SelectItem value="Pending">Pending</SelectItem>
-                                                    <SelectItem value="Inactive">Inactive</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-
-                                        <div className="p-2">
-                                            <p className="text-xs font-medium mb-1">KYC Status</p>
-                                            <Select value={selectedKycStatus || ""} onValueChange={setSelectedKycStatus}>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="All Statuses" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">All Statuses</SelectItem>
-                                                    <SelectItem value="Verified">Verified</SelectItem>
-                                                    <SelectItem value="Unverified">Unverified</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={resetFilters}>
-                                            <X className="mr-2 h-4 w-4" />
-                                            Reset Filters
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-
-                                <Button variant="outline">
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Export
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Applied filters */}
-                        {(selectedStatus || selectedKycStatus) && (
-                            <div className="flex flex-wrap gap-2">
-                                {selectedStatus && (
-                                    <Badge variant="secondary" className="flex items-center gap-1">
-                                        Status: {selectedStatus}
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-4 w-4 ml-1 p-0"
-                                            onClick={() => setSelectedStatus(null)}
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </Button>
-                                    </Badge>
-                                )}
-                                {selectedKycStatus && (
-                                    <Badge variant="secondary" className="flex items-center gap-1">
-                                        KYC: {selectedKycStatus}
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-4 w-4 ml-1 p-0"
-                                            onClick={() => setSelectedKycStatus(null)}
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </Button>
-                                    </Badge>
-                                )}
-                                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={resetFilters}>
-                                    Clear All
-                                </Button>
-                            </div>
-                        )}
-
-                        {/* Table */}
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>User</TableHead>
-                                        <TableHead>Account Number</TableHead>
-                                        <TableHead>Date Created</TableHead>
-                                        <TableHead>KYC Verified</TableHead>
-                                        <TableHead>Referral Link</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead></TableHead>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-1/3 font-semibold">Level</TableHead>
+                                <TableHead className="w-1/3 font-semibold">Bonus/Lot</TableHead>
+                                <TableHead className="w-1/3 text-right font-semibold">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                                        Loading configurations...
+                                    </TableCell>
+                                </TableRow>
+                            ) : ibConfigurations.length > 0 ? (
+                                ibConfigurations.map((config) => (
+                                    <TableRow key={config._id} className="hover:bg-muted/30">
+                                        <TableCell className="font-medium py-4">Level {config.level}</TableCell>
+                                        <TableCell className="py-4">${config.bonusPerLot.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right py-4">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleEditConfig(config)}
+                                                className="flex items-center gap-1 ml-auto"
+                                            >
+                                                <Pencil className="h-4 w-4" /> Edit
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredIBPartners.map((partner) => (
-                                        <TableRow key={partner.id}>
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar>
-                                                        <AvatarImage src={partner.user.avatar} alt={partner.user.name} />
-                                                        <AvatarFallback>{partner.user.name.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <div>
-                                                        <div className="font-medium">{partner.user.name}</div>
-                                                        <div className="text-sm text-muted-foreground">{partner.user.email}</div>
-                                                    </div>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>{partner.accountNumber}</TableCell>
-                                            <TableCell>{formatDate(partner.dateCreated)}</TableCell>
-                                            <TableCell>
-                                                {partner.kycVerified ? (
-                                                    <Badge variant="green" className="bg-green-100 text-green-800 hover:bg-green-100">
-                                                        <Check className="mr-1 h-3 w-3" /> Verified
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge variant="destructive" className="bg-red-100 text-red-800 hover:bg-red-100">
-                                                        <X className="mr-1 h-3 w-3" /> Unverified
-                                                    </Badge>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="max-w-[150px] truncate text-xs">{partner.referralLink}</div>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-6 w-6"
-                                                        onClick={() => copyReferralLink(partner.referralLink)}
-                                                    >
-                                                        <Copy className="h-3 w-3" />
-                                                        <span className="sr-only">Copy link</span>
-                                                    </Button>
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                                                        <LinkIcon className="h-3 w-3" />
-                                                        <span className="sr-only">Open link</span>
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>{getStatusBadge(partner.status)}</TableCell>
-                                            <TableCell>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                            <span className="sr-only">Open menu</span>
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                                                        <DropdownMenuItem>Edit Partner</DropdownMenuItem>
-                                                        {partner.status === "Pending" && (
-                                                            <DropdownMenuItem className="text-green-600">Approve</DropdownMenuItem>
-                                                        )}
-                                                        {partner.status === "Active" && (
-                                                            <DropdownMenuItem className="text-red-600">Deactivate</DropdownMenuItem>
-                                                        )}
-                                                        {partner.status === "Inactive" && (
-                                                            <DropdownMenuItem className="text-green-600">Activate</DropdownMenuItem>
-                                                        )}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                                        No configurations found for this group.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
 
-                        {/* Pagination */}
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
-                                Showing <strong>{filteredIBPartners.length}</strong> of <strong>{ibPartners.length}</strong> partners
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Button variant="outline" size="sm" disabled>
-                                    Previous
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                    Next
-                                </Button>
+            {/* Add/Edit Configuration Dialog */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{isEditMode ? "Edit IB Configuration" : "Add New IB Configuration"}</DialogTitle>
+                        <DialogDescription>
+                            {isEditMode
+                                ? "Update the bonus amount for this level."
+                                : "Add a new level and bonus amount for the selected group."}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="level" className="text-right">
+                                Level
+                            </Label>
+                            <Input
+                                id="level"
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={newLevel}
+                                onChange={(e) => setNewLevel(e.target.value)}
+                                className="col-span-3"
+                                disabled={isEditMode}
+                                placeholder="Enter level (1-10)"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="bonusPerLot" className="text-right">
+                                Bonus/Lot
+                            </Label>
+                            <div className="col-span-3 flex items-center">
+                                <span className="mr-2">$</span>
+                                <Input
+                                    id="bonusPerLot"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={newBonusPerLot}
+                                    onChange={(e) => setNewBonusPerLot(e.target.value)}
+                                    className="flex-grow"
+                                    placeholder="Enter bonus amount per lot"
+                                />
                             </div>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSubmitConfig}>
+                            {isEditMode ? "Update" : "Add"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
 
 export default IBPartnersPage
-

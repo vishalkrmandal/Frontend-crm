@@ -1,7 +1,5 @@
 // Frontend\src\pages\admin\support\admin\ticket\AdminTicketDetail.tsx
 
-// Frontend\src\pages\admin\support\admin\ticket\AdminTicketDetail.tsx
-
 "use client"
 
 import { useState, useEffect, useRef } from "react"

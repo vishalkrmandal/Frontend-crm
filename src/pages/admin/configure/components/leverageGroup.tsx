@@ -123,6 +123,7 @@ export default function LeverageAndGroup() {
                 },
             })
             setGroups(res.data.data)
+            console.log('Groups:', res.data.data)
         } catch (error) {
             console.error('Error fetching groups:', error)
             toast.error('Failed to load groups')
