@@ -28,6 +28,7 @@ import AdminPortal from './pages/admin/support/admin/AdminPortal';
 import TicketDetail from './pages/client/support/app/client/ticket.tsx/TicketDetail';
 import AdminTicketDetail from './pages/admin/support/admin/ticket/AdminTicketDetail';
 import AdminNewTicket from './pages/admin/support/admin/CreateTicket';
+import AdminClientDetail from './pages/admin/support/admin/ticket/ClientDetail';
 import AdminLayout from './pages/admin/layout/Layout';
 import AdminDashboard from './pages/admin/features/AdminDashboard';
 import ClientsPage from './pages/admin/features/ClientsPage';
@@ -39,6 +40,7 @@ import ConfigurationPage from './pages/admin/configure/ConfigurePage';
 import ProtectedRoute from './ProtectedRoute';
 import ResetPassword from './pages/auth/sign-in/components/ResetPassword';
 import ProfilePage from './pages/client/layout/profile/ProfilePage';
+import ClientTickets from './pages/admin/support/admin/ticket/ClientTickets';
 
 const routes: RouteObject[] = [
   {
@@ -271,6 +273,14 @@ const routes: RouteObject[] = [
               {
                 path: 'new-ticket',
                 element: <AdminNewTicket />
+              },
+              {
+                path: 'client/:id',
+                element: <AdminClientDetail />
+              },
+              {
+                path: 'client/:id/tickets',
+                element: <ClientTickets />
               }
             ]
           }

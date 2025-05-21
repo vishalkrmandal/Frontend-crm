@@ -1,3 +1,5 @@
+// Frontend\src\pages\admin\support\admin\CreateTicket.tsx
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -42,41 +44,44 @@ export default function CreateTicket() {
 
     const fetchClients = async () => {
         try {
-            const token = getToken()
+            const token = getToken();
 
             if (!token) {
-                setError("Authentication failed. Please log in again.")
-                setLoading(false)
-                navigate("/login")
-                return
+                setError("Authentication failed. Please log in again.");
+                setLoading(false);
+                navigate("/login");
+                return;
             }
 
+            // Changed to get all clients with role 'client'
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/clients?role=client`,
+                `${import.meta.env.VITE_API_URL}/api/admin/clients?role=client`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 }
-            )
+            );
+
+            console.log("Clients response:", response.data);
 
             if (response.data.success) {
-                setClients(response.data.data)
+                // Setting the array of clients
+                setClients(response.data.data);
             } else {
-                setError("Failed to fetch clients")
+                setError("Failed to fetch clients");
             }
         } catch (error) {
-            console.error("Error fetching clients:", error)
+            console.error("Error fetching clients:", error);
             if (axios.isAxiosError(error)) {
-                setError(error.response?.data?.message || "Failed to fetch clients")
+                setError(error.response?.data?.message || "Failed to fetch clients");
             } else {
-                setError("Failed to fetch clients")
+                setError("Failed to fetch clients");
             }
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
-
+    };
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0]
@@ -153,7 +158,7 @@ export default function CreateTicket() {
 
             if (response.data.success) {
                 toast.success("Ticket created successfully")
-                navigate("/admin/support")
+                navigate("/admin/support/portal")
             }
         } catch (error) {
             console.error("Error creating ticket:", error)
@@ -243,7 +248,7 @@ export default function CreateTicket() {
                                     value={selectedClient}
                                     onValueChange={setSelectedClient}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger id="client">
                                         <SelectValue placeholder="Select a client" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -255,7 +260,6 @@ export default function CreateTicket() {
                                     </SelectContent>
                                 </Select>
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="subject">Subject</Label>
                                 <Input

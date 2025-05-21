@@ -93,6 +93,7 @@ type Admin = {
     firstname: string
     lastname: string
     email?: string
+    role: string
 }
 
 export default function AdminTicketDetail() {
@@ -113,6 +114,35 @@ export default function AdminTicketDetail() {
     const navigate = useNavigate()
     const messageEndRef = useRef<HTMLDivElement | null>(null)
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const [clientStats, setClientStats] = useState({ totalTickets: 0 });
+
+    const fetchClientStats = async (clientId: string) => {
+        try {
+            if (!clientId) return;
+
+            const token = getToken();
+            const response = await axios.get(
+                `${import.meta.env.VITE_API_URL}/api/tickets/client/${clientId}/stats`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (response.data.success) {
+                setClientStats(response.data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching client stats:", error);
+        }
+    };
+    // Call this function when ticket loads
+    useEffect(() => {
+        if (ticket?.createdBy?._id) {
+            fetchClientStats(ticket.createdBy._id);
+        }
+    }, [ticket]);
 
     useEffect(() => {
         fetchTicket()
@@ -221,7 +251,7 @@ export default function AdminTicketDetail() {
                 }
             )
 
-            console.log("Ticket response:", response.data);;
+            console.log("Ticket response:", response.data);
 
             if (response.data.success) {
                 setTicket(response.data.data)
@@ -242,30 +272,32 @@ export default function AdminTicketDetail() {
 
     const fetchAdmins = async () => {
         try {
-            const token = getToken()
+            const token = getToken();
 
             if (!token) {
-                return
+                return;
             }
 
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/clients?role=admin`,
+                `${import.meta.env.VITE_API_URL}/api/admin/clients?role=admin,superadmin`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 }
-            )
-
-            console.log("Admins response:", response.data);
+            );
 
             if (response.data.success) {
-                setAdmins(response.data.data)
+                // Filter to make sure we only include admin users
+                const adminUsers = response.data.data.filter(
+                    (user: Admin) => user.role === 'admin' || user.role === 'superadmin'
+                );
+                setAdmins(adminUsers);
             }
         } catch (error) {
-            console.error("Error fetching admins:", error)
+            console.error("Error fetching admins:", error);
         }
-    }
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -729,8 +761,7 @@ export default function AdminTicketDetail() {
                                     <div>
                                         <p className="text-sm font-medium">Total Tickets</p>
                                         <p className="text-sm text-muted-foreground">
-                                            {/* This would need to be fetched from the backend */}
-                                            Loading...
+                                            {clientStats.totalTickets || "0"}
                                         </p>
                                     </div>
 
@@ -739,7 +770,7 @@ export default function AdminTicketDetail() {
                                             variant="outline"
                                             asChild
                                         >
-                                            <Link to={`/admin/clients/${ticket.createdBy?._id}`}>
+                                            <Link to={`/admin/support/client/${ticket.createdBy?._id}`}>
                                                 View Customer Profile
                                             </Link>
                                         </Button>
