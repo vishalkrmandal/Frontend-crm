@@ -1,68 +1,23 @@
-//Frontend\src\pages\auth\sign-in\SignIn.tsx
+// Frontend/src/pages/auth/sign-in/SignIn.tsx
 
-import CssBaseline from '@mui/material/CssBaseline';
-import Stack from '@mui/material/Stack';
-import AppTheme from '@/Material/shared-theme/AppTheme';
-import ColorModeSelect from '@/Material/shared-theme/ColorModeSelect';
 import SignInCard from '@/pages/auth/sign-in/components/SignInCard';
+import { ThemeToggle } from '@/components/theme-toggle';
 
-
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
+export default function SignIn() {
   return (
-    <AppTheme {...props}>
-      <CssBaseline enableColorScheme />
-      <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
-      <Stack
-        direction="column"
-        component="main"
-        sx={[
-          {
-            justifyContent: 'center',
-            height: 'calc((1 - var(--template-frame-height, 0)) * 100%)',
-            marginTop: 'max(40px - var(--template-frame-height, 0px), 0px)',
-            minHeight: '100%',
-          },
-          (theme) => ({
-            '&::before': {
-              content: '""',
-              display: 'block',
-              position: 'absolute',
-              zIndex: -1,
-              inset: 0,
-              backgroundImage:
-                'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
-              backgroundRepeat: 'no-repeat',
-              ...theme.applyStyles('dark', {
-                backgroundImage:
-                  'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
-              }),
-            },
-          }),
-        ]}
-      >
-        <Stack
-          direction={{ xs: 'column-reverse', md: 'row' }}
-          sx={{
-            justifyContent: 'center',
-            gap: { xs: 6, sm: 12 },
-            p: 2,
-            mx: 'auto',
-          }}
-        >
-          <Stack
-            direction={{ xs: 'column-reverse', md: 'row' }}
-            sx={{
-              justifyContent: 'center',
-              gap: { xs: 6, sm: 12 },
-              p: { xs: 2, sm: 4 },
-              m: 'auto',
-            }}
-          >
-            {/* <Content /> */}
-            <SignInCard />
-          </Stack>
-        </Stack>
-      </Stack>
-    </AppTheme>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 flex items-center justify-center relative">
+      <ThemeToggle />
+
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob dark:bg-purple-600 dark:opacity-30"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000 dark:bg-blue-600 dark:opacity-30"></div>
+        <div className="absolute top-40 left-1/2 transform -translate-x-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000 dark:bg-pink-600 dark:opacity-30"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md">
+        <SignInCard />
+      </div>
+    </div>
   );
 }

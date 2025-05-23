@@ -37,7 +37,7 @@ const PhoneInput: React.ForwardRefExoticComponent<PhoneInputProps> =
       return (
         <RPNInput.default
           ref={ref}
-          className={cn("flex", className)}
+          className={cn("flex h-12", className)}
           flagComponent={FlagComponent}
           countrySelectComponent={CountrySelect}
           inputComponent={InputComponent}
@@ -64,7 +64,7 @@ const InputComponent = React.forwardRef<
   React.ComponentProps<"input">
 >(({ className, ...props }, ref) => (
   <Input
-    className={cn("rounded-e-lg rounded-s-none", className)}
+    className={cn("h-12 rounded-e-lg rounded-s-none bg-background/50", className)}
     {...props}
     ref={ref}
   />
@@ -92,7 +92,7 @@ const CountrySelect = ({
         <Button
           type="button"
           variant="outline"
-          className="flex gap-1 rounded-e-none rounded-s-lg border-r-0 px-3 focus:z-10"
+          className="h-12 flex gap-1 rounded-e-none rounded-s-lg border-r-0 px-3 focus:z-10 bg-background/50"
           disabled={disabled}
         >
           <FlagComponent
@@ -107,9 +107,9 @@ const CountrySelect = ({
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0">
+      <PopoverContent className="w-[300px] p-0 bg-background border border-border">
         <Command>
-          <CommandInput placeholder="Search country..." />
+          <CommandInput placeholder="Search country..." className="bg-background/50" />
           <CommandList>
             <ScrollArea className="h-72">
               <CommandEmpty>No country found.</CommandEmpty>
@@ -146,7 +146,10 @@ const CountrySelectOption = ({
   onChange,
 }: CountrySelectOptionProps) => {
   return (
-    <CommandItem className="gap-2" onSelect={() => onChange(country)}>
+    <CommandItem
+      className="gap-2 hover:bg-accent hover:text-accent-foreground"
+      onSelect={() => onChange(country)}
+    >
       <FlagComponent country={country} countryName={countryName} />
       <span className="flex-1 text-sm">{countryName}</span>
       <span className="text-sm text-foreground/50">{`+${RPNInput.getCountryCallingCode(country)}`}</span>

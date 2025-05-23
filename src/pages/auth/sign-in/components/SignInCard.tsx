@@ -1,54 +1,50 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import MuiCard from '@mui/material/Card';
-import Checkbox from '@mui/material/Checkbox';
-import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Link from '@mui/material/Link';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import { styled } from '@mui/material/styles';
-import ForgotPassword from './ForgotPassword';
-import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+// Frontend/src/pages/auth/sign-in/components/SignInCard.tsx
 
-const Card = styled(MuiCard)(({ theme }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    alignSelf: 'center',
-    width: '100%',
-    padding: theme.spacing(4),
-    gap: theme.spacing(2),
-    boxShadow:
-        'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
-    [theme.breakpoints.up('sm')]: {
-        width: '450px',
-    },
-    ...theme.applyStyles('dark', {
-        boxShadow:
-            'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
-    }),
-}));
+import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Eye, EyeOff, Mail, Lock, LogIn, UserPlus } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast, Toaster } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import ForgotPassword from './ForgotPassword';
+
+const loginSchema = z.object({
+    email: z.string().email('Please enter a valid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    rememberMe: z.boolean().default(false)
+});
 
 export default function SignInCard() {
     const { login, hasMultipleRoles } = useAuth();
     const navigate = useNavigate();
-    const [emailError, setEmailError] = React.useState(false);
-    const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
-    const [passwordError, setPasswordError] = React.useState(false);
-    const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-    const [open, setOpen] = React.useState(false);
+    const [showPassword, setShowPassword] = React.useState(false);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [showForgotPassword, setShowForgotPassword] = React.useState(false);
+
+    const form = useForm<z.infer<typeof loginSchema>>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: '',
+            password: '',
+            rememberMe: false
+        }
+    });
 
     // Check if user already has active sessions
     React.useEffect(() => {
-        // Check for existing auth tokens
         const adminToken = localStorage.getItem('adminToken');
         const clientToken = localStorage.getItem('clientToken');
         const superadminToken = localStorage.getItem('superadminToken');
 
-        // If already logged in with some role, redirect accordingly
         if (adminToken || superadminToken) {
             navigate('/admin');
         } else if (clientToken) {
@@ -56,197 +52,214 @@ export default function SignInCard() {
         }
     }, [navigate]);
 
-    const handleClickOpen = () => {
-        setOpen(true);
-    };
+    const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+        setIsSubmitting(true);
 
-    const handleClose = () => {
-        setOpen(false);
-    };
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: values.email,
+                    password: values.password
+                }),
+            });
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        if (!validateInputs()) {
-            return;
-        }
+            const data = await response.json();
 
-        const data = new FormData(event.currentTarget);
-        const email = data.get('email') as string;
-        const password = data.get('password') as string;
+            if (data.success) {
+                const userRole = data.user.role;
 
-        // Call the login API
-        fetch('http://localhost:5000/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const userRole = data.user.role;
+                // Store token and user info in localStorage based on role
+                localStorage.setItem(`${userRole}Token`, data.token);
+                localStorage.setItem(`${userRole}User`, JSON.stringify(data.user));
 
-                    // Store token and user info in localStorage based on role
-                    localStorage.setItem(`${userRole}Token`, data.token);
-                    localStorage.setItem(`${userRole}User`, JSON.stringify(data.user));
+                if (data.user.isEmailVerified === true) {
+                    toast.success('Login successful! Redirecting...', {
+                        duration: 2000
+                    });
 
-                    // Also store in generic token/user for backwards compatibility
-                    // localStorage.setItem('token', data.token);
-                    // localStorage.setItem('user', JSON.stringify(data.user));
-
-                    console.log(data.user);
-                    // Redirect based on role
-                    if (data.user.isEmailVerified === true) {
+                    setTimeout(() => {
                         if (userRole === 'admin' || userRole === 'superadmin') {
                             window.location.href = '/admin';
                         } else {
                             window.location.href = '/client';
                         }
-                    } else {
-                        alert('Please Verify Your Email');
-                    }
-
+                    }, 1000);
                 } else {
-                    // Show error message
-                    alert(data.message || 'Login failed');
+                    toast.error('Please verify your email address first');
                 }
-            })
-            .catch(error => {
-                console.error('Login error:', error);
-                alert('An error occurred during login');
-            });
+            } else {
+                toast.error(data.message || 'Login failed');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            toast.error('An error occurred during login');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    const validateInputs = () => {
-        const email = document.getElementById('email') as HTMLInputElement;
-        const password = document.getElementById('password') as HTMLInputElement;
-
-        let isValid = true;
-
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-            setEmailError(true);
-            setEmailErrorMessage('Please enter a valid email address.');
-            isValid = false;
-        } else {
-            setEmailError(false);
-            setEmailErrorMessage('');
-        }
-
-        if (!password.value || password.value.length < 6) {
-            setPasswordError(true);
-            setPasswordErrorMessage('Password must be at least 6 characters long.');
-            isValid = false;
-        } else {
-            setPasswordError(false);
-            setPasswordErrorMessage('');
-        }
-
-        return isValid;
-    };
-
-    // Check if user has multiple roles already logged in
     const multipleRoles = hasMultipleRoles();
 
     return (
-        <Card variant="outlined">
-            {/* <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
-                <SitemarkIcon />
-            </Box> */}
-            {multipleRoles && (
-                <Typography
-                    variant="body2"
-                    color="primary"
-                    sx={{
-                        backgroundColor: theme => theme.palette.mode === 'dark'
-                            ? 'rgba(0, 100, 255, 0.1)'
-                            : 'rgba(0, 100, 255, 0.05)',
-                        padding: 1.5,
-                        borderRadius: 1
-                    }}
-                >
-                    You are already logged in with multiple accounts. You can switch between them in your profile.
-                </Typography>
-            )}
-            <Typography
-                component="h1"
-                variant="h4"
-                sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
-            >
-                Sign in
-            </Typography>
-            <Box
-                component="form"
-                onSubmit={handleSubmit}
-                noValidate
-                sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}
-            >
-                <FormControl>
-                    <FormLabel htmlFor="email">Email</FormLabel>
-                    <TextField
-                        error={emailError}
-                        helperText={emailErrorMessage}
-                        id="email"
-                        type="email"
-                        name="email"
-                        placeholder="your@email.com"
-                        autoComplete="email"
-                        autoFocus
-                        required
-                        fullWidth
-                        variant="outlined"
-                        color={emailError ? 'error' : 'primary'}
-                    />
-                </FormControl>
-                <FormControl>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <FormLabel htmlFor="password">Password</FormLabel>
-                        <Link
-                            component="button"
-                            type="button"
-                            onClick={handleClickOpen}
-                            variant="body2"
-                            sx={{ alignSelf: 'baseline' }}
-                        >
-                            Forgot your password?
-                        </Link>
-                    </Box>
-                    <TextField
-                        error={passwordError}
-                        helperText={passwordErrorMessage}
-                        name="password"
-                        placeholder="••••••"
-                        type="password"
-                        id="password"
-                        autoComplete="current-password"
-                        autoFocus
-                        required
-                        fullWidth
-                        variant="outlined"
-                        color={passwordError ? 'error' : 'primary'}
-                    />
-                </FormControl>
-                <FormControlLabel
-                    control={<Checkbox value="remember" color="primary" />}
-                    label="Remember me"
-                />
-                <ForgotPassword open={open} handleClose={handleClose} />
-                <Button type="submit" fullWidth variant="contained" onClick={() => validateInputs()}>
-                    Sign in
-                </Button>
-                <Typography sx={{ textAlign: 'center' }}>
-                    Don&apos;t have an account?{' '}
-                    <span>
-                        <Link
-                            href="/signup"
-                            variant="body2"
-                            sx={{ alignSelf: 'center' }}
-                        >
-                            Sign up
-                        </Link>
-                    </span>
-                </Typography>
-            </Box>
-        </Card>
+        <>
+            <Card className="w-full max-w-md shadow-2xl border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+                <CardHeader className="text-center space-y-4 pb-8">
+                    <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
+                        <LogIn className="w-8 h-8 text-white" />
+                    </div>
+                    <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Welcome Back
+                    </CardTitle>
+                    <CardDescription className="text-lg text-muted-foreground">
+                        Sign in to your account to continue
+                    </CardDescription>
+                </CardHeader>
+
+                <CardContent className="px-8 pb-8">
+                    {multipleRoles && (
+                        <Alert className="mb-6 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20">
+                            <AlertDescription className="text-blue-800 dark:text-blue-200">
+                                You are already logged in with multiple accounts. You can switch between them in your profile.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="flex items-center gap-2">
+                                            <Mail className="w-4 h-4" />
+                                            Email Address
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="Enter your email"
+                                                type="email"
+                                                className="h-12 bg-background/50"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel className="flex items-center gap-2">
+                                                <Lock className="w-4 h-4" />
+                                                Password
+                                            </FormLabel>
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                className="p-0 h-auto text-sm font-medium text-blue-600 hover:text-blue-700"
+                                                onClick={() => setShowForgotPassword(true)}
+                                            >
+                                                Forgot password?
+                                            </Button>
+                                        </div>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Input
+                                                    placeholder="Enter your password"
+                                                    type={showPassword ? "text" : "password"}
+                                                    className="h-12 bg-background/50 pr-10"
+                                                    {...field}
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-4 w-4" />
+                                                    ) : (
+                                                        <Eye className="h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="rememberMe"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel className="text-sm font-medium">
+                                                Remember me
+                                            </FormLabel>
+                                        </div>
+                                    </FormItem>
+                                )}
+                            />
+
+                            <Button
+                                type="submit"
+                                className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        Signing in...
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <LogIn className="w-4 h-4" />
+                                        Sign In
+                                    </div>
+                                )}
+                            </Button>
+
+                            <div className="text-center pt-4">
+                                <p className="text-muted-foreground">
+                                    Don't have an account?{" "}
+                                    <Button
+                                        variant="link"
+                                        className="p-0 h-auto font-semibold text-blue-600 hover:text-blue-700"
+                                        onClick={() => navigate('/signup')}
+                                    >
+                                        <UserPlus className="w-4 h-4 mr-1" />
+                                        Create account
+                                    </Button>
+                                </p>
+                            </div>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+
+            <ForgotPassword
+                open={showForgotPassword}
+                handleClose={() => setShowForgotPassword(false)}
+            />
+            <Toaster richColors position="top-right" />
+        </>
     );
 }

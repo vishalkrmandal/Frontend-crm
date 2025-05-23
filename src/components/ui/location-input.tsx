@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils'
 // Import JSON data directly
 import countries from '@/components/data/countries.json'
 import states from '@/components/data/states.json'
-import { useTheme } from '@mui/material/styles';
+import { useTheme } from '@/context/ThemeContext';
 
 interface Timezone {
   zoneName: string
@@ -80,7 +80,7 @@ const LocationSelector = ({
   onCountryChange,
   onStateChange,
 }: LocationSelectorProps) => {
-  const theme = useTheme();
+  const { theme } = useTheme();
   const [selectedCountry, setSelectedCountry] = useState<CountryProps | null>(
     null,
   )
@@ -119,12 +119,7 @@ const LocationSelector = ({
             role="combobox"
             aria-expanded={openCountryDropdown}
             disabled={disabled}
-            className="w-full justify-between"
-            style={{
-              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-              color: theme.palette.text.primary,
-              borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
-            }}
+            className="h-12 w-full justify-between bg-background/50"
           >
             {selectedCountry ? (
               <div className="flex items-center gap-2">
@@ -137,19 +132,11 @@ const LocationSelector = ({
             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0" style={{
-          backgroundColor: theme.palette.background.paper,
-          color: theme.palette.text.primary,
-        }}>
-          <Command style={{
-            backgroundColor: 'transparent',
-            color: theme.palette.text.primary,
-          }}
-          >
-            <CommandInput placeholder="Search country..." style={{
-              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-              color: theme.palette.text.primary,
-            }}
+        <PopoverContent className="p-0 bg-background border border-border">
+          <Command className="bg-transparent">
+            <CommandInput
+              placeholder="Search country..."
+              className="bg-background/50"
             />
             <CommandList>
               <CommandEmpty>No country found.</CommandEmpty>
@@ -163,14 +150,7 @@ const LocationSelector = ({
                         handleCountrySelect(country)
                         setOpenCountryDropdown(false)
                       }}
-                      className="flex cursor-pointer items-center justify-between text-sm"
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: theme.palette.text.primary,
-                        '&:hover': {
-                          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                        }
-                      }}
+                      className="flex cursor-pointer items-center justify-between text-sm hover:bg-accent hover:text-accent-foreground"
                     >
                       <div className="flex items-center gap-2">
                         <span>{country.emoji}</span>
@@ -203,12 +183,7 @@ const LocationSelector = ({
               role="combobox"
               aria-expanded={openStateDropdown}
               disabled={!selectedCountry}
-              className="w-full justify-between"
-              style={{
-                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                color: theme.palette.text.primary,
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
-              }}
+              className="h-12 w-full justify-between bg-background/50"
             >
               {selectedState ? (
                 <span>{selectedState.name}</span>
@@ -218,21 +193,11 @@ const LocationSelector = ({
               <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="p-0"
-            style={{
-              backgroundColor: theme.palette.background.paper,
-              color: theme.palette.text.primary,
-            }}
-          >
-            <Command style={{
-              backgroundColor: 'transparent',
-              color: theme.palette.text.primary,
-            }}>
-              <CommandInput placeholder="Search state..."
-                style={{
-                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                  color: theme.palette.text.primary,
-                }}
+          <PopoverContent className="p-0 bg-background border border-border">
+            <Command className="bg-transparent">
+              <CommandInput
+                placeholder="Search state..."
+                className="bg-background/50"
               />
               <CommandList>
                 <CommandEmpty>No state found.</CommandEmpty>
@@ -246,14 +211,7 @@ const LocationSelector = ({
                           handleStateSelect(state)
                           setOpenStateDropdown(false)
                         }}
-                        className="flex cursor-pointer items-center justify-between text-sm"
-                        style={{
-                          backgroundColor: 'transparent',
-                          color: theme.palette.text.primary,
-                          '&:hover': {
-                            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                          }
-                        }}
+                        className="flex cursor-pointer items-center justify-between text-sm hover:bg-accent hover:text-accent-foreground"
                       >
                         <span>{state.name}</span>
                         <Check
