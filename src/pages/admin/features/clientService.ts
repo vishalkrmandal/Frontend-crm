@@ -40,7 +40,7 @@ const clientService = {
         try {
             const response = await axios.put(`${API_URL}/clients/${id}`, clientData, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
             });
             return response.data;
@@ -82,7 +82,7 @@ const clientService = {
         try {
             const response = await axios.put(`${API_URL}/clients/${id}/suspend`, {}, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
             });
             return response.data;

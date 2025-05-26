@@ -38,7 +38,7 @@ export interface IBPartner {
 
 // Setup axios instance with auth token
 const getAuthHeader = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('adminToken');
     return {
         headers: {
             Authorization: token ? `Bearer ${token}` : ''
@@ -108,7 +108,7 @@ export const updateIBConfiguration = async (
 
 export const deleteIBConfiguration = async (id: string): Promise<void> => {
     try {
-        await axios.delete(`${API_URL}/ib-configurations/${id}`, getAuthHeader());
+        await axios.delete(`${API_URL}/api/ib-configurations/${id}`, getAuthHeader());
     } catch (error) {
         console.error("Error deleting IB configuration:", error);
         throw error;

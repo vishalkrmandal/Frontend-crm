@@ -84,6 +84,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
       submenu: [
         { title: "Create New Account", path: "/client/partner/new-account" },
         { title: "Partner Dashboard", path: "/client/partner/dashboard" },
+        { title: "IB Withdrawal", path: "/client/partner/ib-withdrawal" },
         { title: "Multi Level IB", path: "/client/partner/multi-level-ib" },
         { title: "IB Accounts", path: "/client/partner/ib-accounts" },
         { title: "Auto Rebate Report", path: "/client/partner/auto-rebate-report" },

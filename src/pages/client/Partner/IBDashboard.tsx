@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { Banknote, History, Users, Trees, CreditCard } from "lucide-react";
 import IBTree from './IBTree';
 
@@ -67,13 +67,13 @@ const IBDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('clientToken');
 
             if (!token) {
                 return;
             }
 
-            const dashboardResponse = await axios.get(`${API_BASE_URL}/api/ib-configurations/dashboard`, {
+            const dashboardResponse = await axios.get(`${API_BASE_URL}/api/ibclients/ib-configurations/dashboard`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -83,7 +83,7 @@ const IBDashboard = () => {
                 setIbSummary(dashboardResponse.data.summary);
             }
 
-            const partnersResponse = await axios.get(`${API_BASE_URL}/api/ib-configurations/partners`, {
+            const partnersResponse = await axios.get(`${API_BASE_URL}/api/ibclients/ib-configurations/partners`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -93,7 +93,7 @@ const IBDashboard = () => {
                 setPartnersList(partnersResponse.data.partners);
             }
 
-            const withdrawalsResponse = await axios.get(`${API_BASE_URL}/api/withdrawals/ib-withdrawals`, {
+            const withdrawalsResponse = await axios.get(`${API_BASE_URL}/api/ibclients/withdrawals/ib-withdrawals`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -112,14 +112,14 @@ const IBDashboard = () => {
 
     const handleWithdraw = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('clientToken');
 
             if (!token) {
                 return;
             }
 
             const response = await axios.post(
-                `${API_BASE_URL}/api/withdrawals/ib-withdraw`,
+                `${API_BASE_URL}/api/ibclients/withdrawals/ib-withdraw`,
                 { amount: ibSummary.withdrawableBalance },
                 {
                     headers: {
@@ -367,8 +367,6 @@ const IBDashboard = () => {
                     </Card>
                 </TabsContent>
             </Tabs>
-
-            <Toaster position="top-center" />
         </div>
     );
 };

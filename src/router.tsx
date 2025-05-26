@@ -1,4 +1,4 @@
-// router.tsx
+// router.tsx - Updated with referral signup routes
 import { createBrowserRouter, RouteObject } from 'react-router-dom';
 import Layout from "./pages/client/layout/Layout"
 import Dashboard from "./pages/client/Dashboard/Dashboard"
@@ -12,7 +12,7 @@ import TradingContest from "./pages/client/account/TradingContest"
 import TradingPlatforms from './pages/client/Trading/TradingPlatforms';
 import ReferFriend from './pages/client/Refer/ReferFriend';
 import CreatePartnerAccount from './pages/client/Partner/CreatePartnerAccount';
-import PartnerDashboard from './pages/client/Partner/PartnerDashboard';
+import IBDashboard from './pages/client/Partner/IBDashboard';
 import MultiLevelIB from './pages/client/Partner/MultiLevelIB';
 import IBAccounts from './pages/client/Partner/IBAccounts';
 import AutoRebateReport from './pages/client/Partner/AutoRebateReport';
@@ -41,6 +41,8 @@ import ProtectedRoute from './ProtectedRoute';
 import ResetPassword from './pages/auth/sign-in/components/ResetPassword';
 import ProfilePage from './pages/client/layout/profile/ProfilePage';
 import ClientTickets from './pages/admin/support/admin/ticket/ClientTickets';
+import ReferralRouteHandler from './pages/auth/sign-in/ReferralRouteHandler';
+import IBWithdrawal from './pages/client/Partner/IBWithdrawal';
 
 const routes: RouteObject[] = [
   {
@@ -54,6 +56,10 @@ const routes: RouteObject[] = [
   {
     path: '/signup',
     element: <SignUp />
+  },
+  {
+    path: '/signup/:referralCode',
+    element: <ReferralRouteHandler />
   },
 
   // Client routes (protected)
@@ -134,7 +140,7 @@ const routes: RouteObject[] = [
             element: <ReferFriend />
           },
 
-          // Partner Zone
+          // Partner Zone - UPDATED ROUTES
           {
             path: 'partner',
             children: [
@@ -144,7 +150,11 @@ const routes: RouteObject[] = [
               },
               {
                 path: 'dashboard',
-                element: <PartnerDashboard />
+                element: <IBDashboard />
+              },
+              {
+                path: 'ib-withdrawal',
+                element: <IBWithdrawal />
               },
               {
                 path: 'multi-level-ib',
@@ -209,7 +219,6 @@ const routes: RouteObject[] = [
     ]
   },
 
-
   // Admin routes (protected)
   {
     element: <ProtectedRoute allowedRoles={['admin', 'superadmin']} />,
@@ -223,7 +232,6 @@ const routes: RouteObject[] = [
             index: true,
             element: <AdminDashboard />
           },
-          // ...other admin routes
           // Admin Dashboard
           {
             path: 'dashboard',
@@ -232,22 +240,21 @@ const routes: RouteObject[] = [
                 path: 'clients',
                 element: <ClientsPage />
               },
-              // Admin should have their own components for these routes
               {
                 path: 'deposits',
-                element: <DepositsPage />  // Should be AdminDeposit
+                element: <DepositsPage />
               },
               {
                 path: 'withdrawals',
-                element: <WithdrawalsPage />  // Should be AdminWithdrawal
+                element: <WithdrawalsPage />
               },
               {
                 path: 'transactions',
-                element: <TransactionsPage />  // Should be AdminTransactionHistory
+                element: <TransactionsPage />
               },
               {
                 path: 'ib-partners',
-                element: <IBPartnersPage />  // Should be AdminPartners
+                element: <IBPartnersPage />
               }
             ]
           },
@@ -288,7 +295,6 @@ const routes: RouteObject[] = [
       }
     ]
   }
-
 ];
 
 export default createBrowserRouter(routes);

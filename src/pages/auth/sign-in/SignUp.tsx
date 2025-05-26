@@ -1,23 +1,23 @@
-// Frontend/src/pages/auth/sign-in/SignUp.tsx
+// Frontend/src/pages/auth/sign-in/SignUp.tsx - Updated without manual referral code input
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { CalendarIcon, Eye, EyeOff, Phone, User, Mail, Lock, Globe } from "lucide-react";
+import { CalendarIcon, Eye, EyeOff, Phone, User, Mail, Lock, Globe, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-// import { Calendar } from "@/components/ui/calendar";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast, Toaster } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import LocationSelector from "@/components/ui/location-input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const API_BASE_URL = 'http://localhost:5000/api/auth';
+const API_BASE_URL = 'http://localhost:5000';
 
 const formSchema = z.object({
     firstname: z.string().min(1, "First name is required").max(50, "First name too long"),
@@ -26,18 +26,25 @@ const formSchema = z.object({
     phone: z.string().min(10, "Enter a valid phone number"),
     dateofbirth: z.date({ required_error: "Date of birth is required" }),
     email: z.string().email("Invalid email format"),
-    password: z.string()
-        .min(6, "Password must be at least 6 characters")
-    // .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain uppercase, lowercase, and number") 
-    ,
-    confirmPassword: z.string().min(1, "Please confirm your password")
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+    referralCode: z.string().optional()
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"]
 });
 
-export default function SignUp() {
+interface SignUpProps {
+    validReferral?: {
+        code: string;
+        userName: string;
+        preValidated: boolean;
+    };
+}
+
+export default function SignUp({ validReferral }: SignUpProps) {
     const navigate = useNavigate();
+    const location = useLocation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -53,15 +60,23 @@ export default function SignUp() {
             phone: "",
             email: "",
             password: "",
-            confirmPassword: ""
+            confirmPassword: "",
+            referralCode: validReferral?.code || ""
         },
     });
+
+    // Handle pre-validated referral from ReferralRouteHandler
+    useEffect(() => {
+        if (validReferral?.preValidated) {
+            form.setValue("referralCode", validReferral.code);
+        }
+    }, [validReferral, form]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             setIsSubmitting(true);
 
-            const response = await fetch(`${API_BASE_URL}/signup`, {
+            const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -107,9 +122,28 @@ export default function SignUp() {
                         Create Your Account
                     </CardTitle>
                     <CardDescription className="text-lg text-muted-foreground">
-                        Join us today and start your journey
+                        {validReferral?.preValidated && validReferral.userName ?
+                            `Join us today! You were referred by ${validReferral.userName}` :
+                            "Join us today and start your journey"
+                        }
                     </CardDescription>
                 </CardHeader>
+
+                {/* Valid Referral Alert */}
+                {validReferral?.preValidated && (
+                    <div className="px-8 mb-4">
+                        <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <AlertTitle className="text-green-800 dark:text-green-200">
+                                Valid Referral Code!
+                            </AlertTitle>
+                            <AlertDescription className="text-green-700 dark:text-green-300">
+                                You were referred by <strong>{validReferral.userName}</strong>.
+                                The referral bonus will be applied to your account.
+                            </AlertDescription>
+                        </Alert>
+                    </div>
+                )}
 
                 <CardContent className="px-8 pb-8">
                     <Form {...form}>
@@ -201,7 +235,6 @@ export default function SignUp() {
                                                 <PhoneInput
                                                     placeholder="Enter phone number"
                                                     defaultCountry="IN"
-                                                    // className="h-12 bg-background/50"
                                                     {...field}
                                                 />
                                             </FormControl>
@@ -254,6 +287,11 @@ export default function SignUp() {
                                     </FormItem>
                                 )}
                             />
+
+                            {/* Hidden referral code field for pre-validated referrals */}
+                            {validReferral?.preValidated && (
+                                <input type="hidden" {...form.register("referralCode")} />
+                            )}
 
                             {/* Password Fields */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
