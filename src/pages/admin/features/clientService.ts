@@ -2,14 +2,14 @@
 
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const clientService = {
 
     // Get all clients
     getAllClients: async () => {
         try {
-            const response = await axios.get(`${API_URL}/clients`, {
+            const response = await axios.get(`${API_BASE_URL}/api/clients`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -24,7 +24,7 @@ const clientService = {
     // Get client details
     getClientDetails: async (id: string) => {
         try {
-            const response = await axios.get(`${API_URL}/clients/${id}`, {
+            const response = await axios.get(`${API_BASE_URL}/api/clients/${id}`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -38,7 +38,7 @@ const clientService = {
     // Update client
     updateClient: async (id: string, clientData: any) => {
         try {
-            const response = await axios.put(`${API_URL}/clients/${id}`, clientData, {
+            const response = await axios.put(`${API_BASE_URL}/api/clients/${id}`, clientData, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -52,7 +52,7 @@ const clientService = {
     // Update client password
     updateClientPassword: async (id: string, password: string) => {
         try {
-            const response = await axios.put(`${API_URL}/clients/${id}/update-password`, { password }, {
+            const response = await axios.put(`${API_BASE_URL}/api/clients/${id}/update-password`, { password }, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -66,7 +66,7 @@ const clientService = {
     // Get client password
     getClientPassword: async (id: string) => {
         try {
-            const response = await axios.get(`${API_URL}/clients/${id}/password`, {
+            const response = await axios.get(`${API_BASE_URL}/api/clients/${id}/password`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -80,7 +80,7 @@ const clientService = {
     // Suspend client
     suspendClient: async (id: string) => {
         try {
-            const response = await axios.put(`${API_URL}/clients/${id}/suspend`, {}, {
+            const response = await axios.put(`${API_BASE_URL}/api/clients/${id}/suspend`, {}, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -94,7 +94,7 @@ const clientService = {
     // Activate client
     activateClient: async (id: string) => {
         try {
-            const response = await axios.put(`${API_URL}/clients/${id}/activate`, {}, {
+            const response = await axios.put(`${API_BASE_URL}/api/clients/${id}/activate`, {}, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -108,7 +108,7 @@ const clientService = {
     // Get all accounts for a specific user
     getUserAccounts: async (userId: string) => {
         try {
-            const response = await axios.get(`${API_URL}/clients/users/${userId}/accounts`, {
+            const response = await axios.get(`${API_BASE_URL}/api/clients/users/${userId}/accounts`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -122,7 +122,7 @@ const clientService = {
     // Export clients to Excel
     exportToExcel: async () => {
         try {
-            const response = await axios.get(`${API_URL}/clients/export/excel`, {
+            const response = await axios.get(`${API_BASE_URL}/api/clients/export/excel`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 },
@@ -145,7 +145,7 @@ const clientService = {
     // Export clients to PDF
     exportToPdf: async () => {
         try {
-            const response = await axios.get(`${API_URL}/clients/export/pdf`, {
+            const response = await axios.get(`${API_BASE_URL}/api/clients/export/pdf`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 },
@@ -168,7 +168,7 @@ const clientService = {
 
     // In clientService.js, add this function:
     impersonateClient: async (clientId: string) => {
-        const response = await axios.post(`${API_URL}/auth/admin/impersonate/${clientId}`, {}, {
+        const response = await axios.post(`${API_BASE_URL}/api/auth/admin/impersonate/${clientId}`, {}, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('adminToken')}`
             }

@@ -3,7 +3,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Search, Filter, Download, ChevronDown, Check, X, MoreHorizontal, Eye, EyeOff, Lock, Pencil } from "lucide-react"
+import { Search, Filter, Download, ChevronDown, Check, X, MoreHorizontal, Eye, EyeOff, Lock, Pencil, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -33,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import clientService from "./clientService"
 import { toast } from "sonner"
 import { impersonateClient } from "@/utils/impersonation"
+import { useTheme } from '@/context/ThemeContext'
 
 interface Client {
     id: string;
@@ -85,6 +86,7 @@ interface Account {
 }
 
 const ClientsPage = () => {
+    const { theme } = useTheme();
     const [clients, setClients] = useState<Client[]>([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
@@ -370,21 +372,44 @@ const ClientsPage = () => {
         });
     }, [clients, searchTerm, selectedCountry, selectedKycStatus, selectedEmailStatus, selectedIbPartner]);
 
-    // Add this function to fetch user accounts
+    // Add this function to fetch user accounts with proper cleanup
+    // Add this function to fetch user accounts with proper cleanup
     const handleViewAccounts = async (client: Client) => {
         setSelectedClient(client)
         setLoadingAccounts(true)
+        setAccountsDialogOpen(true) // Open dialog immediately to show loading state
+
         try {
             const response = await clientService.getUserAccounts(client.id)
             setClientAccounts(response.data)
-            setAccountsDialogOpen(true)
+
+            // Show warning if API returned a warning (when external API fails)
+            if (response.warning) {
+                toast.warning(response.warning)
+            }
         } catch (error) {
             console.error("Error fetching user accounts:", error)
             toast.error("Failed to fetch user accounts. Please try again.")
+            handleCloseAccountsDialog() // Use proper close handler
         } finally {
             setLoadingAccounts(false)
         }
     }
+
+    // Add proper dialog close handler with cleanup
+    const handleCloseAccountsDialog = () => {
+        setAccountsDialogOpen(false)
+        setLoadingAccounts(false)
+        setClientAccounts([])
+        setSelectedClient(null)
+
+        // Force cleanup of any lingering modal states
+        setTimeout(() => {
+            document.body.style.overflow = 'unset'
+            document.body.style.paddingRight = '0px'
+        }, 100)
+    }
+
 
     // Reset all filters
     const resetFilters = () => {
@@ -1646,81 +1671,459 @@ const ClientsPage = () => {
             </Dialog>
 
             {/* Add this dialog to your JSX, right after the existing dialogs */}
-            <Dialog open={accountsDialogOpen} onOpenChange={setAccountsDialogOpen}>
-                <DialogContent className="max-w-3xl max-h-[80vh]">
-                    <DialogHeader>
-                        <DialogTitle>MT5 Accounts for {selectedClient?.firstname} {selectedClient?.lastname}</DialogTitle>
-                        <DialogDescription>
-                            Below are all MT5 trading accounts associated with this client.
-                        </DialogDescription>
-                    </DialogHeader>
+            {accountsDialogOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    {/* Backdrop */}
+                    <div
+                        className={`fixed inset-0 transition-opacity ${theme === 'dark' ? 'bg-black/80' : 'bg-black/50'
+                            }`}
+                        onClick={handleCloseAccountsDialog}
+                    />
 
-                    {loadingAccounts ? (
-                        <div className="flex justify-center p-6">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+                    {/* Dialog Content */}
+                    <div className={`
+            relative w-[95vw] max-w-4xl h-[90vh] max-h-[90vh] rounded-lg shadow-xl
+            ${theme === 'dark'
+                            ? 'bg-gray-900 border border-gray-700'
+                            : 'bg-white border border-gray-200'
+                        } 
+            flex flex-col overflow-hidden
+        `}>
+                        {/* Header */}
+                        <div className={`
+                p-4 pb-2 border-b flex justify-between items-start
+                ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}
+            `}>
+                            <div className="flex-1">
+                                <h2 className={`
+                        text-base sm:text-lg font-semibold
+                        ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+                    `}>
+                                    MT5 Accounts for {selectedClient?.firstname} {selectedClient?.lastname}
+                                </h2>
+                                <p className={`
+                        text-sm mt-1
+                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                    `}>
+                                    {loadingAccounts
+                                        ? "Fetching latest account information from trading server..."
+                                        : "Below are all MT5 trading accounts associated with this client."
+                                    }
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleCloseAccountsDialog}
+                                className={`
+                        ml-4 p-2 rounded-md transition-colors
+                        ${theme === 'dark'
+                                        ? 'hover:bg-gray-800 text-gray-400 hover:text-white'
+                                        : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
+                                    }
+                    `}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
-                    ) : clientAccounts.length === 0 ? (
-                        <div className="text-center p-6">
-                            <p>No MT5 accounts found for this client.</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-y-auto max-h-[50vh] overflow-x-auto">
-                            <Table>
-                                <TableHeader className="sticky top-0 bg-white z-10">
-                                    <TableRow>
-                                        <TableHead>Account Number</TableHead>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Leverage</TableHead>
-                                        <TableHead>Balance</TableHead>
-                                        <TableHead>Equity</TableHead>
-                                        <TableHead>Profit/Loss</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {clientAccounts
-                                        .slice() // Create a copy of the array to avoid mutating the original
-                                        .sort((a, b) => {
-                                            // Safely handle sorting with potentially undefined values
-                                            const balanceA = typeof a.balance === 'number' ? a.balance : 0;
-                                            const balanceB = typeof b.balance === 'number' ? b.balance : 0;
-                                            return balanceB - balanceA; // Sort in descending order
-                                        })
-                                        .map((account) => (
-                                            <TableRow key={account._id}>
-                                                <TableCell className="font-medium">{account.mt5Account}</TableCell>
-                                                <TableCell>{account.name}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant={account.accountType === 'real' ? 'default' : 'outline'}>
-                                                        {account.accountType?.charAt(0).toUpperCase() + account.accountType?.slice(1) || 'N/A'}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>{account.leverage || 'N/A'}</TableCell>
-                                                <TableCell>${typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}</TableCell>
-                                                <TableCell>${typeof account.equity === 'number' ? account.equity.toFixed(2) : '0.00'}</TableCell>
-                                                <TableCell className={
-                                                    account.profit > 0
-                                                        ? 'text-green-600'
-                                                        : account.profit < 0
-                                                            ? 'text-red-600'
-                                                            : ''
-                                                }>
-                                                    ${typeof account.profit === 'number' ? account.profit.toFixed(2) : '0.00'}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
 
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setAccountsDialogOpen(false)}>
-                            Close
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        {/* Content */}
+                        <div className="flex-1 overflow-hidden">
+                            {loadingAccounts ? (
+                                <div className="flex flex-col items-center justify-center h-full p-6 space-y-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-500"></div>
+                                    <div className="text-center space-y-2">
+                                        <p className={`
+                                text-base sm:text-lg font-medium
+                                ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+                            `}>
+                                            Loading Account Information
+                                        </p>
+                                        <p className={`
+                                text-xs sm:text-sm px-4
+                                ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                            `}>
+                                            Synchronizing with trading server to get latest balance and equity...
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : clientAccounts.length === 0 ? (
+                                <div className="text-center p-6 h-full flex flex-col items-center justify-center">
+                                    <div className={`
+                            mx-auto flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full mb-4
+                            ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
+                        `}>
+                                        <svg className={`
+                                w-5 h-5 sm:w-6 sm:h-6
+                                ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}
+                            `} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                        </svg>
+                                    </div>
+                                    <h3 className={`
+                            text-base sm:text-lg font-medium mb-2
+                            ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+                        `}>
+                                        No MT5 Accounts Found
+                                    </h3>
+                                    <p className={`
+                            text-sm px-4
+                            ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                        `}>
+                                        This client doesn't have any MT5 trading accounts yet.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="h-full overflow-y-auto">
+                                    <div className="p-4 space-y-4">
+                                        {/* Account Summary Cards */}
+                                        <div className={`
+                                grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 sm:p-4 rounded-lg
+                                ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}
+                            `}>
+                                            <div className="text-center">
+                                                <p className={`
+                                        text-xs sm:text-sm
+                                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                                    `}>
+                                                    Total Accounts
+                                                </p>
+                                                <p className="text-lg sm:text-2xl font-bold text-blue-500">
+                                                    {clientAccounts.length}
+                                                </p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className={`
+                                        text-xs sm:text-sm
+                                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                                    `}>
+                                                    Total Balance
+                                                </p>
+                                                <p className="text-lg sm:text-2xl font-bold text-green-500">
+                                                    ${clientAccounts.reduce((sum, acc) => sum + (acc.balance || 0), 0).toFixed(2)}
+                                                </p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className={`
+                                        text-xs sm:text-sm
+                                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                                    `}>
+                                                    Total Equity
+                                                </p>
+                                                <p className="text-lg sm:text-2xl font-bold text-purple-500">
+                                                    ${clientAccounts.reduce((sum, acc) => sum + (acc.equity || 0), 0).toFixed(2)}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Mobile Card View */}
+                                        <div className="block sm:hidden space-y-3">
+                                            {clientAccounts
+                                                .slice()
+                                                .sort((a, b) => {
+                                                    const balanceA = typeof a.balance === 'number' ? a.balance : 0;
+                                                    const balanceB = typeof b.balance === 'number' ? b.balance : 0;
+                                                    return balanceB - balanceA;
+                                                })
+                                                .map((account) => (
+                                                    <div key={account._id} className={`
+                                            border rounded-lg p-4 space-y-3
+                                            ${theme === 'dark'
+                                                            ? 'bg-gray-800 border-gray-700'
+                                                            : 'bg-white border-gray-200'
+                                                        }
+                                        `}>
+                                                        <div className="flex justify-between items-start">
+                                                            <div>
+                                                                <p className={`
+                                                        font-medium font-mono text-sm
+                                                        ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+                                                    `}>
+                                                                    {account.mt5Account}
+                                                                </p>
+                                                                <p className={`
+                                                        text-sm
+                                                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                                                    `}>
+                                                                    {account.name}
+                                                                </p>
+                                                            </div>
+                                                            {/* <span className={`
+                                                    px-2 py-1 text-xs rounded-full font-medium
+                                                    ${account.status 
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                    }
+                                                `}>
+                                                    {account.status ? 'Active' : 'Inactive'}
+                                                </span> */}
+                                                        </div>
+
+                                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                                            <div>
+                                                                <p className={`
+                                                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                                                    `}>
+                                                                    Type
+                                                                </p>
+                                                                <span className={`
+                                                        px-2 py-1 text-xs rounded font-medium
+                                                        ${account.accountType?.toLowerCase() === 'real'
+                                                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                                                                    }
+                                                    `}>
+                                                                    {account.accountType?.charAt(0).toUpperCase() + account.accountType?.slice(1) || 'N/A'}
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <p className={`
+                                                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                                                    `}>
+                                                                    Leverage
+                                                                </p>
+                                                                <p className={`
+                                                        font-medium
+                                                        ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+                                                    `}>
+                                                                    1:{account.leverage || 'N/A'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-3 gap-3 text-sm">
+                                                            <div>
+                                                                <p className={`
+                                                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                                                    `}>
+                                                                    Balance
+                                                                </p>
+                                                                <p className="font-medium text-green-500">
+                                                                    ${typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className={`
+                                                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                                                    `}>
+                                                                    Equity
+                                                                </p>
+                                                                <p className="font-medium text-purple-500">
+                                                                    ${typeof account.equity === 'number' ? account.equity.toFixed(2) : '0.00'}
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className={`
+                                                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                                                    `}>
+                                                                    P&L
+                                                                </p>
+                                                                <p className={`font-medium ${(account.profit || 0) > 0
+                                                                    ? 'text-green-500'
+                                                                    : (account.profit || 0) < 0
+                                                                        ? 'text-red-500'
+                                                                        : theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                                                    }`}>
+                                                                    {(account.profit || 0) > 0 ? '+' : ''}${typeof account.profit === 'number' ? account.profit.toFixed(2) : '0.00'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                        </div>
+
+                                        {/* Desktop Table View */}
+                                        <div className={`
+                                hidden sm:block border rounded-lg overflow-hidden
+                                ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}
+                            `}>
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full">
+                                                    <thead className={`
+                                            sticky top-0 z-10
+                                            ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}
+                                        `}>
+                                                        <tr className={`
+                                                ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}
+                                            `}>
+                                                            <th className={`
+                                                    px-4 py-3 text-left text-xs font-medium uppercase tracking-wider
+                                                    ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}
+                                                `}>
+                                                                Account Number
+                                                            </th>
+                                                            <th className={`
+                                                    px-4 py-3 text-left text-xs font-medium uppercase tracking-wider
+                                                    ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}
+                                                `}>
+                                                                Name
+                                                            </th>
+                                                            <th className={`
+                                                    px-4 py-3 text-left text-xs font-medium uppercase tracking-wider
+                                                    ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}
+                                                `}>
+                                                                Type
+                                                            </th>
+                                                            <th className={`
+                                                    px-4 py-3 text-left text-xs font-medium uppercase tracking-wider
+                                                    ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}
+                                                `}>
+                                                                Leverage
+                                                            </th>
+                                                            <th className={`
+                                                    px-4 py-3 text-left text-xs font-medium uppercase tracking-wider
+                                                    ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}
+                                                `}>
+                                                                Balance
+                                                            </th>
+                                                            <th className={`
+                                                    px-4 py-3 text-left text-xs font-medium uppercase tracking-wider
+                                                    ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}
+                                                `}>
+                                                                Equity
+                                                            </th>
+                                                            <th className={`
+                                                    px-4 py-3 text-left text-xs font-medium uppercase tracking-wider
+                                                    ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}
+                                                `}>
+                                                                Profit/Loss
+                                                            </th>
+                                                            {/* <th className={`
+                                                    px-4 py-3 text-left text-xs font-medium uppercase tracking-wider
+                                                    ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}
+                                                `}>
+                                                                Status
+                                                            </th> */}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className={`
+                                            divide-y
+                                            ${theme === 'dark'
+                                                            ? 'bg-gray-900 divide-gray-700'
+                                                            : 'bg-white divide-gray-200'
+                                                        }
+                                        `}>
+                                                        {clientAccounts
+                                                            .slice()
+                                                            .sort((a, b) => {
+                                                                const balanceA = typeof a.balance === 'number' ? a.balance : 0;
+                                                                const balanceB = typeof b.balance === 'number' ? b.balance : 0;
+                                                                return balanceB - balanceA;
+                                                            })
+                                                            .map((account) => (
+                                                                <tr key={account._id} className={`
+                                                        transition-colors
+                                                        ${theme === 'dark'
+                                                                        ? 'hover:bg-gray-800'
+                                                                        : 'hover:bg-gray-50'
+                                                                    }
+                                                    `}>
+                                                                    <td className={`
+                                                            px-4 py-4 text-sm font-medium font-mono
+                                                            ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+                                                        `}>
+                                                                        {account.mt5Account}
+                                                                    </td>
+                                                                    <td className={`
+                                                            px-4 py-4 text-sm
+                                                            ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}
+                                                        `}>
+                                                                        {account.name}
+                                                                    </td>
+                                                                    <td className="px-4 py-4 text-sm">
+                                                                        <span className={`
+                                                                px-2 py-1 text-xs rounded-full font-medium
+                                                                ${account.accountType?.toLowerCase() === 'real'
+                                                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                                                                : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                                                                            }
+                                                            `}>
+                                                                            {account.accountType?.charAt(0).toUpperCase() + account.accountType?.slice(1) || 'N/A'}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className={`
+                                                            px-4 py-4 text-sm
+                                                            ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}
+                                                        `}>
+                                                                        1:{account.leverage || 'N/A'}
+                                                                    </td>
+                                                                    <td className="px-4 py-4 text-sm font-medium text-green-500">
+                                                                        ${typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}
+                                                                    </td>
+                                                                    <td className="px-4 py-4 text-sm font-medium text-purple-500">
+                                                                        ${typeof account.equity === 'number' ? account.equity.toFixed(2) : '0.00'}
+                                                                    </td>
+                                                                    <td className={`px-4 py-4 text-sm font-medium ${(account.profit || 0) > 0
+                                                                        ? 'text-green-500'
+                                                                        : (account.profit || 0) < 0
+                                                                            ? 'text-red-500'
+                                                                            : theme === 'dark' ? 'text-gray-300' : 'text-gray-900'
+                                                                        }`}>
+                                                                        {(account.profit || 0) > 0 ? '+' : ''}${typeof account.profit === 'number' ? account.profit.toFixed(2) : '0.00'}
+                                                                    </td>
+                                                                    {/* <td className="px-4 py-4 text-sm">
+                                                            <span className={`
+                                                                px-2 py-1 text-xs rounded-full font-medium
+                                                                ${account.status 
+                                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                                }
+                                                            `}>
+                                                                {account.status ? 'Active' : 'Inactive'}
+                                                            </span>
+                                                        </td> */}
+                                                                </tr>
+                                                            ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className={`
+                p-4 pt-2 border-t flex flex-col sm:flex-row gap-2 justify-end
+                ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}
+            `}>
+                            {!loadingAccounts && clientAccounts.length > 0 && (
+                                <button
+                                    onClick={() => handleViewAccounts(selectedClient!)}
+                                    className={`
+                            w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-md
+                            border transition-colors flex items-center justify-center gap-2
+                            ${theme === 'dark'
+                                            ? 'border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white'
+                                            : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                                        }
+                        `}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh Accounts
+                                </button>
+                            )}
+                            <button
+                                onClick={handleCloseAccountsDialog}
+                                disabled={loadingAccounts}
+                                className={`
+                        w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-md
+                        border transition-colors
+                        ${theme === 'dark'
+                                        ? 'border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-50'
+                                        : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50'
+                                    }
+                    `}
+                            >
+                                {loadingAccounts ? 'Loading...' : 'Close'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
