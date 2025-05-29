@@ -110,6 +110,8 @@ const ClientsPage = () => {
     // List of unique countries, IB partners for filters
     const [countries, setCountries] = useState<string[]>([])
     const [ibPartners, setIbPartners] = useState<string[]>([])
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
 
     // Add this function after your state declarations
     const getFullDocumentUrl = (documentPath: string) => {
@@ -340,39 +342,6 @@ const ClientsPage = () => {
     }
 
 
-    // Filter clients based on search and filters
-    // Update the filtering logic
-    const filteredClients = useMemo(() => {
-        return clients.filter(client => {
-            const matchesSearch = !searchTerm ||
-                client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                client.accountNumber?.toLowerCase().includes(searchTerm.toLowerCase());
-
-            const matchesCountry = !selectedCountry ||
-                selectedCountry === "all" ||
-                client.country?.name === selectedCountry;
-
-            const matchesKycStatus = !selectedKycStatus ||
-                selectedKycStatus === "all" ||
-                (selectedKycStatus === "Verified" && client.kycStatus === "verified") ||
-                (selectedKycStatus === "Unverified" && client.kycStatus === "unverified") ||
-                (selectedKycStatus === "Rejected" && client.kycStatus === "rejected");
-
-            const matchesEmailStatus = !selectedEmailStatus ||
-                selectedEmailStatus === "all" ||
-                (selectedEmailStatus === "Verified" && client.isEmailVerified) ||
-                (selectedEmailStatus === "Unverified" && !client.isEmailVerified);
-
-            const matchesIbPartner = !selectedIbPartner ||
-                selectedIbPartner === "all" ||
-                client.ibPartner === selectedIbPartner;
-
-            return matchesSearch && matchesCountry && matchesKycStatus && matchesEmailStatus && matchesIbPartner;
-        });
-    }, [clients, searchTerm, selectedCountry, selectedKycStatus, selectedEmailStatus, selectedIbPartner]);
-
-    // Add this function to fetch user accounts with proper cleanup
     // Add this function to fetch user accounts with proper cleanup
     const handleViewAccounts = async (client: Client) => {
         setSelectedClient(client)
@@ -419,6 +388,381 @@ const ClientsPage = () => {
         setSelectedEmailStatus(null)
         setSelectedIbPartner(null)
     }
+
+    // 1. Email Verified Badge (replace existing email verification badges)
+    const EmailVerifiedBadge = ({ isVerified }: { isVerified: boolean }) => {
+        const { theme } = useTheme();
+
+        if (isVerified) {
+            return (
+                <Badge
+                    variant="outline"
+                    className={`${theme === 'dark'
+                        ? 'bg-green-900/20 text-green-400 border-green-800 hover:bg-green-900/30'
+                        : 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100'
+                        }`}
+                >
+                    <Check className="mr-1 h-3 w-3" />Verified
+                </Badge>
+            );
+        }
+
+        return (
+            <Badge
+                variant="outline"
+                className={`${theme === 'dark'
+                    ? 'bg-red-900/20 text-red-400 border-red-800 hover:bg-red-900/30'
+                    : 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100'
+                    }`}
+            >
+                <X className="mr-1 h-3 w-3" />Unverified
+            </Badge>
+        );
+    };
+
+    // 2. KYC Status Badge (replace existing KYC badges)
+    const KYCStatusBadge = ({ status }: { status: "verified" | "unverified" | "rejected" }) => {
+        const { theme } = useTheme();
+
+        switch (status) {
+            case "verified":
+                return (
+                    <Badge
+                        variant="outline"
+                        className={`${theme === 'dark'
+                            ? 'bg-green-900/20 text-green-400 border-green-800 hover:bg-green-900/30'
+                            : 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100'
+                            }`}
+                    >
+                        <Check className="mr-1 h-3 w-3" />Verified
+                    </Badge>
+                );
+            case "rejected":
+                return (
+                    <Badge
+                        variant="outline"
+                        className={`${theme === 'dark'
+                            ? 'bg-red-900/20 text-red-400 border-red-800 hover:bg-red-900/30'
+                            : 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100'
+                            }`}
+                    >
+                        <X className="mr-1 h-3 w-3" />Rejected
+                    </Badge>
+                );
+            default:
+                return (
+                    <Badge
+                        variant="outline"
+                        className={`${theme === 'dark'
+                            ? 'bg-yellow-900/20 text-yellow-400 border-yellow-800 hover:bg-yellow-900/30'
+                            : 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100'
+                            }`}
+                    >
+                        <X className="mr-1 h-3 w-3" />Unverified
+                    </Badge>
+                );
+        }
+    };
+
+    // 3. Client Status Badge (replace existing status badges)
+    const ClientStatusBadge = ({ status }: { status: string }) => {
+        const { theme } = useTheme();
+
+        if (status === "activated") {
+            return (
+                <Badge
+                    className={`${theme === 'dark'
+                        ? 'bg-green-900/20 text-green-400 border-green-800 hover:bg-green-900/30'
+                        : 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100'
+                        }`}
+                >
+                    Active
+                </Badge>
+            );
+        }
+
+        return (
+            <Badge
+                className={`${theme === 'dark'
+                    ? 'bg-red-900/20 text-red-400 border-red-800 hover:bg-red-900/30'
+                    : 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100'
+                    }`}
+            >
+                Suspended
+            </Badge>
+        );
+    };
+
+    // 4. Filter Badge (replace existing filter badges)
+    const FilterBadge = ({ label, value, onRemove }: { label: string, value: string, onRemove: () => void }) => {
+        const { theme } = useTheme();
+
+        return (
+            <Badge
+                variant="secondary"
+                className={`flex items-center gap-1 ${theme === 'dark'
+                    ? 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                    }`}
+            >
+                {label}: {value}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 ml-1 p-0 hover:bg-transparent"
+                    onClick={onRemove}
+                >
+                    <X className="h-3 w-3" />
+                </Button>
+            </Badge>
+        );
+    };
+
+    {
+        selectedCountry && selectedCountry !== "all" && (
+            <FilterBadge
+                label="Country"
+                value={selectedCountry}
+                onRemove={() => setSelectedCountry(null)}
+            />
+        )
+    }
+    {
+        selectedKycStatus && selectedKycStatus !== "all" && (
+            <FilterBadge
+                label="KYC"
+                value={selectedKycStatus}
+                onRemove={() => setSelectedKycStatus(null)}
+            />
+        )
+    }
+    {
+        selectedEmailStatus && selectedEmailStatus !== "all" && (
+            <FilterBadge
+                label="Email"
+                value={selectedEmailStatus}
+                onRemove={() => setSelectedEmailStatus(null)}
+            />
+        )
+    }
+    {
+        selectedIbPartner && selectedIbPartner !== "all" && (
+            <FilterBadge
+                label="IB Partner"
+                value={selectedIbPartner}
+                onRemove={() => setSelectedIbPartner(null)}
+            />
+        )
+    }
+
+    const { paginatedClients, totalPages, totalItems, startItem, endItem } = useMemo(() => {
+        const filtered = clients.filter(client => {
+            const matchesSearch = !searchTerm ||
+                client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                client.accountNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+
+            const matchesCountry = !selectedCountry ||
+                selectedCountry === "all" ||
+                client.country?.name === selectedCountry;
+
+            const matchesKycStatus = !selectedKycStatus ||
+                selectedKycStatus === "all" ||
+                (selectedKycStatus === "Verified" && client.kycStatus === "verified") ||
+                (selectedKycStatus === "Unverified" && client.kycStatus === "unverified") ||
+                (selectedKycStatus === "Rejected" && client.kycStatus === "rejected");
+
+            const matchesEmailStatus = !selectedEmailStatus ||
+                selectedEmailStatus === "all" ||
+                (selectedEmailStatus === "Verified" && client.isEmailVerified) ||
+                (selectedEmailStatus === "Unverified" && !client.isEmailVerified);
+
+            const matchesIbPartner = !selectedIbPartner ||
+                selectedIbPartner === "all" ||
+                client.ibPartner === selectedIbPartner;
+
+            return matchesSearch && matchesCountry && matchesKycStatus && matchesEmailStatus && matchesIbPartner;
+        });
+
+        // Reverse the order - newest clients first
+        const reversedFiltered = filtered.reverse();
+
+        // Calculate pagination
+        const totalItems = reversedFiltered.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedClients = reversedFiltered.slice(startIndex, endIndex);
+
+        const startItem = totalItems === 0 ? 0 : startIndex + 1;
+        const endItem = Math.min(endIndex, totalItems);
+
+        return {
+            paginatedClients,
+            totalPages,
+            totalItems,
+            startItem,
+            endItem
+        };
+    }, [clients, searchTerm, selectedCountry, selectedKycStatus, selectedEmailStatus, selectedIbPartner, currentPage, itemsPerPage]);
+
+    // 3. Add function to handle page changes
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handleItemsPerPageChange = (value: string) => {
+        setItemsPerPage(parseInt(value));
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
+
+    // 4. Reset current page when filters change (add this useEffect)
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, selectedCountry, selectedKycStatus, selectedEmailStatus, selectedIbPartner]);
+
+    // 5. Pagination Component (add this component)
+    const PaginationComponent = () => {
+        const { theme } = useTheme();
+
+        return (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+                {/* Items per page selector */}
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Show</span>
+                    <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                        <SelectTrigger className="w-20">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="5">5</SelectItem>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="20">20</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <span className="text-sm text-muted-foreground">entries</span>
+                </div>
+
+                {/* Pagination info and controls */}
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="text-sm text-muted-foreground">
+                        Showing <strong>{startItem}</strong> to <strong>{endItem}</strong> of{' '}
+                        <strong>{totalItems}</strong> clients
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                            {/* Previous button */}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className={`${theme === 'dark'
+                                    ? 'border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-50'
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50'
+                                    }`}
+                            >
+                                Previous
+                            </Button>
+
+                            {/* Page numbers */}
+                            <div className="flex items-center gap-1">
+                                {/* First page */}
+                                {currentPage > 3 && (
+                                    <>
+                                        <Button
+                                            variant={currentPage === 1 ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => handlePageChange(1)}
+                                            className={`w-10 ${currentPage === 1
+                                                ? ''
+                                                : theme === 'dark'
+                                                    ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+                                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            1
+                                        </Button>
+                                        {currentPage > 4 && <span className="text-gray-400">...</span>}
+                                    </>
+                                )}
+
+                                {/* Current page and surrounding pages */}
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNumber;
+                                    if (totalPages <= 5) {
+                                        pageNumber = i + 1;
+                                    } else if (currentPage <= 3) {
+                                        pageNumber = i + 1;
+                                    } else if (currentPage >= totalPages - 2) {
+                                        pageNumber = totalPages - 4 + i;
+                                    } else {
+                                        pageNumber = currentPage - 2 + i;
+                                    }
+
+                                    if (pageNumber < 1 || pageNumber > totalPages) return null;
+
+                                    return (
+                                        <Button
+                                            key={pageNumber}
+                                            variant={currentPage === pageNumber ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => handlePageChange(pageNumber)}
+                                            className={`w-10 ${currentPage === pageNumber
+                                                ? ''
+                                                : theme === 'dark'
+                                                    ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+                                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            {pageNumber}
+                                        </Button>
+                                    );
+                                })}
+
+                                {/* Last page */}
+                                {currentPage < totalPages - 2 && (
+                                    <>
+                                        {currentPage < totalPages - 3 && <span className="text-gray-400">...</span>}
+                                        <Button
+                                            variant={currentPage === totalPages ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => handlePageChange(totalPages)}
+                                            className={`w-10 ${currentPage === totalPages
+                                                ? ''
+                                                : theme === 'dark'
+                                                    ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+                                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            {totalPages}
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Next button */}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className={`${theme === 'dark'
+                                    ? 'border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-50'
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50'
+                                    }`}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-6">
@@ -602,13 +946,123 @@ const ClientsPage = () => {
                             </div>
                         )}
 
-                        {/* Table */}
-                        <div className="rounded-md border">
+                        {/* Mobile Card View */}
+                        <div className="block md:hidden space-y-4">
+                            {loading ? (
+                                <div className="text-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                                    <p>Loading...</p>
+                                </div>
+                            ) : paginatedClients.length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    {totalItems === 0 ? "No clients found" : "No clients on this page"}
+                                </div>
+                            ) : (
+                                paginatedClients.map((client) => (
+                                    <Card key={client.id} className="p-4">
+                                        <div className="space-y-3">
+                                            {/* User Info */}
+                                            <div className="flex items-center gap-3">
+                                                <Avatar
+                                                    className="cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                                                    onClick={() => handleImpersonateClient(client)}
+                                                    title="Login as this client"
+                                                >
+                                                    <AvatarImage src={client.avatar || "/placeholder.svg"} alt={client.name} />
+                                                    <AvatarFallback>{client.firstname?.charAt(0) || "C"}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium truncate">{`${client.firstname || ''} ${client.lastname || ''}`}</div>
+                                                    <div className="text-sm text-muted-foreground truncate">{client.email}</div>
+                                                </div>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                            <span className="sr-only">Open menu</span>
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleViewDetails(client)}>
+                                                            View Details
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleViewAccounts(client)}>
+                                                            View MT5 Accounts
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleImpersonateClient(client)}>
+                                                            Login as Client
+                                                        </DropdownMenuItem>
+                                                        {client.status === "activated" ? (
+                                                            <DropdownMenuItem
+                                                                className="text-red-600"
+                                                                onClick={() => handleSuspendClient(client.id)}
+                                                            >
+                                                                Suspend Client
+                                                            </DropdownMenuItem>
+                                                        ) : (
+                                                            <DropdownMenuItem
+                                                                className="text-green-600"
+                                                                onClick={() => handleActivateClient(client.id)}
+                                                            >
+                                                                Activate Client
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+
+                                            {/* Status Row */}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8"
+                                                        onClick={() => handlePasswordDialog(client)}
+                                                    >
+                                                        <Lock className="h-4 w-4" />
+                                                    </Button>
+                                                    <span className="text-sm text-muted-foreground">Password</span>
+                                                </div>
+                                                <ClientStatusBadge status={client.status} />
+                                            </div>
+
+                                            {/* Verification Status */}
+                                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                                <div>
+                                                    <p className="text-muted-foreground mb-1">Email</p>
+                                                    <EmailVerifiedBadge isVerified={client.isEmailVerified} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted-foreground mb-1">KYC</p>
+                                                    <KYCStatusBadge status={client.kycStatus} />
+
+                                                </div>
+                                            </div>
+
+                                            {/* Additional Info */}
+                                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                                <div>
+                                                    <p className="text-muted-foreground">Country</p>
+                                                    <p className="font-medium">{client.country?.name || "—"}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted-foreground">IB Partner</p>
+                                                    <p className="font-medium">{client.ibPartner}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block rounded-md border">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>User</TableHead>
-                                        {/* <TableHead>Account Number</TableHead> */}
                                         <TableHead>Password</TableHead>
                                         <TableHead>Email Verified</TableHead>
                                         <TableHead>KYC Verified</TableHead>
@@ -621,14 +1075,16 @@ const ClientsPage = () => {
                                 <TableBody>
                                     {loading ? (
                                         <TableRow>
-                                            <TableCell colSpan={9} className="text-center py-4">Loading...</TableCell>
+                                            <TableCell colSpan={8} className="text-center py-4">Loading...</TableCell>
                                         </TableRow>
-                                    ) : filteredClients.length === 0 ? (
+                                    ) : paginatedClients.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={9} className="text-center py-4">No clients found</TableCell>
+                                            <TableCell colSpan={8} className="text-center py-4">
+                                                {totalItems === 0 ? "No clients found" : "No clients on this page"}
+                                            </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filteredClients.map((client) => (
+                                        paginatedClients.map((client) => (
                                             <TableRow key={client.id}>
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
@@ -646,7 +1102,6 @@ const ClientsPage = () => {
                                                         </div>
                                                     </div>
                                                 </TableCell>
-                                                {/* <TableCell>{client.accountNumber || "—"}</TableCell> */}
                                                 <TableCell>
                                                     <Button
                                                         variant="ghost"
@@ -683,7 +1138,6 @@ const ClientsPage = () => {
                                                         </Badge>
                                                     )}
                                                 </TableCell>
-
                                                 <TableCell>{client.country?.name || "—"}</TableCell>
                                                 <TableCell>{client.ibPartner}</TableCell>
                                                 <TableCell>
@@ -740,20 +1194,7 @@ const ClientsPage = () => {
                             </Table>
                         </div>
 
-                        {/* Pagination */}
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
-                                Showing <strong>{filteredClients.length}</strong> of <strong>{clients.length}</strong> clients
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Button variant="outline" size="sm" disabled>
-                                    Previous
-                                </Button>
-                                <Button variant="outline" size="sm" disabled={filteredClients.length === clients.length}>
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
+                        <PaginationComponent />
                     </div>
                 </CardContent>
             </Card>
@@ -1671,6 +2112,7 @@ const ClientsPage = () => {
             </Dialog>
 
             {/* Add this dialog to your JSX, right after the existing dialogs */}
+            {/* Updated Accounts Dialog with mobile responsiveness */}
             {accountsDialogOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     {/* Backdrop */}

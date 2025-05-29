@@ -70,12 +70,12 @@ const DepositsPage = () => {
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null)
     const [startDate, setStartDate] = useState<Date | null>(null)
     const [endDate, setEndDate] = useState<Date | null>(null)
+
+    // Updated default sorting to show latest first
     const [sortField, setSortField] = useState("requestedOn")
     const [sortOrder, setSortOrder] = useState("desc")
 
-
     const [deposits, setDeposits] = useState<Deposit[]>([]);
-    // Removed unused loading state
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -99,7 +99,9 @@ const DepositsPage = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalItems, setTotalItems] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
+
 
     // Get token from localStorage
     const getToken = () => localStorage.getItem('adminToken');
@@ -110,6 +112,19 @@ const DepositsPage = () => {
             Authorization: `Bearer ${getToken()}`
         }
     });
+    // Debounced search effect
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (currentPage !== 1) {
+                setCurrentPage(1); // Reset to first page on search
+            } else {
+                fetchDeposits();
+            }
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm]);
+
 
     // Fetch deposits on component mount and when filters/sort change
     useEffect(() => {
@@ -120,77 +135,86 @@ const DepositsPage = () => {
     const fetchDeposits = async () => {
         try {
             setLoading(true);
-            setError(null); // Clear any previous errors
+            setError(null);
 
             // Build query params
             const params = new URLSearchParams();
-            if (searchTerm) params.append('search', searchTerm);
+            if (searchTerm.trim()) params.append('search', searchTerm.trim());
             if (selectedStatus) params.append('status', selectedStatus);
             if (selectedPlanType) params.append('planType', selectedPlanType);
             if (selectedPaymentMethod) params.append('paymentMethod', selectedPaymentMethod);
             if (startDate) params.append('startDate', startDate.toISOString());
             if (endDate) params.append('endDate', endDate.toISOString());
+
+            // Always sort by latest first by default
             params.append('sortField', sortField);
             params.append('sortOrder', sortOrder);
-
-            // Add pagination parameters
             params.append('page', currentPage.toString());
             params.append('limit', itemsPerPage.toString());
 
             const response = await axios.get(`http://localhost:5000/api/admindeposits?${params.toString()}`, getAuthHeaders());
 
-            // Transform the API response to match our expected format
+            // Transform the API response
             const transformedData = response.data.data.map((item: any) => ({
                 id: item._id,
                 user: {
-                    name: item.user.name,
-                    email: item.user.email,
-                    // avatar: "/placeholder.svg" // Default avatar
+                    name: item.user?.name || 'Unknown User',
+                    email: item.user?.email || 'No email',
                 },
-                accountNumber: item.accountNumber,
-                amount: item.amount,
-                planType: item.planType,
-                paymentMethod: item.paymentMethod,
+                accountNumber: item.accountNumber || 'N/A',
+                amount: item.amount || 0,
+                planType: item.planType || 'Unknown',
+                paymentMethod: item.paymentMethod || 'Unknown',
                 bonus: item.bonus || 0,
-                document: item.proofOfPayment,
+                document: item.proofOfPayment || item.document,
                 requestedOn: item.requestedOn || item.createdAt,
                 approvedOn: item.approvedOn,
                 rejectedOn: item.rejectedOn,
-                status: item.status,
+                status: item.status || 'Pending',
                 remarks: item.remarks || item.notes,
-                proofOfPayment: item.proofOfPayment
+                proofOfPayment: item.proofOfPayment || item.document
             }));
 
             setDeposits(transformedData);
+            setTotalItems(response.data.total || 0);
+            setTotalPages(Math.ceil((response.data.total || 0) / itemsPerPage));
 
-            // Set pagination info
-            setTotalPages(Math.ceil(response.data.total / itemsPerPage));
-
-            setLoading(false);
         } catch (error) {
             console.error('Error fetching deposits:', error);
             setError('Failed to fetch deposits');
-            // Even if there's an error, we should end the loading state
-            setLoading(false);
+            setDeposits([]);
             toast.error("Failed to load deposits. Please try refreshing the page.");
+        } finally {
+            setLoading(false);
         }
     };
 
+
     useEffect(() => {
-        if (deposits.length > 0) {
-            // Extract unique statuses
-            const uniqueStatus = [...new Set(deposits.map(deposit => deposit.status))];
-            setStatusOptions(uniqueStatus);
+        const fetchFilterOptions = async () => {
+            try {
+                // const response = await axios.get('http://localhost:5000/api/admindeposits/filters', getAuthHeaders());
+                // setStatusOptions(response.data.statuses || []);
+                // setPlanTypeOptions(response.data.planTypes || []);
+                // setPaymentMethodOptions(response.data.paymentMethods || []);
+            } catch (error) {
+                console.error('Error fetching filter options:', error);
+                // Fallback to current data
+                if (deposits.length > 0) {
+                    const uniqueStatuses = [...new Set(deposits.map(deposit => deposit.status))];
+                    const uniquePlanTypes = [...new Set(deposits.map(deposit => deposit.planType))];
+                    const uniquePaymentMethods = [...new Set(deposits.map(deposit => deposit.paymentMethod))];
 
-            // Extract unique plan types
-            const uniquePlanTypes = [...new Set(deposits.map(deposit => deposit.planType))];
-            setPlanTypeOptions(uniquePlanTypes);
+                    setStatusOptions(uniqueStatuses);
+                    setPlanTypeOptions(uniquePlanTypes);
+                    setPaymentMethodOptions(uniquePaymentMethods);
+                }
+            }
+        };
 
-            // Extract unique payment methods
-            const uniquePaymentMethods = [...new Set(deposits.map(deposit => deposit.paymentMethod))];
-            setPaymentMethodOptions(uniquePaymentMethods);
-        }
-    }, [deposits]);
+        fetchFilterOptions();
+    }, []);
+
     // Filter deposits based on search and filters
     const filteredDeposits = deposits.filter((deposit) => {
         // Search filter
@@ -236,6 +260,7 @@ const DepositsPage = () => {
         setSelectedPaymentMethod(null)
         setStartDate(null)
         setEndDate(null)
+        setCurrentPage(1) // Reset to first page when clearing filters
     }
 
     // Format date
@@ -256,8 +281,9 @@ const DepositsPage = () => {
             setSortOrder(sortOrder === "asc" ? "desc" : "asc")
         } else {
             setSortField(field)
-            setSortOrder("asc")
+            setSortOrder(field === "requestedOn" ? "desc" : "asc") // Default to desc for dates
         }
+        setCurrentPage(1); // Reset to first page when sorting
     }
 
     // Get status badge
@@ -265,20 +291,20 @@ const DepositsPage = () => {
         switch (status) {
             case "Approved":
                 return (
-                    <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">
-                        {/* <Check className="mr-1 h-3 w-3" /> */}Approved
+                    <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
+                        Approved
                     </Badge>
                 )
             case "Pending":
                 return (
-                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
                         Pending
                     </Badge>
                 )
             case "Rejected":
                 return (
-                    <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100">
-                        {/*<X className="mr-1 h-3 w-3" />*/}Rejected
+                    <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100 border-red-200">
+                        Rejected
                     </Badge>
                 )
             default:
@@ -291,14 +317,18 @@ const DepositsPage = () => {
     // Handle export
     const handleExport = async (format: string) => {
         try {
+            const loadingToast = toast.loading(`Exporting ${format.toUpperCase()}...`);
+
             // Build query parameters for filtering
             const params = new URLSearchParams();
-            if (searchTerm) params.append('search', searchTerm);
+            if (searchTerm.trim()) params.append('search', searchTerm.trim());
             if (selectedStatus) params.append('status', selectedStatus);
             if (selectedPlanType) params.append('planType', selectedPlanType);
             if (selectedPaymentMethod) params.append('paymentMethod', selectedPaymentMethod);
             if (startDate) params.append('startDate', startDate.toISOString());
             if (endDate) params.append('endDate', endDate.toISOString());
+            params.append('sortField', sortField);
+            params.append('sortOrder', sortOrder);
             params.append('format', format);
 
             // Create export URL
@@ -306,15 +336,17 @@ const DepositsPage = () => {
 
             // Make authenticated request
             const response = await axios.get(exportUrl, {
-                responseType: 'blob', // Important for file downloads
-                ...getAuthHeaders() // This adds your Authorization: Bearer token header
+                responseType: 'blob',
+                ...getAuthHeaders()
             });
 
             // Get filename from content-disposition header or use default
             const contentDisposition = response.headers['content-disposition'];
             const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
             const matches = filenameRegex.exec(contentDisposition);
-            const filename = matches && matches[1] ? matches[1].replace(/['"]/g, '') : `deposits.${format.toLowerCase()}`;
+            const filename = matches && matches[1]
+                ? matches[1].replace(/['"]/g, '')
+                : `deposits_${new Date().toISOString().split('T')[0]}.${format.toLowerCase()}`;
 
             // Create a download link and trigger it
             const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -325,11 +357,15 @@ const DepositsPage = () => {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
+
+            toast.dismiss(loadingToast);
+            toast.success(`${format.toUpperCase()} exported successfully`);
         } catch (error) {
             console.error('Export failed:', error);
-            // Handle error (show notification, etc.)
+            toast.error(`Failed to export ${format.toUpperCase()}. Please try again.`);
         }
     };
+
     // Open details dialog
     const openDetails = (deposit: Deposit) => {
         setSelectedDeposit(deposit)
@@ -485,62 +521,85 @@ const DepositsPage = () => {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Deposit List</CardTitle>
-                    <CardDescription>Manage and view all deposit requests</CardDescription>
+                    <CardTitle>Deposit Management</CardTitle>
+                    <CardDescription>
+                        Manage and view all deposit requests. Latest deposits appear first.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col space-y-4">
-                        {/* Search and filters */}
-                        <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Search and filters - Responsive */}
+                        <div className="flex flex-col lg:flex-row gap-4">
                             <div className="relative flex-1">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="search"
-                                    placeholder="Search by name, email, or account..."
+                                    placeholder="Search by name, email, or account number..."
                                     className="pl-8"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                {/* Filters Dropdown */}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="flex gap-1">
+                                        <Button variant="outline" className="flex items-center gap-2">
                                             <Filter className="h-4 w-4" />
                                             Filters
+                                            {(selectedStatus || selectedPlanType || selectedPaymentMethod || startDate || endDate) && (
+                                                <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                                                    {[selectedStatus, selectedPlanType, selectedPaymentMethod, startDate || endDate].filter(Boolean).length}
+                                                </Badge>
+                                            )}
                                             <ChevronDown className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-[320px]">
-                                        <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                                    <DropdownMenuContent align="end" className="w-[250px]">
+                                        <DropdownMenuLabel>Filter Deposits</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
 
+                                        {/* Status Filter */}
                                         <div className="p-2">
-                                            <p className="text-xs font-medium mb-1">Status</p>
-                                            {/* Status Filter */}
+                                            <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                                Status
+                                            </Label>
                                             <Select
                                                 value={selectedStatus || "all"}
-                                                onValueChange={(value) => setSelectedStatus(value === "all" ? null : value)}
+                                                onValueChange={(value) => {
+                                                    setSelectedStatus(value === "all" ? null : value);
+                                                    setCurrentPage(1);
+                                                }}
                                             >
                                                 <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="All Status" />
+                                                    <SelectValue placeholder="All Statuses" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="all">All Statuses</SelectItem>
                                                     {statusOptions.map(status => (
-                                                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                                                        <SelectItem key={status} value={status}>
+                                                            <div className="flex items-center gap-2">
+                                                                {getStatusBadge(status)}
+                                                            </div>
+                                                        </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
+
+                                        {/* Plan Type Filter */}
                                         <div className="p-2">
-                                            <p className="text-xs font-medium mb-1">Plan Type</p>
-                                            {/* Plan Type Filter */}
+                                            <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                                Plan Type
+                                            </Label>
                                             <Select
                                                 value={selectedPlanType || "all"}
-                                                onValueChange={(value) => setSelectedPlanType(value === "all" ? null : value)}
+                                                onValueChange={(value) => {
+                                                    setSelectedPlanType(value === "all" ? null : value);
+                                                    setCurrentPage(1);
+                                                }}
                                             >
                                                 <SelectTrigger className="w-full">
                                                     <SelectValue placeholder="All Plans" />
@@ -548,18 +607,25 @@ const DepositsPage = () => {
                                                 <SelectContent>
                                                     <SelectItem value="all">All Plans</SelectItem>
                                                     {planTypeOptions.map(planType => (
-                                                        <SelectItem key={planType} value={planType}>{planType}</SelectItem>
+                                                        <SelectItem key={planType} value={planType}>
+                                                            {planType}
+                                                        </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
+                                        {/* Payment Method Filter */}
                                         <div className="p-2">
-                                            <p className="text-xs font-medium mb-1">Payment Method</p>
-                                            {/* Payment Method Filter */}
+                                            <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                                Payment Method
+                                            </Label>
                                             <Select
                                                 value={selectedPaymentMethod || "all"}
-                                                onValueChange={(value) => setSelectedPaymentMethod(value === "all" ? null : value)}
+                                                onValueChange={(value) => {
+                                                    setSelectedPaymentMethod(value === "all" ? null : value);
+                                                    setCurrentPage(1);
+                                                }}
                                             >
                                                 <SelectTrigger className="w-full">
                                                     <SelectValue placeholder="All Methods" />
@@ -567,34 +633,43 @@ const DepositsPage = () => {
                                                 <SelectContent>
                                                     <SelectItem value="all">All Methods</SelectItem>
                                                     {paymentMethodOptions.map(method => (
-                                                        <SelectItem key={method} value={method}>{method}</SelectItem>
+                                                        <SelectItem key={method} value={method}>
+                                                            {method}
+                                                        </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
+                                        {/* Date Range Filter */}
                                         <div className="p-2">
-                                            <p className="text-xs font-medium mb-1">Date Range</p>
-                                            <div className="flex gap-2">
+                                            <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                                Date Range
+                                            </Label>
+                                            <div className="grid grid-cols-2 gap-2">
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                         <Button
                                                             variant="outline"
                                                             className="w-full justify-start text-left font-normal"
+                                                            size="sm"
                                                         >
                                                             <Calendar className="mr-2 h-4 w-4" />
                                                             {startDate ? (
-                                                                format(startDate, "PP")
+                                                                format(startDate, "MMM dd")
                                                             ) : (
-                                                                <span>From</span>
+                                                                <span className="text-muted-foreground">From</span>
                                                             )}
                                                         </Button>
                                                     </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0">
+                                                    <PopoverContent className="w-auto p-0" align="start">
                                                         <CalendarComponent
                                                             mode="single"
                                                             selected={startDate || undefined}
-                                                            onSelect={(day) => setStartDate(day || null)}
+                                                            onSelect={(day) => {
+                                                                setStartDate(day || null);
+                                                                setCurrentPage(1);
+                                                            }}
                                                             initialFocus
                                                         />
                                                     </PopoverContent>
@@ -605,20 +680,24 @@ const DepositsPage = () => {
                                                         <Button
                                                             variant="outline"
                                                             className="w-full justify-start text-left font-normal"
+                                                            size="sm"
                                                         >
                                                             <Calendar className="mr-2 h-4 w-4" />
                                                             {endDate ? (
-                                                                format(endDate, "PP")
+                                                                format(endDate, "MMM dd")
                                                             ) : (
-                                                                <span>To</span>
+                                                                <span className="text-muted-foreground">To</span>
                                                             )}
                                                         </Button>
                                                     </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0">
+                                                    <PopoverContent className="w-auto p-0" align="start">
                                                         <CalendarComponent
                                                             mode="single"
                                                             selected={endDate || undefined}
-                                                            onSelect={(day) => setEndDate(day || null)}
+                                                            onSelect={(day) => {
+                                                                setEndDate(day || null);
+                                                                setCurrentPage(1);
+                                                            }}
                                                             initialFocus
                                                         />
                                                     </PopoverContent>
@@ -627,177 +706,334 @@ const DepositsPage = () => {
                                         </div>
 
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={resetFilters}>
-                                            <X className="mr-2 h-4 w-4" />
-                                            Reset Filters
-                                        </DropdownMenuItem>
+                                        <div className="p-2">
+                                            <Button
+                                                variant="ghost"
+                                                onClick={resetFilters}
+                                                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            >
+                                                <X className="mr-2 h-4 w-4" />
+                                                Reset All Filters
+                                            </Button>
+                                        </div>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
 
+
+                                {/* Export Dropdown */}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline">
-                                            <Download className="mr-2 h-4 w-4" />
+                                        <Button variant="outline" className="flex items-center gap-2">
+                                            <Download className="h-4 w-4" />
                                             Export
-                                            <ChevronDown className="ml-2 h-4 w-4" />
+                                            <ChevronDown className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleExport('xlsx')}>
-                                            Export as Excel
+                                        <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onClick={() => handleExport('xlsx')}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <FileText className="h-4 w-4 text-green-600" />
+                                            Excel (.xlsx)
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                                            Export as PDF
+                                        <DropdownMenuItem
+                                            onClick={() => handleExport('csv')}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <FileText className="h-4 w-4 text-blue-600" />
+                                            CSV (.csv)
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleExport('docx')}>
-                                            Export as DOCX
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleExport('csv')}>
-                                            Export as CSV
+                                        <DropdownMenuItem
+                                            onClick={() => handleExport('pdf')}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <FileText className="h-4 w-4 text-red-600" />
+                                            PDF (.pdf)
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
                         </div>
 
-                        {/* Applied filters */}
-                        {(selectedStatus || selectedPlanType || selectedPaymentMethod || startDate || endDate) && (
-                            <div className="flex flex-wrap gap-2">
+                        {/* Applied Filters Display */}
+                        {(searchTerm || selectedStatus || selectedPlanType || selectedPaymentMethod || startDate || endDate) && (
+                            <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg border">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Filter className="h-4 w-4" />
+                                    Active filters:
+                                </div>
+
+                                {searchTerm && (
+                                    <Badge variant="secondary" className="flex items-center gap-1">
+                                        Search: "{searchTerm}"
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-4 w-4 ml-1 p-0 hover:bg-transparent"
+                                            onClick={() => setSearchTerm("")}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </Badge>
+                                )}
+
                                 {selectedStatus && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                         Status: {selectedStatus}
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-4 w-4 ml-1 p-0"
+                                            className="h-4 w-4 ml-1 p-0 hover:bg-transparent"
                                             onClick={() => setSelectedStatus(null)}
                                         >
                                             <X className="h-3 w-3" />
                                         </Button>
                                     </Badge>
                                 )}
+
                                 {selectedPlanType && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                         Plan: {selectedPlanType}
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-4 w-4 ml-1 p-0"
+                                            className="h-4 w-4 ml-1 p-0 hover:bg-transparent"
                                             onClick={() => setSelectedPlanType(null)}
                                         >
                                             <X className="h-3 w-3" />
                                         </Button>
                                     </Badge>
                                 )}
+
                                 {selectedPaymentMethod && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                         Payment: {selectedPaymentMethod}
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-4 w-4 ml-1 p-0"
+                                            className="h-4 w-4 ml-1 p-0 hover:bg-transparent"
                                             onClick={() => setSelectedPaymentMethod(null)}
                                         >
                                             <X className="h-3 w-3" />
                                         </Button>
                                     </Badge>
                                 )}
+
                                 {(startDate || endDate) && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
-                                        Date Range
+                                        Date: {startDate && format(startDate, "MMM dd")} - {endDate && format(endDate, "MMM dd")}
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-4 w-4 ml-1 p-0"
+                                            className="h-4 w-4 ml-1 p-0 hover:bg-transparent"
                                             onClick={() => {
-                                                setStartDate(null)
-                                                setEndDate(null)
+                                                setStartDate(null);
+                                                setEndDate(null);
                                             }}
                                         >
                                             <X className="h-3 w-3" />
                                         </Button>
                                     </Badge>
                                 )}
-                                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={resetFilters}>
+
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 text-xs px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={resetFilters}
+                                >
                                     Clear All
                                 </Button>
                             </div>
                         )}
 
+                        {/* Results Summary */}
+                        {!loading && deposits.length > 0 && (
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-muted-foreground">
+                                <div>
+                                    {totalItems > 0 ? (
+                                        <>Found <strong>{totalItems}</strong> deposits</>
+                                    ) : (
+                                        <>No deposits found</>
+                                    )}
+                                    {(searchTerm || selectedStatus || selectedPlanType || selectedPaymentMethod || startDate || endDate) &&
+                                        <> matching your filters</>
+                                    }
+                                </div>
+                                {sortField && (
+                                    <div className="flex items-center gap-1">
+                                        Sorted by {sortField} ({sortOrder === 'desc' ? 'newest first' : 'oldest first'})
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {/* Loading state */}
+                        {loading && (
+                            <div className="text-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                                <p className="mt-2 text-sm text-muted-foreground">Loading deposits...</p>
+                            </div>
+                        )}
+
+                        {/* Error state */}
+                        {error && !loading && (
+                            <div className="text-center py-8">
+                                <p className="text-red-600">{error}</p>
+                                <Button onClick={fetchDeposits} className="mt-2">
+                                    Try Again
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Empty state */}
+                        {!loading && !error && deposits.length === 0 && (
+                            <div className="text-center py-8">
+                                <p className="text-muted-foreground">No deposits found.</p>
+                            </div>
+                        )}
+
                         {/* Table */}
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>User</TableHead>
-                                        <TableHead>Account Number</TableHead>
-                                        <TableHead onClick={() => handleSort("amount")} className="cursor-pointer">
-                                            Amount
-                                            <SortIndicator field="amount" />
-                                        </TableHead>
-                                        <TableHead onClick={() => handleSort("planType")} className="cursor-pointer">
-                                            Plan Type
-                                            <SortIndicator field="planType" />
-                                        </TableHead>
-                                        <TableHead onClick={() => handleSort("paymentMethod")} className="cursor-pointer">
-                                            Payment Method
-                                            <SortIndicator field="paymentMethod" />
-                                        </TableHead>
-                                        <TableHead>Bonus</TableHead>
-                                        <TableHead>Document</TableHead>
-                                        <TableHead onClick={() => handleSort("requestedOn")} className="cursor-pointer">
-                                            Requested On
-                                            <SortIndicator field="requestedOn" />
-                                        </TableHead>
-                                        <TableHead onClick={() => handleSort("status")} className="cursor-pointer ">
-                                            Status
-                                            <SortIndicator field="status" />
-                                        </TableHead>
-                                        <TableHead></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredDeposits.map((deposit) => (
-                                        <TableRow key={deposit.id}>
-                                            <TableCell>
+                        {!loading && !error && deposits.length > 0 && (
+                            <>
+                                <div className="hidden md:block rounded-md border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>User</TableHead>
+                                                <TableHead>Account #</TableHead>
+                                                <TableHead
+                                                    onClick={() => handleSort("amount")}
+                                                    className="cursor-pointer hover:bg-muted/50"
+                                                >
+                                                    <div className="flex items-center">
+                                                        Amount
+                                                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                                                    </div>
+                                                </TableHead>
+                                                <TableHead
+                                                    onClick={() => handleSort("planType")}
+                                                    className="cursor-pointer hover:bg-muted/50"
+                                                >
+                                                    <div className="flex items-center">
+                                                        Plan
+                                                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                                                    </div>
+                                                </TableHead>
+                                                <TableHead>Payment</TableHead>
+                                                <TableHead>Bonus</TableHead>
+                                                <TableHead>Doc</TableHead>
+                                                <TableHead
+                                                    onClick={() => handleSort("requestedOn")}
+                                                    className="cursor-pointer hover:bg-muted/50"
+                                                >
+                                                    <div className="flex items-center">
+                                                        Date
+                                                        {sortField === "requestedOn" && (
+                                                            sortOrder === "desc" ?
+                                                                <ChevronDown className="ml-1 h-4 w-4" /> :
+                                                                <ChevronDown className="ml-1 h-4 w-4 rotate-180" />
+                                                        )}
+                                                        {sortField !== "requestedOn" && <ArrowUpDown className="ml-1 h-4 w-4" />}
+                                                    </div>
+                                                </TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead></TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filteredDeposits.map((deposit) => (
+                                                <TableRow key={deposit.id}>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar>
+                                                                <AvatarImage /*src={deposit.user.avatar}*/ alt={deposit.user.name} />
+                                                                <AvatarFallback>{deposit.user.name?.charAt(0)}</AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <div className="font-medium">{deposit.user.name}</div>
+                                                                <div className="text-sm text-muted-foreground">{deposit.user.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>{deposit.accountNumber}</TableCell>
+                                                    <TableCell>${deposit.amount.toLocaleString()}</TableCell>
+                                                    <TableCell>{deposit.planType}</TableCell>
+                                                    <TableCell>{deposit.paymentMethod}</TableCell>
+                                                    <TableCell>${deposit.bonus.toLocaleString()}</TableCell>
+                                                    <TableCell>
+                                                        {deposit.document ? (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
+                                                                onClick={() => openDocument(deposit)}
+                                                            >
+                                                                <FileText className="h-4 w-4" />
+                                                            </Button>
+                                                        ) : (
+                                                            <span className="text-muted-foreground">None</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>{formatDate(deposit.requestedOn)}</TableCell>
+                                                    <TableCell className="text-center">{getStatusBadge(deposit.status)}</TableCell>
+                                                    <TableCell>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon">
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                    <span className="sr-only">Open menu</span>
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem onClick={() => openDetails(deposit)}>
+                                                                    View Details
+                                                                </DropdownMenuItem>
+                                                                {deposit.status === "Pending" && (
+                                                                    <>
+                                                                        <DropdownMenuItem
+                                                                            className="text-green-600"
+                                                                            onClick={() => openApprove(deposit)}
+                                                                        >
+                                                                            Approve
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            className="text-red-600"
+                                                                            onClick={() => openReject(deposit)}
+                                                                        >
+                                                                            Reject
+                                                                        </DropdownMenuItem>
+                                                                    </>
+                                                                )}
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+
+                                {/* Mobile Card View */}
+                                <div className="md:hidden space-y-4">
+                                    {deposits.map((deposit) => (
+                                        <Card key={deposit.id} className="p-4">
+                                            <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
-                                                    <Avatar>
-                                                        <AvatarImage /*src={deposit.user.avatar}*/ alt={deposit.user.name} />
+                                                    <Avatar className="h-10 w-10">
                                                         <AvatarFallback>{deposit.user.name?.charAt(0)}</AvatarFallback>
                                                     </Avatar>
                                                     <div>
-                                                        <div className="font-medium">{deposit.user.name}</div>
-                                                        <div className="text-sm text-muted-foreground">{deposit.user.email}</div>
+                                                        <div className="font-medium text-sm">{deposit.user.name}</div>
+                                                        <div className="text-xs text-muted-foreground">{deposit.user.email}</div>
                                                     </div>
                                                 </div>
-                                            </TableCell>
-                                            <TableCell>{deposit.accountNumber}</TableCell>
-                                            <TableCell>${deposit.amount.toLocaleString()}</TableCell>
-                                            <TableCell>{deposit.planType}</TableCell>
-                                            <TableCell>{deposit.paymentMethod}</TableCell>
-                                            <TableCell>${deposit.bonus.toLocaleString()}</TableCell>
-                                            <TableCell>
-                                                {deposit.document ? (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onClick={() => openDocument(deposit)}
-                                                    >
-                                                        <FileText className="h-4 w-4" />
-                                                    </Button>
-                                                ) : (
-                                                    <span className="text-muted-foreground">None</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>{formatDate(deposit.requestedOn)}</TableCell>
-                                            <TableCell className="text-center">{getStatusBadge(deposit.status)}</TableCell>
-                                            <TableCell>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
                                                             <MoreHorizontal className="h-4 w-4" />
-                                                            <span className="sr-only">Open menu</span>
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
@@ -822,86 +1058,137 @@ const DepositsPage = () => {
                                                         )}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
-                                            </TableCell>
-                                        </TableRow>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                                                <div>
+                                                    <span className="text-muted-foreground">Amount:</span>
+                                                    <div className="font-semibold">${deposit.amount.toLocaleString()}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-muted-foreground">Plan:</span>
+                                                    <div>{deposit.planType}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-muted-foreground">Payment:</span>
+                                                    <div>{deposit.paymentMethod}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-muted-foreground">Bonus:</span>
+                                                    <div>${deposit.bonus.toLocaleString()}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                <div className="text-xs text-muted-foreground">
+                                                    {formatDate(deposit.requestedOn)}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {deposit.document && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            onClick={() => openDocument(deposit)}
+                                                        >
+                                                            <FileText className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {getStatusBadge(deposit.status)}
+                                                </div>
+                                            </div>
+                                        </Card>
                                     ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-
-                        {/* Pagination */}
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
-                                Showing <strong>{(currentPage - 1) * itemsPerPage + 1}</strong> to{" "}
-                                <strong>{Math.min(currentPage * itemsPerPage, deposits.length)}</strong> of{" "}
-                                <strong>{deposits.length}</strong> deposits
-                            </div>
-                            <div className="flex items-center space-x-6">
-                                <Select
-                                    value={itemsPerPage.toString()}
-                                    onValueChange={(value) => {
-                                        setItemsPerPage(Number(value));
-                                        setCurrentPage(1); // Reset to first page when changing items per page
-                                    }}
-                                >
-                                    <SelectTrigger className="w-[80px]">
-                                        <SelectValue placeholder="10" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="10">10</SelectItem>
-                                        <SelectItem value="20">20</SelectItem>
-                                        <SelectItem value="50">50</SelectItem>
-                                        <SelectItem value="100">100</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                <div className="flex items-center space-x-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                        disabled={currentPage === 1}
-                                    >
-                                        Previous
-                                    </Button>
-
-                                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                                        // Show 5 page buttons at most
-                                        let pageToShow = currentPage;
-                                        if (currentPage < 3) {
-                                            pageToShow = i + 1;
-                                        } else if (currentPage > totalPages - 2) {
-                                            pageToShow = totalPages - 4 + i;
-                                        } else {
-                                            pageToShow = currentPage - 2 + i;
-                                        }
-
-                                        if (pageToShow > 0 && pageToShow <= totalPages) {
-                                            return (
-                                                <Button
-                                                    key={i}
-                                                    variant={pageToShow === currentPage ? "default" : "outline"}
-                                                    size="sm"
-                                                    onClick={() => setCurrentPage(pageToShow)}
-                                                >
-                                                    {pageToShow}
-                                                </Button>
-                                            );
-                                        }
-                                        return null;
-                                    })}
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                        disabled={currentPage === totalPages}
-                                    >
-                                        Next
-                                    </Button>
                                 </div>
-                            </div>
-                        </div>
+
+                                {/* Updated Pagination - Inside Card */}
+                                <div className="border-t pt-4">
+                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                        <div className="text-sm text-muted-foreground">
+                                            Showing <strong>{Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}</strong> to{" "}
+                                            <strong>{Math.min(currentPage * itemsPerPage, totalItems)}</strong> of{" "}
+                                            <strong>{totalItems}</strong> deposits
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                                            <div className="flex items-center space-x-2">
+                                                <span className="text-sm whitespace-nowrap">Rows per page:</span>
+                                                <Select
+                                                    value={itemsPerPage.toString()}
+                                                    onValueChange={(value) => {
+                                                        setItemsPerPage(Number(value));
+                                                        setCurrentPage(1);
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="w-[70px]">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="10">10</SelectItem>
+                                                        <SelectItem value="20">20</SelectItem>
+                                                        <SelectItem value="50">50</SelectItem>
+                                                        <SelectItem value="100">100</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div className="flex items-center space-x-1 sm:space-x-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                                    disabled={currentPage === 1 || loading}
+                                                    className="text-xs sm:text-sm"
+                                                >
+                                                    Previous
+                                                </Button>
+
+                                                <div className="flex items-center space-x-1">
+                                                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                                                        let pageToShow;
+                                                        if (totalPages <= 5) {
+                                                            pageToShow = i + 1;
+                                                        } else if (currentPage <= 3) {
+                                                            pageToShow = i + 1;
+                                                        } else if (currentPage >= totalPages - 2) {
+                                                            pageToShow = totalPages - 4 + i;
+                                                        } else {
+                                                            pageToShow = currentPage - 2 + i;
+                                                        }
+
+                                                        if (pageToShow > 0 && pageToShow <= totalPages) {
+                                                            return (
+                                                                <Button
+                                                                    key={i}
+                                                                    variant={pageToShow === currentPage ? "default" : "outline"}
+                                                                    size="sm"
+                                                                    className="w-8 h-8 p-0 text-xs"
+                                                                    onClick={() => setCurrentPage(pageToShow)}
+                                                                    disabled={loading}
+                                                                >
+                                                                    {pageToShow}
+                                                                </Button>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })}
+                                                </div>
+
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                                    disabled={currentPage === totalPages || loading}
+                                                    className="text-xs sm:text-sm"
+                                                >
+                                                    Next
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -1252,14 +1539,15 @@ const DepositsPage = () => {
                                         </div>
                                     )}
                                 </div>
-                            </div>
 
+                            </div>
                             <div className="flex justify-end space-x-2">
                                 <Button variant="outline" onClick={() => setDocumentOpen(false)}>Close</Button>
                                 <Button onClick={() => openDocumentInNewTab()}>
                                     Open in New Tab
                                 </Button>
                             </div>
+
                         </div>
                     )}
                 </div>

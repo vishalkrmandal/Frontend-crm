@@ -68,7 +68,7 @@ interface Withdrawal {
     account: {
         _id: string;
         mt5Account: string;
-        balance: number;
+        // balance: number;
         accountType: string;
     };
     amount: number;
@@ -329,7 +329,14 @@ const WithdrawalsPage = () => {
 
     const handleExport = (format: string) => {
         try {
-            const filteredData = filterWithdrawals()
+            const filteredData = filterWithdrawals().map(w => ({
+                ...w,
+                account: {
+                    ...w.account,
+                    // Provide a default balance if missing (e.g., 0)
+                    balance: (w.account as any).balance ?? 0,
+                }
+            }))
             withdrawalService.exportWithdrawals(filteredData, format)
             toast.success(`Withdrawals exported as ${format.toUpperCase()} successfully`)
         } catch (error) {
@@ -429,10 +436,10 @@ const WithdrawalsPage = () => {
                                 <p className="text-sm font-medium">Account Number</p>
                                 <p className="text-sm text-gray-600">{withdrawal.account.mt5Account}</p>
                             </div>
-                            <div>
+                            {/* <div>
                                 <p className="text-sm font-medium">Balance</p>
                                 <p className="text-sm text-gray-600">${withdrawal.account.balance.toLocaleString()}</p>
-                            </div>
+                            </div> */}
                             <div>
                                 <p className="text-sm font-medium">Withdrawal Amount</p>
                                 <p className="text-sm text-gray-600">${withdrawal.amount.toLocaleString()}</p>
@@ -732,232 +739,459 @@ const WithdrawalsPage = () => {
                                 No withdrawals found
                             </div>
                         ) : (
-                            <div className="rounded-md border">
-                                <Table className="w-full table-auto">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-[15%]">User</TableHead>
-                                            <TableHead className="w-[10%]">Account Number</TableHead>
-                                            <TableHead className="w-[8%]">Balance</TableHead>
-                                            <TableHead className="w-[12%]">
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => handleSort('amount')}
-                                                    className="flex items-center"
-                                                >
-                                                    Withdrawal Amount
-                                                    {sortField === 'amount' ?
-                                                        (sortDirection === 'asc' ? <ArrowUp className="h-4 w-4 ml-1" /> : <ArrowDown className="h-4 w-4 ml-1" />) :
-                                                        <ArrowUp className="h-4 w-4 ml-1" />
-                                                    }
-                                                </Button>
-                                            </TableHead>
-                                            <TableHead className="w-[10%]">
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => handleSort('planType')}
-                                                    className="flex items-center"
-                                                >
-                                                    PlanType
-                                                    {sortField === 'planType' ?
-                                                        (sortDirection === 'asc' ? <ArrowUp className="h-4 w-4 ml-1" /> : <ArrowDown className="h-4 w-4 ml-1" />) :
-                                                        <ArrowUp className="h-4 w-4 ml-1" />
-                                                    }
-                                                </Button>
-                                            </TableHead>
-                                            <TableHead className="w-[12%]">
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => handleSort('paymentMethod')}
-                                                    className="flex items-center"
-                                                >
-                                                    Payment Method
-                                                    {sortField === 'paymentMethod' ?
-                                                        (sortDirection === 'asc' ? <ArrowUp className="h-4 w-4 ml-1" /> : <ArrowDown className="h-4 w-4 ml-1" />) :
-                                                        <ArrowUp className="h-4 w-4 ml-1" />
-                                                    }
-                                                </Button>
-                                            </TableHead>
-                                            <TableHead className="w-[8%]">Withdrawal Details</TableHead>
-                                            <TableHead className="w-[10%]">
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => handleSort('date')}
-                                                    className="flex items-center"
-                                                >
-                                                    Requested On
-                                                    {sortField === 'date' ?
-                                                        (sortDirection === 'asc' ? <ArrowUp className="h-4 w-4 ml-1" /> : <ArrowDown className="h-4 w-4 ml-1" />) :
-                                                        <ArrowUp className="h-4 w-4 ml-1" />
-                                                    }
-                                                </Button>
-                                            </TableHead>
-                                            <TableHead className="w-[7%]">
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => handleSort('status')}
-                                                    className="flex items-center"
-                                                >
-                                                    Status
-                                                    {sortField === 'status' ?
-                                                        (sortDirection === 'asc' ? <ArrowUp className="h-4 w-4 ml-1" /> : <ArrowDown className="h-4 w-4 ml-1" />) :
-                                                        <ArrowUp className="h-4 w-4 ml-1" />
-                                                    }
-                                                </Button>
-                                            </TableHead>
-                                            <TableHead className="w-[8%]">Action</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {paginateWithdrawals(filterWithdrawals()).map((withdrawal) => (
-                                            <TableRow key={withdrawal._id}>
-                                                <TableCell className="max-w-[200px]">
-                                                    <div className="flex items-center gap-3">
-                                                        <Avatar className="flex-shrink-0">
-                                                            <AvatarImage src={withdrawal.user.avatar} alt={`${withdrawal.user.firstname} ${withdrawal.user.lastname}`} />
-                                                            <AvatarFallback>
-                                                                {withdrawal.user && withdrawal.user.firstname
-                                                                    ? withdrawal.user.firstname.charAt(0)
-                                                                    : '?'}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="min-w-0">
-                                                            <div className="font-medium truncate">{`${withdrawal.user.firstname} ${withdrawal.user.lastname}`}</div>
-                                                            <div className="text-sm text-muted-foreground truncate">{withdrawal.user.email}</div>
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>{withdrawal.account.mt5Account}</TableCell>
-                                                <TableCell>${withdrawal.account.balance.toLocaleString()}</TableCell>
-                                                <TableCell >
-                                                    <p className="flex flex-row items-center justify-center">
-                                                        ${withdrawal.amount.toLocaleString()}
-                                                    </p>
-                                                </TableCell>
-                                                <TableCell><p className="flex flex-row items-center justify-center">{withdrawal.account.accountType}</p></TableCell>
-                                                <TableCell><p className="flex flex-row items-center justify-center">{withdrawal.paymentMethod}</p></TableCell>
-                                                <TableCell>
+                            <div className="w-full">
+                                {/* Desktop Table */}
+                                <div className="hidden md:block rounded-md border overflow-x-auto">
+                                    <Table className="w-full">
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead >User</TableHead>
+                                                <TableHead >Account</TableHead>
+                                                {/* <TableHead className="min-w-[80px] px-2">Balance</TableHead> */}
+                                                <TableHead >
                                                     <Button
                                                         variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
+                                                        onClick={() => handleSort('amount')}
+                                                        className="flex items-center p-0 h-auto font-medium"
+                                                    >
+                                                        Amount
+                                                        {sortField === 'amount' ?
+                                                            (sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />) :
+                                                            <ArrowUp className="h-3 w-3 ml-1 opacity-30" />
+                                                        }
+                                                    </Button>
+                                                </TableHead>
+                                                <TableHead >
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => handleSort('planType')}
+                                                        className="flex items-center p-0 h-auto font-medium"
+                                                    >
+                                                        Plan
+                                                        {sortField === 'planType' ?
+                                                            (sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />) :
+                                                            <ArrowUp className="h-3 w-3 ml-1 opacity-30" />
+                                                        }
+                                                    </Button>
+                                                </TableHead>
+                                                <TableHead>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => handleSort('paymentMethod')}
+                                                        className="flex items-center p-0 h-auto font-medium"
+                                                    >
+                                                        Payment
+                                                        {sortField === 'paymentMethod' ?
+                                                            (sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />) :
+                                                            <ArrowUp className="h-3 w-3 ml-1 opacity-30" />
+                                                        }
+                                                    </Button>
+                                                </TableHead>
+                                                <TableHead >Details</TableHead>
+
+                                                <TableHead>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => handleSort('date')}
+                                                        className="flex items-center p-0 h-auto font-medium"
+                                                    >
+                                                        Date
+                                                        {sortField === 'date' ?
+                                                            (sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />) :
+                                                            <ArrowUp className="h-3 w-3 ml-1 opacity-30" />
+                                                        }
+                                                    </Button>
+                                                </TableHead>
+                                                <TableHead>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => handleSort('status')}
+                                                        className="flex items-center p-0 h-auto font-medium"
+                                                    >
+                                                        Status
+                                                        {sortField === 'status' ?
+                                                            (sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />) :
+                                                            <ArrowUp className="h-3 w-3 ml-1 opacity-30" />
+                                                        }
+                                                    </Button>
+                                                </TableHead>
+                                                <TableHead >Action</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {paginateWithdrawals(filterWithdrawals()).map((withdrawal) => (
+                                                <TableRow key={withdrawal._id}>
+                                                    <TableCell >
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="h-8 w-8 flex-shrink-0">
+                                                                <AvatarImage src={withdrawal.user.avatar} alt={`${withdrawal.user.firstname} ${withdrawal.user.lastname}`} />
+                                                                <AvatarFallback className="text-xs">
+                                                                    {withdrawal.user && withdrawal.user.firstname
+                                                                        ? withdrawal.user.firstname.charAt(0)
+                                                                        : '?'}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="font-medium text-sm truncate">{`${withdrawal.user.firstname} ${withdrawal.user.lastname}`}</div>
+                                                                <div className="text-xs text-muted-foreground truncate">{withdrawal.user.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm font-mono">{withdrawal.account.mt5Account}</div>
+                                                    </TableCell>
+                                                    {/* <TableCell className="px-2 py-3">
+                                                        <div className="text-sm font-medium">${withdrawal.account.balance.toLocaleString()}</div>
+                                                    </TableCell> */}
+                                                    <TableCell >
+                                                        <div className="text-sm font-medium text-center">
+                                                            ${withdrawal.amount.toLocaleString()}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell >
+                                                        <div className="text-sm text-center">{withdrawal.account.accountType}</div>
+                                                    </TableCell>
+                                                    <TableCell >
+                                                        <div className="text-sm text-center">{withdrawal.paymentMethod}</div>
+                                                    </TableCell>
+                                                    <TableCell >
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7"
+                                                            onClick={() => {
+                                                                setSelectedWithdrawal(withdrawal)
+                                                                setPaymentDetailsOpen(true)
+                                                            }}
+                                                        >
+                                                            <FileText className="h-3 w-3" />
+                                                        </Button>
+                                                    </TableCell>
+                                                    <TableCell >
+                                                        <div className="text-sm">{formatDate(withdrawal.requestedDate)}</div>
+                                                    </TableCell>
+                                                    <TableCell >{getStatusBadge(withdrawal.status)}</TableCell>
+                                                    <TableCell >
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                                                    <MoreHorizontal className="h-3 w-3" />
+                                                                    <span className="sr-only">Open menu</span>
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem onClick={() => {
+                                                                    handleViewDetails(withdrawal)
+                                                                }} disabled={isViewingDetails}>
+                                                                    {isViewingDetails ? (
+                                                                        <>Loading...</>
+                                                                    ) : (
+                                                                        <>
+                                                                            <Eye className="mr-2 h-4 w-4" />
+                                                                            View Details
+                                                                        </>
+                                                                    )}
+                                                                </DropdownMenuItem>
+                                                                {withdrawal.status === "Pending" && (
+                                                                    <>
+                                                                        <DropdownMenuSeparator />
+                                                                        <DropdownMenuItem
+                                                                            className="text-green-600"
+                                                                            onClick={() => {
+                                                                                setSelectedWithdrawal(withdrawal)
+                                                                                handleApprove(withdrawal._id)
+                                                                            }}
+                                                                            disabled={isApproving}
+                                                                        >
+                                                                            {isApproving ? (
+                                                                                <>Loading...</>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <ThumbsUp className="mr-2 h-4 w-4" />
+                                                                                    Approve
+                                                                                </>
+                                                                            )}
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            className="text-red-600"
+                                                                            onClick={() => {
+                                                                                setSelectedWithdrawal(withdrawal)
+                                                                                setRejectDialogOpen(true)
+                                                                            }}
+                                                                            disabled={isRejecting}
+                                                                        >
+                                                                            <ThumbsDown className="mr-2 h-4 w-4" />
+                                                                            Reject
+                                                                        </DropdownMenuItem>
+                                                                    </>
+                                                                )}
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+
+                                {/* Mobile Card View */}
+                                <div className="md:hidden space-y-4">
+                                    {paginateWithdrawals(filterWithdrawals()).map((withdrawal) => (
+                                        <Card key={withdrawal._id} className="p-4">
+                                            <div className="space-y-3">
+                                                {/* User Info */}
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-10 w-10">
+                                                        <AvatarImage src={withdrawal.user.avatar} alt={`${withdrawal.user.firstname} ${withdrawal.user.lastname}`} />
+                                                        <AvatarFallback>
+                                                            {withdrawal.user && withdrawal.user.firstname
+                                                                ? withdrawal.user.firstname.charAt(0)
+                                                                : '?'}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-medium truncate">{`${withdrawal.user.firstname} ${withdrawal.user.lastname}`}</div>
+                                                        <div className="text-sm text-muted-foreground truncate">{withdrawal.user.email}</div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {getStatusBadge(withdrawal.status)}
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem onClick={() => handleViewDetails(withdrawal)} disabled={isViewingDetails}>
+                                                                    {isViewingDetails ? (
+                                                                        <>Loading...</>
+                                                                    ) : (
+                                                                        <>
+                                                                            <Eye className="mr-2 h-4 w-4" />
+                                                                            View Details
+                                                                        </>
+                                                                    )}
+                                                                </DropdownMenuItem>
+                                                                {withdrawal.status === "Pending" && (
+                                                                    <>
+                                                                        <DropdownMenuSeparator />
+                                                                        <DropdownMenuItem
+                                                                            className="text-green-600"
+                                                                            onClick={() => {
+                                                                                setSelectedWithdrawal(withdrawal)
+                                                                                handleApprove(withdrawal._id)
+                                                                            }}
+                                                                            disabled={isApproving}
+                                                                        >
+                                                                            {isApproving ? (
+                                                                                <>Loading...</>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <ThumbsUp className="mr-2 h-4 w-4" />
+                                                                                    Approve
+                                                                                </>
+                                                                            )}
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            className="text-red-600"
+                                                                            onClick={() => {
+                                                                                setSelectedWithdrawal(withdrawal)
+                                                                                setRejectDialogOpen(true)
+                                                                            }}
+                                                                            disabled={isRejecting}
+                                                                        >
+                                                                            <ThumbsDown className="mr-2 h-4 w-4" />
+                                                                            Reject
+                                                                        </DropdownMenuItem>
+                                                                    </>
+                                                                )}
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </div>
+                                                </div>
+
+                                                {/* Details Grid */}
+                                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                                    <div>
+                                                        <div className="text-muted-foreground">Account</div>
+                                                        <div className="font-medium font-mono">{withdrawal.account.mt5Account}</div>
+                                                    </div>
+                                                    {/* <div>
+                                                        <div className="text-muted-foreground">Balance</div>
+                                                        <div className="font-medium">${withdrawal.account.balance.toLocaleString()}</div>
+                                                    </div> */}
+                                                    <div>
+                                                        <div className="text-muted-foreground">Amount</div>
+                                                        <div className="font-medium text-lg">${withdrawal.amount.toLocaleString()}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-muted-foreground">Plan Type</div>
+                                                        <div className="font-medium">{withdrawal.account.accountType}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-muted-foreground">Payment Method</div>
+                                                        <div className="font-medium">{withdrawal.paymentMethod}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-muted-foreground">Requested</div>
+                                                        <div className="font-medium">{formatDate(withdrawal.requestedDate)}</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Action Buttons */}
+                                                <div className="flex justify-between items-center pt-2 border-t">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
                                                         onClick={() => {
                                                             setSelectedWithdrawal(withdrawal)
                                                             setPaymentDetailsOpen(true)
                                                         }}
                                                     >
-                                                        <FileText className="h-4 w-4" />
+                                                        <FileText className="h-4 w-4 mr-2" />
+                                                        Payment Details
                                                     </Button>
-                                                </TableCell>
-                                                <TableCell>{formatDate(withdrawal.requestedDate)}</TableCell>
-                                                <TableCell>{getStatusBadge(withdrawal.status)}</TableCell>
-                                                <TableCell>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon">
-                                                                <MoreHorizontal className="h-4 w-4" />
-                                                                <span className="sr-only">Open menu</span>
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => {
-                                                                handleViewDetails(withdrawal)
-                                                            }} disabled={isViewingDetails}>
-                                                                {isViewingDetails ? (
-                                                                    <>Loading...</>
-                                                                ) : (
-                                                                    <>
-                                                                        <Eye className="mr-2 h-4 w-4" />
-                                                                        View Details
-                                                                    </>
-                                                                )}
-                                                            </DropdownMenuItem>
-                                                            {withdrawal.status === "Pending" && (
-                                                                <>
-                                                                    <DropdownMenuSeparator />
-                                                                    <DropdownMenuItem
-                                                                        className="text-green-600"
-                                                                        onClick={() => {
-                                                                            setSelectedWithdrawal(withdrawal)
-                                                                            handleApprove(withdrawal._id)
-                                                                        }}
-                                                                        disabled={isApproving}
-                                                                    >
-                                                                        {isApproving ? (
-                                                                            <>Loading...</>
-                                                                        ) : (
-                                                                            <>
-                                                                                <ThumbsUp className="mr-2 h-4 w-4" />
-                                                                                Approve
-                                                                            </>
-                                                                        )}
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        className="text-red-600"
-                                                                        onClick={() => {
-                                                                            setSelectedWithdrawal(withdrawal)
-                                                                            setRejectDialogOpen(true)
-                                                                        }}
-                                                                        disabled={isRejecting}
-                                                                    >
-                                                                        <ThumbsDown className="mr-2 h-4 w-4" />
-                                                                        Reject
-                                                                    </DropdownMenuItem>
-                                                                </>
-                                                            )}
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    ))}
+                                </div>
                             </div>
                         )}
                         {/* Pagination */}
-                        <div className="flex items-center justify-between mt-4">
-                            <div className="text-sm text-muted-foreground">
-                                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filterWithdrawals().length)} of {filterWithdrawals().length} items
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-4 border-t bg-muted/20">
+                            {/* Results Info */}
+                            <div className="text-sm text-muted-foreground order-2 sm:order-1">
+                                Showing {filterWithdrawals().length === 0 ? 0 : ((currentPage - 1) * itemsPerPage) + 1} to{' '}
+                                {Math.min(currentPage * itemsPerPage, filterWithdrawals().length)} of{' '}
+                                {filterWithdrawals().length} results
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <Select
-                                    value={itemsPerPage.toString()}
-                                    onValueChange={(value) => {
-                                        setItemsPerPage(Number(value))
-                                        setCurrentPage(1)
-                                    }}
-                                >
-                                    <SelectTrigger className="w-[100px]">
-                                        <SelectValue placeholder="10 per page" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="5">5 per page</SelectItem>
-                                        <SelectItem value="10">10 per page</SelectItem>
-                                        <SelectItem value="20">20 per page</SelectItem>
-                                        <SelectItem value="50">50 per page</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <div className="flex items-center space-x-2">
+
+                            {/* Pagination Controls */}
+                            <div className="flex items-center gap-2 order-1 sm:order-2">
+                                {/* Items Per Page */}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-muted-foreground hidden sm:inline">Show</span>
+                                    <Select
+                                        value={itemsPerPage.toString()}
+                                        onValueChange={(value) => {
+                                            setItemsPerPage(Number(value))
+                                            setCurrentPage(1)
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-[70px] h-8">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="5">5</SelectItem>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="20">20</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <span className="text-sm text-muted-foreground hidden sm:inline">per page</span>
+                                </div>
+
+                                {/* Page Navigation */}
+                                <div className="flex items-center gap-1 ml-4">
+                                    {/* First Page */}
+                                    {/* <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        className="h-8 w-8 p-0 hidden sm:inline-flex"
+                                    >
+                                        ⏮
+                                    </Button> */}
+
+                                    {/* Previous Page */}
                                     <Button
                                         variant="outline"
-                                        size="icon"
+                                        size="sm"
                                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
+                                        className="h-8 w-10 p-0"
                                     >
-                                        <ChevronDown className="h-4 w-4 rotate-90" />
+                                        Prev
                                     </Button>
-                                    <div className="text-sm">
-                                        Page {currentPage} of {Math.ceil(filterWithdrawals().length / itemsPerPage) || 1}
+
+                                    {/* Page Numbers */}
+                                    <div className="flex items-center gap-1">
+                                        {(() => {
+                                            const totalPages = Math.ceil(filterWithdrawals().length / itemsPerPage) || 1;
+                                            const pages = [];
+
+                                            if (totalPages <= 7) {
+                                                // Show all pages if 7 or fewer
+                                                for (let i = 1; i <= totalPages; i++) {
+                                                    pages.push(i);
+                                                }
+                                            } else {
+                                                // Smart pagination for more than 7 pages
+                                                if (currentPage <= 4) {
+                                                    // Near the beginning
+                                                    pages.push(1, 2, 3, 4, 5, '...', totalPages);
+                                                } else if (currentPage >= totalPages - 3) {
+                                                    // Near the end
+                                                    pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                                                } else {
+                                                    // In the middle
+                                                    pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                                                }
+                                            }
+
+                                            return pages.map((page, index) => (
+                                                page === '...' ? (
+                                                    <span key={`ellipsis-${index}`} className="px-2 py-1 text-sm text-muted-foreground hidden sm:inline">
+                                                        ...
+                                                    </span>
+                                                ) : (
+                                                    <Button
+                                                        key={page}
+                                                        variant={currentPage === page ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setCurrentPage(page as number)}
+                                                        className={`h-8 w-8 p-0 ${currentPage === page ? 'bg-primary text-primary-foreground' : ''} ${
+                                                            // Hide some page numbers on mobile
+                                                            (page !== 1 && page !== totalPages && page !== currentPage) ? 'hidden sm:inline-flex' : ''
+                                                            }`}
+                                                    >
+                                                        {page}
+                                                    </Button>
+                                                )
+                                            ));
+                                        })()}
                                     </div>
+
+                                    {/* Next Page */}
                                     <Button
                                         variant="outline"
-                                        size="icon"
+                                        size="sm"
                                         onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filterWithdrawals().length / itemsPerPage)))}
                                         disabled={currentPage >= Math.ceil(filterWithdrawals().length / itemsPerPage)}
+                                        className="h-8 w-10 p-0"
                                     >
-                                        <ChevronDown className="h-4 w-4 -rotate-90" />
+                                        Next
                                     </Button>
+
+                                    {/* Last Page */}
+                                    {/* <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(Math.ceil(filterWithdrawals().length / itemsPerPage))}
+                                        disabled={currentPage >= Math.ceil(filterWithdrawals().length / itemsPerPage)}
+                                        className="h-8 w-8 p-0 hidden sm:inline-flex"
+                                    >
+                                        ⏭
+                                    </Button> */}
                                 </div>
+                            </div>
+
+                            {/* Mobile Page Info */}
+                            <div className="text-sm text-muted-foreground sm:hidden order-3">
+                                Page {currentPage} of {Math.ceil(filterWithdrawals().length / itemsPerPage) || 1}
                             </div>
                         </div>
                     </div>
