@@ -30,7 +30,7 @@ import AdminTicketDetail from './pages/admin/support/admin/ticket/AdminTicketDet
 import AdminNewTicket from './pages/admin/support/admin/CreateTicket';
 import AdminClientDetail from './pages/admin/support/admin/ticket/ClientDetail';
 import AdminLayout from './pages/admin/layout/Layout';
-import AdminDashboard from './pages/admin/features/AdminDashboard';
+import AdminDashboard from './pages/admin/dashboard/AdminDashboard';
 import ClientsPage from './pages/admin/features/ClientsPage';
 import DepositsPage from './pages/admin/features/DepositsPage';
 import WithdrawalsPage from './pages/admin/features/WithdrawalsPage';

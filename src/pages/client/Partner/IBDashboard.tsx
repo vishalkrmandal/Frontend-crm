@@ -232,14 +232,10 @@ const IBDashboard = () => {
 
             {/* Tabs for Details and Tree */}
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="details">
                         <Users className="mr-2 h-4 w-4" />
                         IB Details
-                    </TabsTrigger>
-                    <TabsTrigger value="history">
-                        <History className="mr-2 h-4 w-4" />
-                        Withdrawal History
                     </TabsTrigger>
                     <TabsTrigger value="tree">
                         <Trees className="mr-2 h-4 w-4" />
@@ -288,60 +284,6 @@ const IBDashboard = () => {
                                             <TableCell colSpan={5} className="text-center py-6">
                                                 <div className="text-muted-foreground">
                                                     No partners found. Share your referral link to start growing your network.
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* Withdrawal History Tab */}
-                <TabsContent value="history">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Withdrawal History</CardTitle>
-                            <CardDescription>
-                                Your commission withdrawal requests and status
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Amount</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Reference</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {withdrawalHistory.length > 0 ? (
-                                        withdrawalHistory.map((withdrawal) => (
-                                            <TableRow key={withdrawal._id}>
-                                                <TableCell>
-                                                    {new Date(withdrawal.createdAt).toLocaleDateString()}
-                                                </TableCell>
-                                                <TableCell>${withdrawal.amount.toFixed(2)}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant={
-                                                        withdrawal.status === 'completed' ? 'default' :
-                                                            withdrawal.status === 'approved' ? 'secondary' :
-                                                                withdrawal.status === 'pending' ? 'secondary' : 'destructive'
-                                                    }>
-                                                        {withdrawal.status}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>{withdrawal.reference || '—'}</TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="text-center py-6">
-                                                <div className="text-muted-foreground">
-                                                    No withdrawal history found.
                                                 </div>
                                             </TableCell>
                                         </TableRow>

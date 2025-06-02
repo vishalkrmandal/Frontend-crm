@@ -152,10 +152,10 @@ const CreatePartnerAccount = () => {
     return (
         <div className="container mx-auto py-6 max-w-6xl">
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-1">
                     <TabsTrigger value="create">Create Partner Account</TabsTrigger>
-                    <TabsTrigger value="dashboard">IB Dashboard</TabsTrigger>
-                    <TabsTrigger value="commissions">Trade Commission</TabsTrigger>
+                    {/* <TabsTrigger value="dashboard">IB Dashboard</TabsTrigger>
+                    <TabsTrigger value="commissions">Trade Commission</TabsTrigger> */}
                 </TabsList>
 
                 <TabsContent value="create">
@@ -348,7 +348,7 @@ const CreatePartnerAccount = () => {
                                 )}
                             </CardContent>
 
-                            {ibConfig && ibConfig.referralCode && (
+                            {/* {ibConfig && ibConfig.referralCode && (
                                 <CardFooter className="flex justify-center gap-4">
                                     <Button
                                         onClick={() => setActiveTab("dashboard")}
@@ -363,18 +363,18 @@ const CreatePartnerAccount = () => {
                                         View Trade Commissions
                                     </Button>
                                 </CardFooter>
-                            )}
+                            )} */}
                         </Card>
                     </div>
                 </TabsContent>
 
-                <TabsContent value="dashboard">
+                {/* <TabsContent value="dashboard">
                     <IBDashboard />
                 </TabsContent>
 
                 <TabsContent value="commissions">
                     <TradeCommission />
-                </TabsContent>
+                </TabsContent> */}
             </Tabs>
         </div>
     );

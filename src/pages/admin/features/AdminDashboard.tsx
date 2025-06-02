@@ -1,3 +1,5 @@
+// Frontend\src\pages\admin\features\AdminDashboard.tsx
+
 "use client"
 
 import { useEffect, useState } from "react"
