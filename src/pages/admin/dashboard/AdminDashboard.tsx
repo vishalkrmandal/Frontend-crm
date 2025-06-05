@@ -170,6 +170,11 @@ const AdminDashboard = () => {
         )
     }
 
+    const adminUserRaw = localStorage.getItem('adminUser')
+    const adminUser = adminUserRaw ? JSON.parse(adminUserRaw) : null
+    const fullName = adminUser ? `${adminUser.firstname} ${adminUser.lastname}`.trim() : 'Admin'
+
+
     return (
         <div className="space-y-6">
             {/* Welcome Banner */}
@@ -178,7 +183,7 @@ const AdminDashboard = () => {
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center">
                     <div>
                         <h1 className="text-xl font-bold flex items-center gap-2">
-                            {greeting}, Adrian
+                            {greeting}, {fullName}!
                             <Activity className="h-5 w-5 text-orange-200" />
                         </h1>
                         <p className="text-orange-100 text-sm mt-1">

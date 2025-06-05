@@ -26,7 +26,7 @@ import {
     getIBConfigurationsByGroup,
     createIBConfiguration,
     updateIBConfiguration
-} from "@/pages/admin/features/ibapi"
+} from "@/pages/admin/Ibpartner/ibapi"
 
 const IBPartnersPage = () => {
     // State for Groups and IB Configuration

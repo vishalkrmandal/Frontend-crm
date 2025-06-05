@@ -34,7 +34,7 @@ import ClientsPage from './pages/admin/features/ClientsPage';
 import DepositsPage from './pages/admin/features/DepositsPage';
 import WithdrawalsPage from './pages/admin/features/WithdrawalsPage';
 import TransactionsPage from './pages/admin/features/TrasactionsPage';
-import IBPartnersPage from './pages/admin/features/IBPartnersPage';
+import IBPartnersPage from './pages/admin/Ibpartner/IBPartnersPage';
 import ConfigurationPage from './pages/admin/configure/ConfigurePage';
 import ProtectedRoute from './ProtectedRoute';
 import ResetPassword from './pages/auth/sign-in/components/ResetPassword';
@@ -44,6 +44,7 @@ import ReferralRouteHandler from './pages/auth/sign-in/ReferralRouteHandler';
 import IBWithdrawal from './pages/client/Partner/IBWithdrawal';
 import TradeCommission from './pages/client/Partner/TradeCommission';
 import PartnerSummary from './pages/client/Partner/Commission/PartnerSummary';
+import IBWithdrawalManagement from './pages/admin/Ibpartner/IBWithdrawalManagement';
 
 
 const routes: RouteObject[] = [
@@ -244,7 +245,7 @@ const routes: RouteObject[] = [
           },
           // Admin Dashboard
           {
-            path: 'dashboard',
+            path: 'features',
             children: [
               {
                 path: 'clients',
@@ -261,14 +262,22 @@ const routes: RouteObject[] = [
               {
                 path: 'transactions',
                 element: <TransactionsPage />
-              },
-              {
-                path: 'ib-partners',
-                element: <IBPartnersPage />
               }
             ]
           },
-
+          {
+            path: 'partner',
+            children: [
+              {
+                path: 'ib-partners',
+                element: <IBPartnersPage />
+              },
+              {
+                path: 'ib-withdrawals',
+                element: <IBWithdrawalManagement />
+              }
+            ]
+          },
           // Admin Configure
           {
             path: 'configure',

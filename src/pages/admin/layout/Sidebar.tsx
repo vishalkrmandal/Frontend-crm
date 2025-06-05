@@ -11,6 +11,7 @@ import {
   HeadphonesIcon,
   Home,
   Settings,
+  HandshakeIcon,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -45,11 +46,10 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
       title: "Features",
       icon: BarChart2,
       submenu: [
-        { title: "Clients", path: "/admin/dashboard/clients" },
-        { title: "Deposits", path: "/admin/dashboard/deposits" },
-        { title: "Withdrawals", path: "/admin/dashboard/withdrawals" },
-        { title: "Transactions", path: "/admin/dashboard/transactions" },
-        { title: "IB Partners", path: "/admin/dashboard/ib-partners" },
+        { title: "Clients", path: "/admin/features/clients" },
+        { title: "Deposits", path: "/admin/features/deposits" },
+        { title: "Withdrawals", path: "/admin/features/withdrawals" },
+        { title: "Transactions", path: "/admin/features/transactions" },
       ],
     },
     {
@@ -58,10 +58,19 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
       path: "/admin/configure",
     },
     {
+      title: "IB Partners",
+      icon: HandshakeIcon,
+      submenu: [
+        { title: "IB Partners", path: "/admin/partner/ib-partners" },
+        { title: "IB Withdrawals", path: "/admin/partner/ib-withdrawals" },
+      ],
+    },
+    {
       title: "Support",
       icon: HeadphonesIcon,
       path: "/admin/support/portal",
     },
+
   ]
 
   const toggleMenu = (title: string) => {

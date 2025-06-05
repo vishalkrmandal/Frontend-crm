@@ -112,7 +112,7 @@ export default function LeverageAndGroup() {
 
     const fetchGroups = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("adminToken");
             if (!token) {
                 toast.error("Authentication token not found");
                 return;
