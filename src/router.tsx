@@ -13,7 +13,6 @@ import TradingPlatforms from './pages/client/Trading/TradingPlatforms';
 import ReferFriend from './pages/client/Refer/ReferFriend';
 import CreatePartnerAccount from './pages/client/Partner/CreatePartnerAccount';
 import IBDashboard from './pages/client/Partner/IBDashboard';
-import MultiLevelIB from './pages/client/Partner/MultiLevelIB';
 import IBAccounts from './pages/client/Partner/IBAccounts';
 import AutoRebateReport from './pages/client/Partner/AutoRebateReport';
 import Rating from './pages/client/copytrading/Rating';
@@ -43,6 +42,9 @@ import ProfilePage from './pages/client/layout/profile/ProfilePage';
 import ClientTickets from './pages/admin/support/admin/ticket/ClientTickets';
 import ReferralRouteHandler from './pages/auth/sign-in/ReferralRouteHandler';
 import IBWithdrawal from './pages/client/Partner/IBWithdrawal';
+import TradeCommission from './pages/client/Partner/TradeCommission';
+import PartnerSummary from './pages/client/Partner/Commission/PartnerSummary';
+
 
 const routes: RouteObject[] = [
   {
@@ -157,8 +159,16 @@ const routes: RouteObject[] = [
                 element: <IBWithdrawal />
               },
               {
-                path: 'multi-level-ib',
-                element: <MultiLevelIB />
+                path: 'ib-commission',
+                element: <TradeCommission />
+              },
+              {
+                path: 'summary',
+                element: <PartnerSummary />
+              },
+              {
+                path: 'ib-commission/:partnerId',
+                element: <TradeCommission />
               },
               {
                 path: 'ib-accounts',
