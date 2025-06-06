@@ -17,7 +17,7 @@ import LocationSelector from "@/components/ui/location-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const formSchema = z.object({
     firstname: z.string().min(1, "First name is required").max(50, "First name too long"),

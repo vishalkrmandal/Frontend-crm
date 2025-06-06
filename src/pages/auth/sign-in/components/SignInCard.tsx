@@ -17,6 +17,8 @@ import { toast, Toaster } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import ForgotPassword from './ForgotPassword';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const loginSchema = z.object({
     email: z.string().email('Please enter a valid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -56,7 +58,7 @@ export default function SignInCard() {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/login', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

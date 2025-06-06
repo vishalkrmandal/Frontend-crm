@@ -15,6 +15,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast, Toaster } from 'sonner';
 import { ThemeToggle } from '@/components/theme-toggle';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const resetPasswordSchema = z.object({
     password: z.string()
         .min(6, 'Password must be at least 6 characters')
@@ -46,7 +48,7 @@ export default function ResetPassword() {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/reset-password', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
