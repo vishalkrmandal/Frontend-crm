@@ -1,6 +1,6 @@
 // Frontend\src\pages\client\components\dashboard\AccountCard.tsx
 
-import { TrendingUp, TrendingDown, Eye, MoreHorizontal } from "lucide-react"
+import { MoreHorizontal } from "lucide-react"
 
 interface AccountCardProps {
     account: {
@@ -29,8 +29,8 @@ export const AccountCard = ({ account }: AccountCardProps) => {
                 </div>
                 <div className="flex items-center gap-2">
                     <span className={`text-xs px-2 py-1 rounded-full ${account.status === 'Active'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
                         }`}>
                         {account.status}
                     </span>

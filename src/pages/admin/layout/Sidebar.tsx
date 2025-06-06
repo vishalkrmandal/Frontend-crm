@@ -29,7 +29,7 @@ interface MenuItem {
   }[]
 }
 
-export default function Sidebar({ open, setOpen }: SidebarProps) {
+export default function Sidebar({ open }: SidebarProps) {
   const location = useLocation()
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     "Dashboard": true,

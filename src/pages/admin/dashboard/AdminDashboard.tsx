@@ -12,8 +12,7 @@ import {
     DollarSign,
     Activity,
     RefreshCw,
-    Calendar,
-    Eye
+    Calendar
 } from "lucide-react"
 import { StatCard } from "./StatCard"
 import { MiniChart } from "./MiniChart"

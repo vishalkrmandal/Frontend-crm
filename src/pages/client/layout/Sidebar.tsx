@@ -14,8 +14,6 @@ import {
   Users,
   Briefcase,
   HeadphonesIcon,
-  Copy,
-  LineChart,
   Home,
 } from "lucide-react"
 
@@ -34,7 +32,7 @@ interface MenuItem {
   }[]
 }
 
-export default function Sidebar({ open, setOpen }: SidebarProps) {
+export default function Sidebar({ open }: SidebarProps) {
   const location = useLocation()
   // Initialize expandedMenus as empty object (all menus collapsed by default)
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({})

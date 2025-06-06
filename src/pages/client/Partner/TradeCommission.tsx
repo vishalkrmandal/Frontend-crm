@@ -28,10 +28,7 @@ import {
     ChevronDown,
     ChevronUp,
     Eye,
-    ArrowRight,
-    User,
     Mail,
-    CreditCard,
     Globe
 } from "lucide-react";
 import * as XLSX from 'xlsx';

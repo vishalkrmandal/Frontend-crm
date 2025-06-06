@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Camera, Upload, UserCircle } from "lucide-react";
+import { Upload } from "lucide-react";
 import axios from 'axios';
 import { toast } from 'sonner';
 import WebcamCapture from './WebcamCapture';
@@ -152,37 +152,37 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
         }
     };
 
-    const openCamera = (ref: React.RefObject<HTMLInputElement>) => {
-        // First check if the browser supports mediaDevices API
-        if (!('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices)) {
-            toast.error("Your browser doesn't support camera access");
-            return;
-        }
+    // const openCamera = (ref: React.RefObject<HTMLInputElement>) => {
+    //     // First check if the browser supports mediaDevices API
+    //     if (!('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices)) {
+    //         toast.error("Your browser doesn't support camera access");
+    //         return;
+    //     }
 
-        // Request camera permission explicitly before opening the camera input
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(() => {
-                // If permission granted, open the camera input
-                if (ref.current) {
-                    ref.current.click();
-                }
-            })
-            .catch(error => {
-                console.error("Camera access error:", error);
-                toast.error("Camera access denied or not available");
+    //     // Request camera permission explicitly before opening the camera input
+    //     navigator.mediaDevices.getUserMedia({ video: true })
+    //         .then(() => {
+    //             // If permission granted, open the camera input
+    //             if (ref.current) {
+    //                 ref.current.click();
+    //             }
+    //         })
+    //         .catch(error => {
+    //             console.error("Camera access error:", error);
+    //             toast.error("Camera access denied or not available");
 
-                // Fall back to file upload if camera access fails
-                if (error.name === 'NotAllowedError') {
-                    toast.info("Please enable camera permission in your browser settings");
-                } else if (error.name === 'NotFoundError') {
-                    toast.error("No camera detected on your device");
-                }
-            });
-    };
+    //             // Fall back to file upload if camera access fails
+    //             if (error.name === 'NotAllowedError') {
+    //                 toast.info("Please enable camera permission in your browser settings");
+    //             } else if (error.name === 'NotFoundError') {
+    //                 toast.error("No camera detected on your device");
+    //             }
+    //         });
+    // };
     // Function to determine if camera is available
-    const isCameraAvailable = () => {
-        return 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices;
-    };
+    // const isCameraAvailable = () => {
+    //     return 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices;
+    // };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();

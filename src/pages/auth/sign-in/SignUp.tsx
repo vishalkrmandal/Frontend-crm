@@ -3,9 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { CalendarIcon, Eye, EyeOff, Phone, User, Mail, Lock, Globe, Check, AlertCircle } from "lucide-react";
+import { CalendarIcon, Eye, EyeOff, Phone, User, Mail, Lock, Globe, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +44,7 @@ interface SignUpProps {
 
 export default function SignUp({ validReferral }: SignUpProps) {
     const navigate = useNavigate();
-    const location = useLocation();
+    // const location = useLocation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);

@@ -1,7 +1,7 @@
 // Frontend\src\pages\admin\components\dashboard\TopClientsTable.tsx
 
 import { useEffect, useState } from 'react'
-import { Users, Crown, TrendingUp, Eye } from 'lucide-react'
+import { Crown, TrendingUp, Eye } from 'lucide-react'
 import { adminDashboardAPI } from './adminDashboardAPI'
 
 interface TopClient {

@@ -1,6 +1,6 @@
 // Frontend\src\pages\client\components\dashboard\PerformanceChart.tsx
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import { TrendingUp, BarChart3, Target, Award } from 'lucide-react'
 
 interface PerformanceChartProps {

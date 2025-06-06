@@ -1,7 +1,7 @@
 // Frontend\src\pages\admin\components\dashboard\PlanDistributionChart.tsx
 
 import { useEffect, useState } from 'react'
-import { PieChart, TrendingUp } from 'lucide-react'
+import { PieChart } from 'lucide-react'
 import { adminDashboardAPI } from './adminDashboardAPI'
 
 interface DistributionData {

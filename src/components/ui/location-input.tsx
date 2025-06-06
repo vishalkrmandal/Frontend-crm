@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils'
 // Import JSON data directly
 import countries from '@/components/data/countries.json'
 import states from '@/components/data/states.json'
-import { useTheme } from '@/context/ThemeContext';
+// import { useTheme } from '@/context/ThemeContext';
 
 interface Timezone {
   zoneName: string
@@ -80,7 +80,7 @@ const LocationSelector = ({
   onCountryChange,
   onStateChange,
 }: LocationSelectorProps) => {
-  const { theme } = useTheme();
+  // const { theme } = useTheme();
   const [selectedCountry, setSelectedCountry] = useState<CountryProps | null>(
     null,
   )

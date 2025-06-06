@@ -8,7 +8,6 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
@@ -18,8 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, Share2, Users, Crown, TrendingUp, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
-import IBDashboard from './IBDashboard';
-import TradeCommission from './TradeCommission';
+
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 

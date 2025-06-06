@@ -3,7 +3,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Search, Filter, Download, ChevronDown, Check, X, MoreHorizontal, Eye, EyeOff, Lock, Pencil, RefreshCw } from "lucide-react"
+import { Search, Filter, Download, ChevronDown, Check, X, MoreHorizontal, Eye, Lock, Pencil } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -94,7 +94,7 @@ const ClientsPage = () => {
     const [selectedKycStatus, setSelectedKycStatus] = useState<string | null>(null)
     const [selectedEmailStatus, setSelectedEmailStatus] = useState<string | null>(null)
     const [selectedIbPartner, setSelectedIbPartner] = useState<string | null>(null)
-    const [visiblePasswords, setVisiblePasswords] = useState<string[]>([])
+    // const [visiblePasswords, setVisiblePasswords] = useState<string[]>([])
     const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
     const [clientDetailsDialogOpen, setClientDetailsDialogOpen] = useState(false)
     const [selectedClient, setSelectedClient] = useState<Client | null>(null)

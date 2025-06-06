@@ -16,12 +16,9 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const superadminToken = localStorage.getItem('superadminToken');
 
   useEffect(() => {
-    let userString: string | null = null;
-
     if (allowedRoles.includes('admin') || allowedRoles.includes('superadmin')) {
       // Check for admin user
       if (allowedRoles.includes('admin') && adminToken) {
-        userString = localStorage.getItem('adminUser');
         // Switch to admin role if not already active
         if (activeRole !== 'admin') {
           switchRole('admin', navigate);
@@ -29,7 +26,6 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
       }
       // Check for superadmin user
       else if (allowedRoles.includes('superadmin') && superadminToken) {
-        userString = localStorage.getItem('superadminUser');
         // Switch to superadmin role if not already active
         if (activeRole !== 'superadmin') {
           switchRole('superadmin', navigate);
@@ -38,7 +34,6 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     }
     // Check for client user
     else if (allowedRoles.includes('client') && clientToken) {
-      userString = localStorage.getItem('clientUser');
       // Switch to client role if not already active
       if (activeRole !== 'client') {
         switchRole('client', navigate);

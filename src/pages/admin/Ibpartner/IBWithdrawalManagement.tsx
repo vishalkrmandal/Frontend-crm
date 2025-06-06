@@ -12,7 +12,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
     DialogFooter
 } from "@/components/ui/dialog";
 import {
@@ -40,7 +39,6 @@ import {
     User,
     Mail,
     Globe,
-    CreditCard,
     AlertTriangle
 } from "lucide-react";
 

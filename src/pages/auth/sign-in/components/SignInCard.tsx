@@ -24,7 +24,7 @@ const loginSchema = z.object({
 });
 
 export default function SignInCard() {
-    const { login, hasMultipleRoles } = useAuth();
+    const { hasMultipleRoles } = useAuth();
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = React.useState(false);
     const [isSubmitting, setIsSubmitting] = React.useState(false);

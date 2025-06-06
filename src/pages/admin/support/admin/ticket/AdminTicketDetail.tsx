@@ -220,16 +220,16 @@ export default function AdminTicketDetail() {
         return localStorage.getItem("adminToken")
     }
 
-    const getUserInfo = () => {
-        const userJson = localStorage.getItem("adminUser")
-        if (!userJson) return null
-        try {
-            return JSON.parse(userJson)
-        } catch (error) {
-            console.error("Error parsing user info:", error)
-            return null
-        }
-    }
+    // const getUserInfo = () => {
+    //     const userJson = localStorage.getItem("adminUser")
+    //     if (!userJson) return null
+    //     try {
+    //         return JSON.parse(userJson)
+    //     } catch (error) {
+    //         console.error("Error parsing user info:", error)
+    //         return null
+    //     }
+    // }
 
     const fetchTicket = async () => {
         try {
@@ -497,7 +497,7 @@ export default function AdminTicketDetail() {
     }
 
     const isClosed = ticket.status === "closed"
-    const user = getUserInfo()
+    // const user = getUserInfo()
 
     return (
         <div className="flex min-h-screen flex-col">

@@ -1,7 +1,7 @@
 // Frontend\src\pages\admin\components\dashboard\StatCard.tsx
 
 import { ReactNode } from "react"
-import { TrendingUp, TrendingDown, Eye, Clock, Users as UsersIcon } from "lucide-react"
+import { TrendingUp, TrendingDown, Eye, Clock } from "lucide-react"
 
 interface StatCardProps {
     title: string

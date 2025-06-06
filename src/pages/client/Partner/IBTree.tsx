@@ -104,8 +104,8 @@ const IBTree = ({ }: IBTreeProps) => {
             return node.children.reduce((sum, child) => sum + getTreeWidth(child), 0);
         };
 
-        const treeDepth = getTreeDepth(data);
-        const treeWidth = Math.max(getTreeWidth(data), 3);
+        // const treeDepth = getTreeDepth(data);
+        // const treeWidth = Math.max(getTreeWidth(data), 3);
 
         // Create tree layout with proper spacing
         const treemap = d3.tree<TreeNode>()
@@ -273,7 +273,7 @@ const IBTree = ({ }: IBTreeProps) => {
                 // Remove tooltip
                 d3.selectAll('.tree-tooltip').remove();
             })
-            .on('click', function (event, d) {
+            .on('click', function (_, d) {
                 // Center the clicked node
                 const currentTransform = d3.zoomTransform(svg.node()!);
                 const [x, y] = [d.x, d.y];

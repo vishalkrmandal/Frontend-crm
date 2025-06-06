@@ -4,8 +4,7 @@
 
 import { useState, useEffect } from "react"
 import {
-    Search, Filter, Download, ChevronDown, X, MoreHorizontal,
-    Check, FileText, ArrowUpDown, Calendar
+    Search, Filter, Download, ChevronDown, X, MoreHorizontal, FileText, ArrowUpDown, Calendar
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,14 +21,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter
-} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -491,12 +482,7 @@ const DepositsPage = () => {
     };
 
     // Sort indicator
-    const SortIndicator = ({ field }: { field: keyof Deposit }) => {
-        if (sortField !== field) return <ArrowUpDown className="ml-1 h-4 w-4" />
-        return sortOrder === "asc" ?
-            <ChevronDown className="ml-1 h-4 w-4" /> :
-            <ChevronDown className="ml-1 h-4 w-4 rotate-180" />
-    }
+    // (Removed unused SortIndicator component)
 
     const openDocumentInNewTab = () => {
         if (selectedDeposit && (selectedDeposit.proofOfPayment || selectedDeposit.document)) {

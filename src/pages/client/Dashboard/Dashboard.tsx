@@ -16,12 +16,10 @@ import {
   Target,
   Award,
   Download,
-  Clock
 } from "lucide-react"
 import { AccountCard } from "./AccountCard"
 import { PerformanceChart } from "./PerformanceChart"
 import { RecentTransactions } from "./RecentTransactions"
-import { ReferralWidget } from "./ReferralWidget"
 import { clientDashboardAPI } from "./clientDashboardAPI"
 
 interface DashboardData {
