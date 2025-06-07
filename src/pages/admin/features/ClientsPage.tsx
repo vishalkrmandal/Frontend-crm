@@ -113,12 +113,15 @@ const ClientsPage = () => {
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
 
+    // Define your API base URL here or import from a config file
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
     // Add this function after your state declarations
     const getFullDocumentUrl = (documentPath: string) => {
         if (!documentPath) return '';
         // Replace backslashes with forward slashes for URL compatibility
         const formattedPath = documentPath.replace(/\\/g, '/');
-        return `http://localhost:5000/${formattedPath}`;
+        return `${API_BASE_URL}/${formattedPath}`;
     };
 
     useEffect(() => {
