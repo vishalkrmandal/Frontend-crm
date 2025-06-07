@@ -2,10 +2,8 @@ import axios from 'axios'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
-// import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, BorderStyle, WidthType, AlignmentType } from 'docx'
 
 // Add Buffer polyfill for browser environments
-// Using ES module import instead of require
 if (typeof window !== 'undefined' && !window.Buffer) {
     import('buffer').then(bufferModule => {
         window.Buffer = bufferModule.Buffer;
@@ -19,10 +17,11 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/'
 // Get token from localStorage
 const getToken = () => localStorage.getItem('adminToken') || localStorage.getItem('superadminToken');
 
-// API headers with auth token
+// API headers with auth token and ngrok bypass
 const getAuthHeaders = () => ({
     headers: {
-        Authorization: `Bearer ${getToken()}`
+        Authorization: `Bearer ${getToken()}`,
+        'ngrok-skip-browser-warning': 'true'
     }
 });
 
@@ -58,11 +57,11 @@ const withdrawalService = {
                 doc.text('Withdrawal Report', 14, 15)
 
                 const tableData = data.map(withdrawal => [
-                    `${withdrawal.user.firstname} ${withdrawal.user.lastname}`,
-                    withdrawal.account.mt5Account,
-                    `$${withdrawal.account.balance.toLocaleString()}`,
+                    `${withdrawal.user?.firstname || ''} ${withdrawal.user?.lastname || ''}`,
+                    withdrawal.account?.mt5Account || '',
+                    `$${(withdrawal.account?.balance || 0).toLocaleString()}`,
                     `$${withdrawal.amount.toLocaleString()}`,
-                    withdrawal.account.accountType,
+                    withdrawal.account?.accountType || '',
                     withdrawal.paymentMethod,
                     withdrawal.status,
                     new Date(withdrawal.requestedDate).toLocaleDateString()
@@ -79,12 +78,12 @@ const withdrawalService = {
 
             case 'excel':
                 const wsData = data.map(withdrawal => ({
-                    'User Name': `${withdrawal.user.firstname} ${withdrawal.user.lastname}`,
-                    'Email': withdrawal.user.email,
-                    'Account Number': withdrawal.account.mt5Account,
-                    'Balance': withdrawal.account.balance,
+                    'User Name': `${withdrawal.user?.firstname || ''} ${withdrawal.user?.lastname || ''}`,
+                    'Email': withdrawal.user?.email || '',
+                    'Account Number': withdrawal.account?.mt5Account || '',
+                    'Balance': withdrawal.account?.balance || 0,
                     'Withdrawal Amount': withdrawal.amount,
-                    'Plan Type': withdrawal.account.accountType,
+                    'Plan Type': withdrawal.account?.accountType || '',
                     'Payment Method': withdrawal.paymentMethod,
                     'Status': withdrawal.status,
                     'Request Date': new Date(withdrawal.requestedDate).toLocaleDateString(),
@@ -99,12 +98,12 @@ const withdrawalService = {
 
             case 'csv':
                 const csvData = data.map(withdrawal => ({
-                    'User Name': `${withdrawal.user.firstname} ${withdrawal.user.lastname}`,
-                    'Email': withdrawal.user.email,
-                    'Account Number': withdrawal.account.mt5Account,
-                    'Balance': withdrawal.account.balance,
+                    'User Name': `${withdrawal.user?.firstname || ''} ${withdrawal.user?.lastname || ''}`,
+                    'Email': withdrawal.user?.email || '',
+                    'Account Number': withdrawal.account?.mt5Account || '',
+                    'Balance': withdrawal.account?.balance || 0,
                     'Withdrawal Amount': withdrawal.amount,
-                    'Plan Type': withdrawal.account.accountType,
+                    'Plan Type': withdrawal.account?.accountType || '',
                     'Payment Method': withdrawal.paymentMethod,
                     'Status': withdrawal.status,
                     'Request Date': new Date(withdrawal.requestedDate).toLocaleDateString(),
@@ -119,8 +118,6 @@ const withdrawalService = {
 
             case 'docx':
                 try {
-                    // Alternative approach for DOCX export that works in browsers
-                    // Using HTML to create a simple document that can be downloaded
                     const docxContent = `
                         <html>
                         <head>
@@ -141,19 +138,19 @@ const withdrawalService = {
                                 <table>
                                     <tr>
                                         <th style="width: 30%;">User</th>
-                                        <td>${withdrawal.user.firstname} ${withdrawal.user.lastname}</td>
+                                        <td>${withdrawal.user?.firstname || ''} ${withdrawal.user?.lastname || ''}</td>
                                     </tr>
                                     <tr>
                                         <th>Email</th>
-                                        <td>${withdrawal.user.email}</td>
+                                        <td>${withdrawal.user?.email || ''}</td>
                                     </tr>
                                     <tr>
                                         <th>Account</th>
-                                        <td>${withdrawal.account.mt5Account}</td>
+                                        <td>${withdrawal.account?.mt5Account || ''}</td>
                                     </tr>
                                     <tr>
                                         <th>Balance</th>
-                                        <td>$${withdrawal.account.balance.toLocaleString()}</td>
+                                        <td>$${(withdrawal.account?.balance || 0).toLocaleString()}</td>
                                     </tr>
                                     <tr>
                                         <th>Withdrawal Amount</th>
@@ -161,7 +158,7 @@ const withdrawalService = {
                                     </tr>
                                     <tr>
                                         <th>Plan Type</th>
-                                        <td>${withdrawal.account.accountType}</td>
+                                        <td>${withdrawal.account?.accountType || ''}</td>
                                     </tr>
                                     <tr>
                                         <th>Payment Method</th>
@@ -223,10 +220,7 @@ const withdrawalService = {
                         </html>
                     `;
 
-                    // Create a Blob with the HTML content
                     const blob = new Blob([docxContent], { type: 'application/msword' });
-
-                    // Create download link
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
                     link.download = 'withdrawals.doc';

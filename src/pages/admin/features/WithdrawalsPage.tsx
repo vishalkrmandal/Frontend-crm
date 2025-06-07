@@ -121,11 +121,19 @@ const WithdrawalsPage = () => {
         try {
             setLoading(true)
             const data = await withdrawalService.getAllWithdrawals()
-            setWithdrawals(data)
 
-            const uniqueStatuses = [...new Set(data.map((item: Withdrawal) => item.status as string))]
-            const uniquePaymentMethods = [...new Set(data.map((item: Withdrawal) => item.paymentMethod))]
-            const uniquePlanTypes = [...new Set(data.map((item: Withdrawal) => item.account.accountType))]
+            // Add null checks and fallbacks
+            const safeData = (data || []).map((withdrawal: any) => ({
+                ...withdrawal,
+                user: withdrawal.user || { firstname: '', lastname: '', email: '', _id: '' },
+                account: withdrawal.account || { mt5Account: '', accountType: '', _id: '' }
+            }))
+
+            setWithdrawals(safeData)
+
+            const uniqueStatuses = [...new Set(safeData.map((item: Withdrawal) => item.status as string))]
+            const uniquePaymentMethods = [...new Set(safeData.map((item: Withdrawal) => item.paymentMethod))]
+            const uniquePlanTypes = [...new Set(safeData.map((item: Withdrawal) => item.account?.accountType).filter(Boolean))]
 
             setStatusOptions(uniqueStatuses as string[])
             setPaymentMethodOptions(uniquePaymentMethods as string[])
@@ -133,10 +141,13 @@ const WithdrawalsPage = () => {
         } catch (error) {
             console.error('Error fetching withdrawals:', error)
             toast.error('Failed to fetch withdrawals')
+            // Set empty array on error
+            setWithdrawals([])
         } finally {
             setLoading(false)
         }
     }
+
 
     const handleSort = (field: string) => {
         if (sortField === field) {
@@ -155,16 +166,17 @@ const WithdrawalsPage = () => {
             <ArrowUp className="h-4 w-4 ml-1" />
     }
     const filterWithdrawals = () => {
-        let filtered = [...withdrawals]
+        // Add null check here
+        let filtered = [...(withdrawals || [])]
 
-        // Search filter
+        // Search filter with null checks
         if (searchTerm) {
             filtered = filtered.filter((withdrawal) => {
-                const fullName = `${withdrawal.user.firstname} ${withdrawal.user.lastname}`.toLowerCase()
+                const fullName = `${withdrawal.user?.firstname || ''} ${withdrawal.user?.lastname || ''}`.toLowerCase()
                 return (
                     fullName.includes(searchTerm.toLowerCase()) ||
-                    withdrawal.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    withdrawal.account.mt5Account.toLowerCase().includes(searchTerm.toLowerCase())
+                    (withdrawal.user?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (withdrawal.account?.mt5Account || '').toLowerCase().includes(searchTerm.toLowerCase())
                 )
             })
         }
@@ -181,7 +193,7 @@ const WithdrawalsPage = () => {
 
         // Plan Type filter
         if (selectedPlanType) {
-            filtered = filtered.filter(withdrawal => withdrawal.account.accountType === selectedPlanType)
+            filtered = filtered.filter(withdrawal => withdrawal.account?.accountType === selectedPlanType)
         }
 
         // Date filter
@@ -192,31 +204,31 @@ const WithdrawalsPage = () => {
             })
         }
 
-        // Sort
+        // Sort with null checks
         if (sortField) {
             filtered.sort((a, b) => {
                 let aValue, bValue
 
                 switch (sortField) {
                     case 'amount':
-                        aValue = a.amount
-                        bValue = b.amount
+                        aValue = a.amount || 0
+                        bValue = b.amount || 0
                         break
                     case 'status':
-                        aValue = a.status
-                        bValue = b.status
+                        aValue = a.status || ''
+                        bValue = b.status || ''
                         break
                     case 'date':
                         aValue = new Date(a.requestedDate).getTime()
                         bValue = new Date(b.requestedDate).getTime()
                         break
                     case 'paymentMethod':
-                        aValue = a.paymentMethod
-                        bValue = b.paymentMethod
+                        aValue = a.paymentMethod || ''
+                        bValue = b.paymentMethod || ''
                         break
                     case 'planType':
-                        aValue = a.account.accountType
-                        bValue = b.account.accountType
+                        aValue = a.account?.accountType || ''
+                        bValue = b.account?.accountType || ''
                         break
                     default:
                         return 0
@@ -824,11 +836,9 @@ const WithdrawalsPage = () => {
                                                     <TableCell >
                                                         <div className="flex items-center gap-2">
                                                             <Avatar className="h-8 w-8 flex-shrink-0">
-                                                                <AvatarImage src={withdrawal.user.avatar} alt={`${withdrawal.user.firstname} ${withdrawal.user.lastname}`} />
+                                                                <AvatarImage src={withdrawal.user?.avatar} alt={`${withdrawal.user?.firstname || ''} ${withdrawal.user?.lastname || ''}`} />
                                                                 <AvatarFallback className="text-xs">
-                                                                    {withdrawal.user && withdrawal.user.firstname
-                                                                        ? withdrawal.user.firstname.charAt(0)
-                                                                        : '?'}
+                                                                    {withdrawal.user?.firstname?.charAt(0) || '?'}
                                                                 </AvatarFallback>
                                                             </Avatar>
                                                             <div className="min-w-0 flex-1">
