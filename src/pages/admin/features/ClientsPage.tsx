@@ -113,15 +113,12 @@ const ClientsPage = () => {
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
 
-    // Define your API base URL here or import from a config file
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
-
     // Add this function after your state declarations
     const getFullDocumentUrl = (documentPath: string) => {
         if (!documentPath) return '';
         // Replace backslashes with forward slashes for URL compatibility
         const formattedPath = documentPath.replace(/\\/g, '/');
-        return `${API_BASE_URL}/${formattedPath}`;
+        return `http://localhost:5000/${formattedPath}`;
     };
 
     useEffect(() => {
@@ -559,7 +556,11 @@ const ClientsPage = () => {
     }
 
     const { paginatedClients, totalPages, totalItems, startItem, endItem } = useMemo(() => {
-        const filtered = clients.filter(client => {
+        // Add this line to fix the error
+        const clientsArray = clients || [];
+
+        // Change this line to use clientsArray instead of clients
+        const filtered = clientsArray.filter(client => {
             const matchesSearch = !searchTerm ||
                 client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
