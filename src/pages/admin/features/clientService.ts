@@ -11,7 +11,8 @@ const clientService = {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/clients`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
             console.log("Client data response:", response.data);
@@ -26,7 +27,8 @@ const clientService = {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/clients/${id}`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
             return response.data;
@@ -40,7 +42,8 @@ const clientService = {
         try {
             const response = await axios.put(`${API_BASE_URL}/api/clients/${id}`, clientData, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
             return response.data;
@@ -54,7 +57,8 @@ const clientService = {
         try {
             const response = await axios.put(`${API_BASE_URL}/api/clients/${id}/update-password`, { password }, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
             return response.data;
@@ -68,7 +72,8 @@ const clientService = {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/clients/${id}/password`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
             return response.data;
@@ -82,7 +87,8 @@ const clientService = {
         try {
             const response = await axios.put(`${API_BASE_URL}/api/clients/${id}/suspend`, {}, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
             return response.data;
@@ -96,7 +102,8 @@ const clientService = {
         try {
             const response = await axios.put(`${API_BASE_URL}/api/clients/${id}/activate`, {}, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
             return response.data;
@@ -110,7 +117,8 @@ const clientService = {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/clients/users/${userId}/accounts`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
             return response.data;
@@ -124,7 +132,8 @@ const clientService = {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/clients/export/excel`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 },
                 responseType: 'blob'
             });
@@ -147,7 +156,8 @@ const clientService = {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/clients/export/pdf`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                    'ngrok-skip-browser-warning': 'true'
                 },
                 responseType: 'blob'
             });
@@ -165,18 +175,16 @@ const clientService = {
         }
     },
 
-
-    // In clientService.js, add this function:
+    // Impersonate client
     impersonateClient: async (clientId: string) => {
         const response = await axios.post(`${API_BASE_URL}/api/auth/admin/impersonate/${clientId}`, {}, {
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+                'ngrok-skip-browser-warning': 'true'
             }
         });
         return response.data;
     }
 };
-
-
 
 export default clientService;
