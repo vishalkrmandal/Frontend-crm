@@ -129,19 +129,66 @@ const ClientsPage = () => {
         try {
             setLoading(true)
             const response = await clientService.getAllClients()
-            setClients(response.data)
 
-            // Extract unique countries and IB partners for filters
-            const uniqueCountries = [...new Set(response.data.map((client: Client) => client.country?.name).filter(Boolean))] as string[]
-            const uniqueIbPartners = [...new Set(response.data.map((client: Client) => client.ibPartner))] as string[]
+            // Add logging to debug the response structure
+            console.log("Full API response:", response);
+            console.log("Response data:", response.data);
+            console.log("Type of response.data:", typeof response.data);
 
-            setCountries(uniqueCountries)
-            setIbPartners(uniqueIbPartners)
-            setLoading(false)
+            // Check if response.data exists and is an array
+            let clientsData = [];
+            if (response.data && Array.isArray(response.data)) {
+                clientsData = response.data;
+            } else if (response && Array.isArray(response)) {
+                // Sometimes the response itself is the array
+                clientsData = response;
+            } else if (response.data && response.data.clients && Array.isArray(response.data.clients)) {
+                // Sometimes data is nested under a 'clients' property
+                clientsData = response.data.clients;
+            } else {
+                console.warn("Unexpected response structure:", response);
+                clientsData = []; // fallback to empty array
+            }
+
+            setClients(clientsData);
+
+            // Extract unique countries and IB partners for filters - with null checks
+            const uniqueCountries = [...new Set(
+                clientsData
+                    .map((client: Client) => client.country?.name)
+                    .filter(Boolean) // Remove null/undefined values
+            )] as string[];
+
+            const uniqueIbPartners = [...new Set(
+                clientsData
+                    .map((client: Client) => client.ibPartner)
+                    .filter(Boolean) // Remove null/undefined values
+            )] as string[];
+
+            setCountries(uniqueCountries);
+            setIbPartners(uniqueIbPartners);
+            setLoading(false);
         } catch (error) {
-            console.error("Error fetching clients:", error)
-            toast.error("Failed to fetch clients. Please try again.")
-            setLoading(false)
+            console.error("Error fetching clients:", error);
+            if (typeof error === "object" && error !== null && "response" in error) {
+                const err = error as { message?: string; response?: any };
+                console.error("Error details:", {
+                    message: err.message,
+                    response: err.response,
+                    status: err.response?.status,
+                    data: err.response?.data
+                });
+            } else {
+                console.error("Error details:", error);
+            }
+
+            // Set empty arrays to prevent further errors
+            setClients([]);
+            setCountries([]);
+            setIbPartners([]);
+
+            toast.error("Failed to fetch clients. Please try again.");
+            setLoading(false);
         }
     }
 
