@@ -29,7 +29,7 @@ import {
 } from "@/pages/admin/Ibpartner/ibapi"
 
 const IBPartnersPage = () => {
-    // State for Groups and IB Configuration
+    // State for Groups and IB Configuration - Initialize with empty arrays
     const [groups, setGroups] = useState<Group[]>([])
     const [selectedGroup, setSelectedGroup] = useState<string>("")
     const [ibConfigurations, setIbConfigurations] = useState<IBConfiguration[]>([])
@@ -48,22 +48,31 @@ const IBPartnersPage = () => {
             try {
                 setLoading(true);
 
-                // Fetch groups from backend
+                // Fetch groups from backend with error handling
                 const fetchedGroups = await getGroups();
-                setGroups(fetchedGroups);
+                console.log("Fetched groups:", fetchedGroups);
+
+                // Ensure we have an array
+                const safeGroups = Array.isArray(fetchedGroups) ? fetchedGroups : [];
+                setGroups(safeGroups);
 
                 // Set the first group as default selected if available
-                if (fetchedGroups.length > 0) {
-                    setSelectedGroup(fetchedGroups[0]._id);
+                if (safeGroups.length > 0) {
+                    setSelectedGroup(safeGroups[0]._id);
                     // Fetch IB configurations for this group
-                    const configs = await getIBConfigurationsByGroup(fetchedGroups[0]._id);
-                    setIbConfigurations(configs);
+                    const configs = await getIBConfigurationsByGroup(safeGroups[0]._id);
+                    const safeConfigs = Array.isArray(configs) ? configs : [];
+                    setIbConfigurations(safeConfigs);
+                } else {
+                    console.warn("No groups found");
+                    setIbConfigurations([]);
                 }
             } catch (error: any) {
                 console.error('Error fetching initial data:', error);
-                toast.error("Error", {
-                    description: error.message || "Failed to load initial data"
-                });
+                // Set empty arrays on error
+                setGroups([]);
+                setIbConfigurations([]);
+                toast.error("Failed to load initial data");
             } finally {
                 setLoading(false);
             }
@@ -78,11 +87,12 @@ const IBPartnersPage = () => {
         try {
             setLoading(true);
             const configs = await getIBConfigurationsByGroup(value);
-            setIbConfigurations(configs);
+            const safeConfigs = Array.isArray(configs) ? configs : [];
+            setIbConfigurations(safeConfigs);
         } catch (error: any) {
-            toast.error("Error", {
-                description: error.message || "Failed to load configurations"
-            });
+            console.error('Error loading configurations:', error);
+            setIbConfigurations([]);
+            toast.error("Failed to load configurations");
         } finally {
             setLoading(false);
         }
@@ -110,52 +120,41 @@ const IBPartnersPage = () => {
     const handleSubmitConfig = async () => {
         try {
             if (newLevel.trim() === "" || newBonusPerLot.trim() === "") {
-                toast.error("Error", {
-                    description: "Please fill all fields"
-                });
+                toast.error("Please fill all fields");
                 return;
             }
 
             const level = parseInt(newLevel);
             const bonusPerLot = parseFloat(newBonusPerLot);
 
-            if (level < 1 || level > 10) {
-                toast.error("Error", {
-                    description: "Level must be between 1 and 10"
-                });
+            if (isNaN(level) || level < 1 || level > 10) {
+                toast.error("Level must be between 1 and 10");
                 return;
             }
 
-            if (bonusPerLot < 0) {
-                toast.error("Error", {
-                    description: "Bonus per lot must be non-negative"
-                });
+            if (isNaN(bonusPerLot) || bonusPerLot < 0) {
+                toast.error("Bonus per lot must be a valid non-negative number");
                 return;
             }
 
             if (isEditMode) {
                 // Update existing configuration
                 await updateIBConfiguration(currentConfigId, bonusPerLot);
-                toast.success("Success", {
-                    description: "IB configuration updated successfully"
-                });
+                toast.success("IB configuration updated successfully");
             } else {
                 // Create new configuration
                 await createIBConfiguration(selectedGroup, level, bonusPerLot);
-                toast.success("Success", {
-                    description: "IB configuration added successfully"
-                });
+                toast.success("IB configuration added successfully");
             }
 
             // Refresh configurations
             const updatedConfigs = await getIBConfigurationsByGroup(selectedGroup);
-            setIbConfigurations(updatedConfigs);
+            const safeConfigs = Array.isArray(updatedConfigs) ? updatedConfigs : [];
+            setIbConfigurations(safeConfigs);
             setIsDialogOpen(false);
         } catch (error: any) {
             console.error('Error submitting configuration:', error);
-            toast.error("Error", {
-                description: error.response?.data?.message || "Failed to save configuration"
-            });
+            toast.error(error.response?.data?.message || "Failed to save configuration");
         }
     };
 
@@ -174,7 +173,8 @@ const IBPartnersPage = () => {
                             <SelectValue placeholder="Select Group" />
                         </SelectTrigger>
                         <SelectContent>
-                            {groups.map((group) => (
+                            {/* Add null check for groups array */}
+                            {(groups || []).map((group) => (
                                 <SelectItem key={group._id} value={group._id}>
                                     {group.name}
                                 </SelectItem>
@@ -188,7 +188,11 @@ const IBPartnersPage = () => {
             <div className="rounded-md border shadow-sm">
                 <div className="flex justify-between items-center p-4 bg-muted/50">
                     <h2 className="text-xl font-semibold">IB Configuration</h2>
-                    <Button className="flex items-center gap-1" onClick={handleAddConfig}>
+                    <Button
+                        className="flex items-center gap-1"
+                        onClick={handleAddConfig}
+                        disabled={!selectedGroup || loading}
+                    >
                         <PlusCircle className="h-4 w-4" /> Add New
                     </Button>
                 </div>
@@ -209,8 +213,14 @@ const IBPartnersPage = () => {
                                         Loading configurations...
                                     </TableCell>
                                 </TableRow>
-                            ) : ibConfigurations.length > 0 ? (
-                                ibConfigurations.map((config) => (
+                            ) : !selectedGroup ? (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                                        Please select a group to view configurations.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (ibConfigurations || []).length > 0 ? (
+                                (ibConfigurations || []).map((config) => (
                                     <TableRow key={config._id} className="hover:bg-muted/30">
                                         <TableCell className="font-medium py-4">Level {config.level}</TableCell>
                                         <TableCell className="py-4">${config.bonusPerLot.toFixed(2)}</TableCell>
