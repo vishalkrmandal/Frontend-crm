@@ -33,6 +33,10 @@ import { format } from "date-fns"
 import axios from "axios";
 import { toast } from "sonner"
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+
+
 interface Deposit {
     id: string;
     user: {
@@ -143,7 +147,7 @@ const DepositsPage = () => {
             params.append('page', currentPage.toString());
             params.append('limit', itemsPerPage.toString());
 
-            const response = await axios.get(`http://localhost:5000/api/admindeposits?${params.toString()}`, getAuthHeaders());
+            const response = await axios.get(`${API_BASE_URL}/api/admindeposits?${params.toString()}`, getAuthHeaders());
 
             // Transform the API response
             const transformedData = response.data.data.map((item: any) => ({
@@ -323,7 +327,7 @@ const DepositsPage = () => {
             params.append('format', format);
 
             // Create export URL
-            const exportUrl = `http://localhost:5000/api/admindeposits/export?${params.toString()}`;
+            const exportUrl = `${API_BASE_URL}/api/admindeposits/export?${params.toString()}`;
 
             // Make authenticated request
             const response = await axios.get(exportUrl, {
@@ -408,7 +412,7 @@ const DepositsPage = () => {
             // Add loading state
             const loadingToast = toast.loading("Processing approval...");
 
-            const response = await axios.post(`http://localhost:5000/api/admindeposits/${selectedDeposit.id}/approve`, {
+            const response = await axios.post(`${API_BASE_URL}/api/admindeposits/${selectedDeposit.id}/approve`, {
                 bonus,
                 remarks
             }, getAuthHeaders());
@@ -454,7 +458,7 @@ const DepositsPage = () => {
 
             const loadingToast = toast.loading("Processing rejection...");
 
-            await axios.post(`http://localhost:5000/api/admindeposits/${selectedDeposit.id}/reject`, {
+            await axios.post(`${API_BASE_URL}/api/admindeposits/${selectedDeposit.id}/reject`, {
                 remarks: rejectRemarks
             }, getAuthHeaders());
 
@@ -492,7 +496,7 @@ const DepositsPage = () => {
             const url = documentPath && documentPath.startsWith('http')
                 ? documentPath
                 : documentPath
-                    ? `http://localhost:5000${documentPath}`
+                    ? `${API_BASE_URL}${documentPath}`
                     : '';
 
             try {
