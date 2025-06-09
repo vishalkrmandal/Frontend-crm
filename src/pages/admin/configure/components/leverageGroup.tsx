@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea"
 import axios from "axios"
 import { toast } from "react-hot-toast"
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 
 
 export default function LeverageAndGroup() {
@@ -38,7 +40,7 @@ export default function LeverageAndGroup() {
                 toast.error("Authentication token not found");
                 return;
             }
-            const res = await axios.get('http://localhost:5000/api/leverages', {
+            const res = await axios.get(`${API_BASE_URL}/api/leverages`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -64,7 +66,7 @@ export default function LeverageAndGroup() {
             }
             if (currentLeverage?._id) {
                 // Update existing leverage
-                await axios.put(`http://localhost:5000/api/leverages/${currentLeverage._id}`, currentLeverage, {
+                await axios.put(`${API_BASE_URL}/api/leverages/${currentLeverage._id}`, currentLeverage, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -72,7 +74,7 @@ export default function LeverageAndGroup() {
                 toast.success('Leverage updated successfully')
             } else {
                 // Create new leverage
-                await axios.post('http://localhost:5000/api/leverages', currentLeverage, {
+                await axios.post(`${API_BASE_URL}/api/leverages`, currentLeverage, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -117,7 +119,7 @@ export default function LeverageAndGroup() {
                 toast.error("Authentication token not found");
                 return;
             }
-            const res = await axios.get('http://localhost:5000/api/groups', {
+            const res = await axios.get(`${API_BASE_URL}/api/groups`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -137,7 +139,7 @@ export default function LeverageAndGroup() {
                 toast.error("Authentication token not found");
                 return;
             }
-            const res = await axios.get('http://localhost:5000/api/groups/mt5-groups', {
+            const res = await axios.get(`${API_BASE_URL}/api/groups/mt5-groups`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -164,7 +166,7 @@ export default function LeverageAndGroup() {
         try {
             if (currentGroup?._id) {
                 // Update existing group
-                await axios.put(`http://localhost:5000/api/groups/${currentGroup._id}`, currentGroup, {
+                await axios.put(`${API_BASE_URL}/api/groups/${currentGroup._id}`, currentGroup, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                     }
@@ -172,7 +174,7 @@ export default function LeverageAndGroup() {
                 toast.success('Group updated successfully')
             } else {
                 // Create new group
-                await axios.post('http://localhost:5000/api/groups', currentGroup, {
+                await axios.post(`${API_BASE_URL}/api/groups`, currentGroup, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                     }
@@ -197,7 +199,7 @@ export default function LeverageAndGroup() {
 
     const confirmGroupDelete = async () => {
         try {
-            await axios.delete(`http://localhost:5000/api/groups/${currentGroup._id}`, {
+            await axios.delete(`${API_BASE_URL}/api/groups/${currentGroup._id}`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                 }

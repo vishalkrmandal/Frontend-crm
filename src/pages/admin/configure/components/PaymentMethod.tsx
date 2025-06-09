@@ -22,6 +22,8 @@ import axios from "axios"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 // Define the currency type
 interface Currency {
     code: string;
@@ -85,7 +87,7 @@ export default function PaymentMethod() {
     const fetchPaymentMethods = async () => {
         try {
             const token = localStorage.getItem('adminToken') // Assuming you store token in localStorage
-            const response = await axios.get('http://localhost:5000/api/payment-methods', {
+            const response = await axios.get(`${API_BASE_URL}/api/payment-methods`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             setPaymentMethods(response.data.data)
@@ -133,14 +135,14 @@ export default function PaymentMethod() {
             }
 
             if (dialogMode === "update") {
-                await axios.put(`http://localhost:5000/api/payment-methods/${currentMethod._id}`, formData, {
+                await axios.put(`${API_BASE_URL}/api/payment-methods/${currentMethod._id}`, formData, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data'
                     }
                 })
             } else {
-                await axios.post('http://localhost:5000/api/payment-methods', formData, {
+                await axios.post(`${API_BASE_URL}/api/payment-methods`, formData, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data'
@@ -163,7 +165,7 @@ export default function PaymentMethod() {
     const handleDelete = async () => {
         try {
             const token = localStorage.getItem('adminToken')
-            await axios.delete(`http://localhost:5000/api/payment-methods/${currentMethod._id}`, {
+            await axios.delete(`${API_BASE_URL}/api/payment-methods/${currentMethod._id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
 
@@ -219,7 +221,7 @@ export default function PaymentMethod() {
     const viewMethodDetails = async (method: { id?: number; name?: string; type?: string; accounts?: string; active?: boolean; _id?: any }) => {
         try {
             const token = localStorage.getItem('adminToken')
-            const response = await axios.get(`http://localhost:5000/api/payment-methods/${method._id}`, {
+            const response = await axios.get(`${API_BASE_URL}/api/payment-methods/${method._id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
 
@@ -253,7 +255,7 @@ export default function PaymentMethod() {
         try {
             setLoading(true);
             const token = localStorage.getItem("adminToken");
-            const response = await axios.get("http://localhost:5000/api/exchanges", {
+            const response = await axios.get(`${API_BASE_URL}/api/exchanges`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             console.log(response.data.data);
@@ -270,7 +272,7 @@ export default function PaymentMethod() {
     const fetchCurrencies = async () => {
         try {
             const token = localStorage.getItem("adminToken");
-            const response = await axios.get("http://localhost:5000/api/exchanges/currencies", {
+            const response = await axios.get(`${API_BASE_URL}/api/exchanges/currencies`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             console.log(response.data.data);
@@ -345,14 +347,14 @@ export default function PaymentMethod() {
             if (currentExchange && currentExchange._id) {
                 // Update existing exchange
                 await axios.put(
-                    `http://localhost:5000/api/exchanges/${currentExchange._id}`,
+                    `${API_BASE_URL}/api/exchanges/${currentExchange._id}`,
                     { rate: formData.rate, type: formData.type },
                     { headers }
                 );
                 toast.success("Exchange rate updated");
             } else {
                 // Create new exchange
-                await axios.post("http://localhost:5000/api/exchanges", formData, { headers });
+                await axios.post(`${API_BASE_URL}/api/exchanges`, formData, { headers });
                 toast.success("Exchange rate added");
             }
 
@@ -371,7 +373,7 @@ export default function PaymentMethod() {
             if (!currentExchange || !currentExchange._id) return;
 
             const token = localStorage.getItem("adminToken");
-            await axios.delete(`http://localhost:5000/api/exchanges/${currentExchange._id}`, {
+            await axios.delete(`${API_BASE_URL}/api/exchanges/${currentExchange._id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -495,7 +497,7 @@ export default function PaymentMethod() {
                                             onCheckedChange={async (checked) => {
                                                 try {
                                                     const token = localStorage.getItem('adminToken')
-                                                    await axios.put(`http://localhost:5000/api/payment-methods/${method._id}`,
+                                                    await axios.put(`${API_BASE_URL}/api/payment-methods/${method._id}`,
                                                         { active: checked },
                                                         { headers: { Authorization: `Bearer ${token}` } }
                                                     )
