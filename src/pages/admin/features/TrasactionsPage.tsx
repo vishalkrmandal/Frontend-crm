@@ -22,6 +22,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { format } from "date-fns"
 import axios from "axios"
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+
 // Transaction type definition
 interface Transaction {
     id: string
@@ -82,7 +85,7 @@ const TransactionsPage = () => {
                 setLoading(true)
                 // In a real implementation, this would be an API call
                 // For now, we'll use a simulated delay and sample data
-                const response = await axios.get<ApiResponse>('http://localhost:5000/api/admin/transactions', {
+                const response = await axios.get<ApiResponse>(`${API_BASE_URL}/api/admin/transactions`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('adminToken')}`
                     }
