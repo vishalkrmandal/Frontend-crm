@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import axios from "axios"
 import { toast } from "sonner"
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 type Client = {
     _id: string
     firstname: string
@@ -55,7 +57,7 @@ export default function CreateTicket() {
 
             // Changed to get all clients with role 'client'
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/admin/clients?role=client`,
+                `${API_BASE_URL}/api/admin/clients?role=client`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -146,7 +148,7 @@ export default function CreateTicket() {
 
             // Submit the form
             const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/tickets`,
+                `${API_BASE_URL}/api/tickets`,
                 formData,
                 {
                     headers: {

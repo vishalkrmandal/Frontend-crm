@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User, ChevronLeft, Mail, Phone, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 type Client = {
     _id: string;
     firstname: string;
@@ -42,7 +44,7 @@ export default function ClientDetail() {
             }
 
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/admin/clients/${id}`,
+                `${API_BASE_URL}/api/admin/clients/${id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

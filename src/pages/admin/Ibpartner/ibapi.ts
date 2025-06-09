@@ -3,7 +3,7 @@
 import axios from "axios";
 
 // Define API base URL - should be set in your environment
-const API_URL = import.meta.env.VITE_API_URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Types
 export interface Group {
@@ -50,7 +50,7 @@ const getAuthHeader = () => {
 // Group API functions
 export const getGroups = async (): Promise<Group[]> => {
     try {
-        const response = await axios.get(`${API_URL}/api/groups`, getAuthHeader());
+        const response = await axios.get(`${API_BASE_URL}/api/groups`, getAuthHeader());
         console.log("Groups API response:", response.data);
 
         // Handle different response structures
@@ -73,7 +73,7 @@ export const getGroups = async (): Promise<Group[]> => {
 export const getIBConfigurationsByGroup = async (groupId: string): Promise<IBConfiguration[]> => {
     try {
         const response = await axios.get(
-            `${API_URL}/api/ib-configurations/group/${groupId}`,
+            `${API_BASE_URL}/api/ib-configurations/group/${groupId}`,
             getAuthHeader()
         );
         console.log("IB Configurations API response:", response.data);
@@ -101,7 +101,7 @@ export const createIBConfiguration = async (
 ): Promise<IBConfiguration> => {
     try {
         const response = await axios.post(
-            `${API_URL}/api/ib-configurations`,
+            `${API_BASE_URL}/api/ib-configurations`,
             { groupId, level, bonusPerLot },
             getAuthHeader()
         );
@@ -126,7 +126,7 @@ export const updateIBConfiguration = async (
 ): Promise<IBConfiguration> => {
     try {
         const response = await axios.put(
-            `${API_URL}/api/ib-configurations/${id}`,
+            `${API_BASE_URL}/api/ib-configurations/${id}`,
             { bonusPerLot },
             getAuthHeader()
         );
@@ -147,7 +147,7 @@ export const updateIBConfiguration = async (
 
 export const deleteIBConfiguration = async (id: string): Promise<void> => {
     try {
-        await axios.delete(`${API_URL}/api/ib-configurations/${id}`, getAuthHeader());
+        await axios.delete(`${API_BASE_URL}/api/ib-configurations/${id}`, getAuthHeader());
     } catch (error) {
         console.error("Error deleting IB configuration:", error);
         throw error;

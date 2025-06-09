@@ -8,6 +8,8 @@ import { ChevronLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 type Ticket = {
     _id: string;
     ticketNumber: string;
@@ -92,7 +94,7 @@ export default function ClientTickets() {
             }
 
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/clients/${id}`,
+                `${API_BASE_URL}/api/clients/${id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -118,7 +120,7 @@ export default function ClientTickets() {
             }
 
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/tickets/client/${id}/all`,
+                `${API_BASE_URL}/api/tickets/client/${id}/all`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

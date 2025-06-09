@@ -2,7 +2,7 @@
     "rewrites": [
         {
             "source": "/(.*)",
-            "destination": "/index.html"
+            "destination": "https://vishal-test.testcrm.top/api/$1"
         }
     ]
 }

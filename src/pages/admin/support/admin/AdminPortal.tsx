@@ -18,6 +18,8 @@ import * as XLSX from 'xlsx'
 import { jsPDF } from "jspdf"
 import autoTable from 'jspdf-autotable'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 // Helper function to get badge variant based on status
 function getStatusVariant(status: string) {
     switch (status) {
@@ -100,7 +102,7 @@ export default function AdminPortal() {
                 return
             }
 
-            let url = `${import.meta.env.VITE_API_URL}/api/tickets`
+            let url = `${API_BASE_URL}/api/tickets`
 
             // Add status filter if not "all"
             if (filter !== "all") {
@@ -150,7 +152,7 @@ export default function AdminPortal() {
             }
 
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/tickets/stats`,
+                `${API_BASE_URL}/api/tickets/stats`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
