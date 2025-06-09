@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Base API URL for dynamic environment support
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface Account {
   _id: string;
@@ -91,7 +91,7 @@ export default function Withdrawal() {
     const fetchAccounts = async () => {
       setIsLoading(prev => ({ ...prev, accounts: true }));
       try {
-        const response = await axios.get(`${API_BASE_URL}/accounts`, getAuthHeaders());
+        const response = await axios.get(`${API_BASE_URL}/api/accounts`, getAuthHeaders());
         setAccounts(response.data.data || []);
         console.log("Accounts fetched:", response.data.data);
         if (response.data.data.length > 0) {
@@ -113,7 +113,7 @@ export default function Withdrawal() {
     const fetchWithdrawalHistory = async () => {
       setIsLoading(prev => ({ ...prev, withdrawals: true }));
       try {
-        const response = await axios.get(`${API_BASE_URL}/withdrawals/user`, getAuthHeaders());
+        const response = await axios.get(`${API_BASE_URL}/api/withdrawals/user`, getAuthHeaders());
         setWithdrawalHistory(response.data.data || []);
       } catch (error) {
         console.error("Error fetching withdrawal history:", error);
@@ -130,7 +130,7 @@ export default function Withdrawal() {
   useEffect(() => {
     const fetchLastPaymentMethod = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/withdrawals/last-method`, getAuthHeaders());
+        const response = await axios.get(`${API_BASE_URL}/api/withdrawals/last-method`, getAuthHeaders());
         if (response.data.data) {
           setLastPaymentMethod(response.data.data);
         }
@@ -260,10 +260,10 @@ export default function Withdrawal() {
         eWalletDetails: method === "ewallet" ? eWalletDetails : undefined
       };
 
-      await axios.post(`${API_BASE_URL}/withdrawals`, withdrawalData, getAuthHeaders());
+      await axios.post(`${API_BASE_URL}/api/withdrawals`, withdrawalData, getAuthHeaders());
 
       // Refresh withdrawal history
-      const response = await axios.get(`${API_BASE_URL}/withdrawals/user`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE_URL}/api/withdrawals/user`, getAuthHeaders());
       setWithdrawalHistory(response.data.data);
 
       // Reset form

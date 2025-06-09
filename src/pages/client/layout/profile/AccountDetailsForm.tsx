@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import axios from 'axios';
 import { toast } from 'sonner';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 
 interface AccountDetailsFormProps {
@@ -43,7 +43,7 @@ const AccountDetailsForm: React.FC<AccountDetailsFormProps> = ({ initialData, se
             }
 
             const response = await axios.post(
-                `${API_URL}/profile/account-details`,
+                `${API_BASE_URL}/profile/account-details`,
                 formData,
                 {
                     headers: {

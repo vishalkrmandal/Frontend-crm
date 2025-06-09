@@ -3,6 +3,8 @@ import { Eye, ChevronLeft, ChevronRight, RefreshCw, Lock } from "lucide-react";
 import axios, { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 // Interfaces
 interface Account {
   _id: string;
@@ -88,7 +90,7 @@ export default function AccountList() {
 
     try {
       const token = localStorage.getItem("clientToken");
-      const response = await axios.get<ApiResponse>("http://localhost:5000/api/accounts", {
+      const response = await axios.get<ApiResponse>(`${API_BASE_URL}/api/accounts`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -140,7 +142,7 @@ export default function AccountList() {
   const handleRefresh = async (accountId: string) => {
     try {
       const token = localStorage.getItem("clientToken");
-      await axios.post(`http://localhost:5000/api/accounts/${accountId}/refresh`, {}, {
+      await axios.post(`${API_BASE_URL}/api/accounts/${accountId}/refresh`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -272,7 +274,7 @@ export default function AccountList() {
       // Proceed with API call if validations pass
       if (hasChanges && !hasErrors) {
         await axios.put(
-          `http://localhost:5000/api/accounts/${passwordDialog.accountId}/passwords`,
+          `${API_BASE_URL}/api/accounts/${passwordDialog.accountId}/passwords`,
           payload,
           {
             headers: {

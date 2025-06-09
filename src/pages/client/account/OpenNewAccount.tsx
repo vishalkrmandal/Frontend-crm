@@ -3,6 +3,9 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { toast } from "sonner";
 
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 // Define the Leverage type
 interface Leverage {
   _id: string
@@ -36,7 +39,7 @@ export default function OpenNewAccount() {
     // Fetch groups data
     const fetchGroups = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/groups")
+        const response = await axios.get(`${API_BASE_URL}/api/groups`)
         if (response.data.success) {
           setGroups(response.data.data)
         }
@@ -49,7 +52,7 @@ export default function OpenNewAccount() {
     // Fetch leverages data
     const fetchLeverages = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/leverages")
+        const response = await axios.get(`${API_BASE_URL}/api/leverages`)
         if (response.data.success) {
           setLeverages(response.data.data.filter((item: Leverage) => item.active))
         }
@@ -119,7 +122,7 @@ export default function OpenNewAccount() {
 
     try {
       // Create new account
-      await axios.post("http://localhost:5000/api/accounts/create", {
+      await axios.post(`${API_BASE_URL}/api/accounts/create`, {
         ...formValues,
         platform: "MetaTrader 5"
       }, {

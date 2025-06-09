@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Base API URL for dynamic environment support
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface PaymentMethod {
   _id: string;
@@ -92,7 +92,7 @@ export default function Deposit() {
   const fetchAccounts = async () => {
     setIsLoading(prev => ({ ...prev, accounts: true }));
     try {
-      const response = await axios.get(`${API_BASE_URL}/accounts`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE_URL}/api/accounts`, getAuthHeaders());
       const accountsData = response.data.data || [];
       setAccounts(accountsData);
       if (accountsData.length > 0) {
@@ -110,7 +110,7 @@ export default function Deposit() {
   const fetchPaymentMethods = async () => {
     setIsLoading(prev => ({ ...prev, methods: true }));
     try {
-      const response = await axios.get(`${API_BASE_URL}/clientdeposits/payment-methods`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE_URL}/api/clientdeposits/payment-methods`, getAuthHeaders());
       setPaymentMethods(response.data.data || {});
     } catch (error) {
       toast.error("Failed to fetch payment methods");
@@ -124,7 +124,7 @@ export default function Deposit() {
   const fetchDeposits = async () => {
     setIsLoading(prev => ({ ...prev, deposits: true }));
     try {
-      const response = await axios.get(`${API_BASE_URL}/clientdeposits`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE_URL}/api/clientdeposits`, getAuthHeaders());
       setDeposits(response.data.data || []);
     } catch (error) {
       toast.error("Failed to fetch deposit history");
@@ -290,7 +290,7 @@ export default function Deposit() {
         formData.append('notes', notes);
       }
 
-      await axios.post(`${API_BASE_URL}/clientdeposits`, formData, {
+      await axios.post(`${API_BASE_URL}/api/clientdeposits`, formData, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           'Content-Type': 'multipart/form-data'

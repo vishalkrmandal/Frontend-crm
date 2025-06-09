@@ -9,6 +9,8 @@ import * as XLSX from 'xlsx'
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 
 export default function TransactionHistory() {
   interface Transaction {
@@ -35,8 +37,6 @@ export default function TransactionHistory() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
   // Function to fetch transactions from backend
   const fetchTransactions = async () => {
     try {
@@ -60,7 +60,7 @@ export default function TransactionHistory() {
       params.append("page", currentPage.toString())
       params.append("limit", "10")
 
-      const response = await axios.get(`${API_URL}/api/transactions?${params.toString()}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/transactions?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -123,7 +123,7 @@ export default function TransactionHistory() {
       params.append("format", "excel")
 
       const token = localStorage.getItem("clientToken")
-      const response = await axios.get(`${API_URL}/api/transactions/export?${params.toString()}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/transactions/export?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -171,7 +171,7 @@ export default function TransactionHistory() {
       params.append("format", "pdf")
 
       const token = localStorage.getItem("clientToken")
-      const response = await axios.get(`${API_URL}/api/transactions/export?${params.toString()}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/transactions/export?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

@@ -15,7 +15,7 @@ interface WalletDetailsFormProps {
     setProfileData: (data: any) => void;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const WalletDetailsForm: React.FC<WalletDetailsFormProps> = ({ initialData, setProfileData }) => {
     const [formData, setFormData] = useState(initialData);
@@ -42,7 +42,7 @@ const WalletDetailsForm: React.FC<WalletDetailsFormProps> = ({ initialData, setP
             }
 
             const response = await axios.post(
-                `${API_URL}/profile/wallet-details`,
+                `${API_BASE_URL}/profile/wallet-details`,
                 formData,
                 {
                     headers: {

@@ -14,7 +14,7 @@ export default function Transfer() {
     amount: ""
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
     // Fetch user accounts and recent transfers on component mount
@@ -27,7 +27,7 @@ export default function Transfer() {
 
       // Fetch accounts
       const accountsResponse = await axios.get(
-        `${API_URL}/api/transfers/accounts`,
+        `${API_BASE_URL}/api/transfers/accounts`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
@@ -37,7 +37,7 @@ export default function Transfer() {
 
       // Fetch transfers
       const transfersResponse = await axios.get(
-        `${API_URL}/api/transfers`,
+        `${API_BASE_URL}/api/transfers`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
@@ -106,7 +106,7 @@ export default function Transfer() {
       setTransferring(true);
 
       await axios.post(
-        `${API_URL}/api/transfers`,
+        `${API_BASE_URL}/api/transfers`,
         formData,
         {
           headers: {

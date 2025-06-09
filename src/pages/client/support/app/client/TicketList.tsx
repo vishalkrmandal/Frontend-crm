@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 
 type Ticket = {
     _id: string;
@@ -40,7 +42,7 @@ const TicketList = () => {
             }
 
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/tickets`,
+                `${API_BASE_URL}/api/tickets`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

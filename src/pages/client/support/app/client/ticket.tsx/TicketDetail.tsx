@@ -13,6 +13,8 @@ import axios from "axios";
 import { toast } from "sonner";
 import { io, Socket } from "socket.io-client";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 // Helper function to get badge variant based on status
 function getStatusVariant(status: string) {
     switch (status) {
@@ -108,7 +110,7 @@ export default function TicketDetail() {
         // Initialize socket connection
         const token = getToken();
         if (token) {
-            const newSocket = io(`${import.meta.env.VITE_API_URL}`, {
+            const newSocket = io(`${API_BASE_URL}`, {
                 auth: { token },
             });
 
@@ -177,7 +179,7 @@ export default function TicketDetail() {
             }
 
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/tickets/${id}`,
+                `${API_BASE_URL}/api/tickets/${id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -271,7 +273,7 @@ export default function TicketDetail() {
             const token = getToken();
 
             const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/tickets/${id}/messages`,
+                `${API_BASE_URL}/api/tickets/${id}/messages`,
                 formData,
                 {
                     headers: {
@@ -435,7 +437,7 @@ export default function TicketDetail() {
                                                     <div className="mt-2">
                                                         {message.attachments?.map((attachment) => {
                                                             const isImage = attachment.fileType.startsWith("image/");
-                                                            const fileUrl = `${import.meta.env.VITE_API_URL}/${attachment.filePath}`;
+                                                            const fileUrl = `${API_BASE_URL}/${attachment.filePath}`;
 
                                                             return (
                                                                 <div

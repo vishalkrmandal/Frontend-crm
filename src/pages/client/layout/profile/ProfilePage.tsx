@@ -7,7 +7,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const ProfilePage = () => {
     const [profileData, setProfileData] = useState({
@@ -50,7 +50,7 @@ const ProfilePage = () => {
                     return;
                 }
 
-                const response = await axios.get(`${API_URL}/api/profile`, {
+                const response = await axios.get(`${API_BASE_URL}/api/profile`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

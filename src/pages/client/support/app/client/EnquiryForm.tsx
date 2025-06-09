@@ -9,6 +9,8 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 interface EnquiryFormProps {
     onTabChange?: (tab: string) => void;
 }
@@ -90,7 +92,7 @@ const EnquiryForm: React.FC<EnquiryFormProps> = ({ onTabChange }) => {
 
             // Submit the form
             const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/tickets`,
+                `${API_BASE_URL}/api/tickets`,
                 formData,
                 {
                     headers: {

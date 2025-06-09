@@ -26,8 +26,8 @@ interface PersonalInfoFormProps {
     setProfileData: React.Dispatch<React.SetStateAction<any>>;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const API_URL_IMAGE = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 
 const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setProfileData }) => {
     const [formData, setFormData] = useState(initialData);
@@ -65,7 +65,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
         // Helper function to get correct URL
         const getDocumentUrl = (path: string | undefined) => {
             if (!path) return '';
-            return path.startsWith('http') ? path : `${API_URL_IMAGE}/${path}`;
+            return path.startsWith('http') ? path : `${API_BASE_URL.replace('/api', '')}/${path}`;
         };
 
         // Set initial previews from server if they exist
@@ -89,7 +89,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
                 address2Document: getDocumentUrl(initialData.address2Document)
             }));
         }
-    }, [initialData, API_URL]);
+    }, [initialData, API_BASE_URL]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -221,7 +221,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
             }
 
             const response = await axios.post(
-                `${API_URL}/profile/personal-info`,
+                `${API_BASE_URL}/profile/personal-info`,
                 formDataToSubmit,
                 {
                     headers: {
@@ -269,7 +269,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
                                 ...prev,
                                 [field]: path.startsWith('http') ?
                                     path :
-                                    `${API_URL.replace('/api', '')}/${formatFilePath(path)}`
+                                    `${API_BASE_URL.replace('/api', '')}/${formatFilePath(path)}`
                             }));
                         }
                         else {
@@ -277,7 +277,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
                                 ...prev,
                                 [field]: path.startsWith('http') ?
                                     path :
-                                    `${API_URL.replace('/api', '')}/${formatFilePath(path)}`
+                                    `${API_BASE_URL.replace('/api', '')}/${formatFilePath(path)}`
                             }));
                             // Update preview URLs with server paths
                             if (updatedData.idDocument) {
@@ -285,7 +285,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
                                     ...prev,
                                     idDocument: updatedData.idDocument.startsWith('http') ?
                                         updatedData.idDocument :
-                                        `${API_URL.replace('/api', '')}/${updatedData.idDocument}`
+                                        `${API_BASE_URL.replace('/api', '')}/${updatedData.idDocument}`
                                 }));
                             }
 
@@ -294,7 +294,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
                                     ...prev,
                                     address1Document: updatedData.address1Document.startsWith('http') ?
                                         updatedData.address1Document :
-                                        `${API_URL.replace('/api', '')}/${updatedData.address1Document}`
+                                        `${API_BASE_URL.replace('/api', '')}/${updatedData.address1Document}`
                                 }));
                             }
 
@@ -303,7 +303,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
                                     ...prev,
                                     address2Document: updatedData.address2Document.startsWith('http') ?
                                         updatedData.address2Document :
-                                        `${API_URL.replace('/api', '')}/${updatedData.address2Document}`
+                                        `${API_BASE_URL.replace('/api', '')}/${updatedData.address2Document}`
                                 }));
                             }
                         }
@@ -342,7 +342,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
                 if (fileName.startsWith('http')) {
                     pdfUrl = fileName;
                 } else if (fileName.includes('/') || fileName.includes('\\')) {
-                    pdfUrl = `${API_URL.replace('/api', '')}/${formatFilePath(fileName)}`;
+                    pdfUrl = `${API_BASE_URL.replace('/api', '')}/${formatFilePath(fileName)}`;
                 }
             }
 
@@ -402,7 +402,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
             if (fileName.startsWith('http')) {
                 imgUrl = fileName;
             } else if (fileName.includes('/')) {
-                imgUrl = `${API_URL.replace('/api', '')}/${fileName}`;
+                imgUrl = `${API_BASE_URL.replace('/api', '')}/${fileName}`;
             }
 
             if (imgUrl) {
