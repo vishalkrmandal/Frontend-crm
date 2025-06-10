@@ -34,7 +34,7 @@ interface MenuItem {
   }[]
 }
 
-export default function Sidebar({ open, setOpen, isMobile = false, onItemClick }: SidebarProps) {
+export default function Sidebar({ open, isMobile = false, onItemClick }: SidebarProps) {
   const location = useLocation()
   // Initialize expandedMenus based on current location
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({})
