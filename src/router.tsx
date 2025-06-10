@@ -45,7 +45,7 @@ import IBWithdrawal from './pages/client/Partner/IBWithdrawal';
 import TradeCommission from './pages/client/Partner/TradeCommission';
 import PartnerSummary from './pages/client/Partner/Commission/PartnerSummary';
 import IBWithdrawalManagement from './pages/admin/Ibpartner/IBWithdrawalManagement';
-
+import { Navigate } from 'react-router-dom';
 
 const routes: RouteObject[] = [
   {
@@ -73,9 +73,15 @@ const routes: RouteObject[] = [
         path: '/client',
         element: <Layout />,
         children: [
-          // All client routes as before...
+          // FIXED: Add explicit redirect from /client to /client/dashboard
           {
             index: true,
+            element: <Navigate to="/client/dashboard" replace />
+          },
+
+          // FIXED: Add explicit dashboard route
+          {
+            path: 'dashboard',
             element: <Dashboard />
           },
 
@@ -89,6 +95,7 @@ const routes: RouteObject[] = [
               }
             ]
           },
+
           // Financial Operations
           {
             path: 'financial',
@@ -238,12 +245,19 @@ const routes: RouteObject[] = [
         path: '/admin',
         element: <AdminLayout />,
         children: [
-          // All admin routes as before...
+          // FIXED: Add explicit redirect from /admin to /admin/dashboard  
           {
             index: true,
+            element: <Navigate to="/admin/dashboard" replace />
+          },
+
+          // FIXED: Add explicit admin dashboard route
+          {
+            path: 'dashboard',
             element: <AdminDashboard />
           },
-          // Admin Dashboard
+
+          // Admin Features
           {
             path: 'features',
             children: [

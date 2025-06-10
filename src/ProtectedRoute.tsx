@@ -16,28 +16,20 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const superadminToken = localStorage.getItem('superadminToken');
 
   useEffect(() => {
+    // Only perform role switching if not already authenticated with correct role
     if (allowedRoles.includes('admin') || allowedRoles.includes('superadmin')) {
       // Check for admin user
-      if (allowedRoles.includes('admin') && adminToken) {
-        // Switch to admin role if not already active
-        if (activeRole !== 'admin') {
-          switchRole('admin', navigate);
-        }
+      if (allowedRoles.includes('admin') && adminToken && activeRole !== 'admin') {
+        switchRole('admin', navigate);
       }
       // Check for superadmin user
-      else if (allowedRoles.includes('superadmin') && superadminToken) {
-        // Switch to superadmin role if not already active
-        if (activeRole !== 'superadmin') {
-          switchRole('superadmin', navigate);
-        }
+      else if (allowedRoles.includes('superadmin') && superadminToken && activeRole !== 'superadmin') {
+        switchRole('superadmin', navigate);
       }
     }
     // Check for client user
-    else if (allowedRoles.includes('client') && clientToken) {
-      // Switch to client role if not already active
-      if (activeRole !== 'client') {
-        switchRole('client', navigate);
-      }
+    else if (allowedRoles.includes('client') && clientToken && activeRole !== 'client') {
+      switchRole('client', navigate);
     }
   }, [activeRole, allowedRoles, adminToken, clientToken, superadminToken, navigate, switchRole]);
 
@@ -56,11 +48,11 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   }
 
   if (!isAuthorized) {
-    // Redirect based on available roles
+    // Redirect based on available roles - use specific dashboard routes
     if ((adminToken || superadminToken) && (userRole === 'admin' || userRole === 'superadmin')) {
-      return <Navigate to="/admin" replace />;
+      return <Navigate to="/admin/dashboard" replace />;
     } else if (clientToken && userRole === 'client') {
-      return <Navigate to="/client" replace />;
+      return <Navigate to="/client/dashboard" replace />;
     } else {
       // No valid role found, go to login
       return <Navigate to="/" replace />;
