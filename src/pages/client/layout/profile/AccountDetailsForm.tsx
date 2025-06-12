@@ -35,7 +35,7 @@ const AccountDetailsForm: React.FC<AccountDetailsFormProps> = ({ initialData, se
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('clientToken');
 
             if (!token) {
                 toast.error("Please login to update your account details");
@@ -43,7 +43,7 @@ const AccountDetailsForm: React.FC<AccountDetailsFormProps> = ({ initialData, se
             }
 
             const response = await axios.post(
-                `${API_BASE_URL}/profile/account-details`,
+                `${API_BASE_URL}/api/profile/account-details`,
                 formData,
                 {
                     headers: {
