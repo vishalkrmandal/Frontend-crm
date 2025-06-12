@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ const WalletDetailsForm: React.FC<WalletDetailsFormProps> = ({ initialData, setP
             }
 
             const response = await axios.post(
-                `${API_BASE_URL}/profile/wallet-details`,
+                `${API_BASE_URL}/api/profile/wallet-details`,
                 formData,
                 {
                     headers: {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -221,7 +221,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
             }
 
             const response = await axios.post(
-                `${API_BASE_URL}/profile/personal-info`,
+                `${API_BASE_URL}/api/profile/personal-info`,
                 formDataToSubmit,
                 {
                     headers: {
