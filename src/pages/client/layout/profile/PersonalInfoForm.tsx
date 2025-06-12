@@ -189,7 +189,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('ClientToken');
+            const token = localStorage.getItem('clientToken');
 
             if (!token) {
                 toast.error("Please login to update your profile");
