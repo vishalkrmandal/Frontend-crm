@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import axios from "axios"
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import { jsPDF } from "jspdf"
 import autoTable from 'jspdf-autotable'
 
@@ -191,14 +191,39 @@ export default function AdminPortal() {
             }))
 
             // Create worksheet
-            const ws = XLSX.utils.json_to_sheet(data)
+            const workbook = new ExcelJS.Workbook()
+            const worksheet = workbook.addWorksheet("Tickets")
 
-            // Create workbook
-            const wb = XLSX.utils.book_new()
-            XLSX.utils.book_append_sheet(wb, ws, "Tickets")
+            // Add header row
+            worksheet.columns = [
+                { header: "Ticket ID", key: "Ticket ID", width: 15 },
+                { header: "Subject", key: "Subject", width: 30 },
+                { header: "Status", key: "Status", width: 15 },
+                { header: "Category", key: "Category", width: 20 },
+                { header: "Created By", key: "Created By", width: 25 },
+                { header: "Assigned To", key: "Assigned To", width: 25 },
+                { header: "Created At", key: "Created At", width: 22 },
+                { header: "Updated At", key: "Updated At", width: 22 }
+            ]
+
+            // Add data rows
+            data.forEach((row) => {
+                worksheet.addRow(row)
+            })
+
+            // Style header row
+            worksheet.getRow(1).font = { bold: true }
 
             // Generate file and trigger download
-            XLSX.writeFile(wb, "tickets_export.xlsx")
+            workbook.xlsx.writeBuffer().then((buffer) => {
+                const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = "tickets_export.xlsx"
+                a.click()
+                window.URL.revokeObjectURL(url)
+            })
 
             toast.success("Exported to Excel successfully")
         } catch (error) {

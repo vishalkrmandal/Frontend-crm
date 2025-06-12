@@ -38,6 +38,7 @@
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.2",
     "@radix-ui/react-tooltip": "^1.1.8",
+    "@reduxjs/toolkit": "^2.8.2",
     "@vitejs/plugin-react": "^4.3.4",
     "axios": "^1.7.8",
     "buffer": "^6.0.3",
@@ -77,8 +78,8 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "use-ref-state": "^0.0.3",
-    "xlsx": "^0.18.5",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react"
 import { Download, Filter, Search, X, Calendar } from "lucide-react"
 import axios from "axios"
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
 
@@ -133,24 +133,59 @@ export default function TransactionHistory() {
         const transactions = response.data.data
 
         // Format data for Excel
-        const worksheet = XLSX.utils.json_to_sheet(transactions.map((transaction: Transaction) => ({
-          "Date & Time": transaction.formattedDate,
-          "Type": transaction.type,
-          "Description": transaction.description,
-          "Amount": transaction.amount,
-          "Account": transaction.account,
-          "Status": transaction.status
-        })))
+        const workbook = new ExcelJS.Workbook()
+        const worksheet = workbook.addWorksheet('Transactions')
 
-        const workbook = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions")
+        // Add header row
+        worksheet.addRow([
+          "Date & Time",
+          "Type",
+          "Description",
+          "Amount",
+          "Account",
+          "Status"
+        ])
+
+        // Add data rows
+        transactions.forEach((transaction: Transaction) => {
+          worksheet.addRow([
+            transaction.formattedDate,
+            transaction.type,
+            transaction.description,
+            transaction.amount,
+            transaction.account,
+            transaction.status
+          ])
+        })
+
+        // Style header row
+        worksheet.getRow(1).font = { bold: true }
+
+        // Auto width for columns
+        worksheet.columns.forEach((column) => {
+          let maxLength = 10
+          if (typeof column.eachCell === "function") {
+            column.eachCell({ includeEmpty: true }, (cell) => {
+              const cellValue = cell.value ? cell.value.toString() : ''
+              maxLength = Math.max(maxLength, cellValue.length)
+            })
+          }
+          column.width = maxLength + 2
+        })
 
         // Generate filename with current date
         const dateStr = new Date().toISOString().split('T')[0]
         const fileName = `transaction_history_${dateStr}.xlsx`
 
         // Download file
-        XLSX.writeFile(workbook, fileName)
+        const buffer = await workbook.xlsx.writeBuffer()
+        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+        const link = document.createElement("a")
+        link.href = URL.createObjectURL(blob)
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
       }
     } catch (err) {
       console.error("Error exporting to Excel:", err)

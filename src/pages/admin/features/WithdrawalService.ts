@@ -1,7 +1,7 @@
 import axios from 'axios'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 // Add Buffer polyfill for browser environments
 if (typeof window !== 'undefined' && !window.Buffer) {
@@ -90,10 +90,37 @@ const withdrawalService = {
                     'Remarks': withdrawal.remarks || ''
                 }))
 
-                const ws = XLSX.utils.json_to_sheet(wsData)
-                const wb = XLSX.utils.book_new()
-                XLSX.utils.book_append_sheet(wb, ws, 'Withdrawals')
-                XLSX.writeFile(wb, 'withdrawals.xlsx')
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('Withdrawals');
+
+                // Add header row
+                worksheet.columns = [
+                    { header: 'User Name', key: 'User Name', width: 20 },
+                    { header: 'Email', key: 'Email', width: 25 },
+                    { header: 'Account Number', key: 'Account Number', width: 18 },
+                    { header: 'Balance', key: 'Balance', width: 15 },
+                    { header: 'Withdrawal Amount', key: 'Withdrawal Amount', width: 18 },
+                    { header: 'Plan Type', key: 'Plan Type', width: 15 },
+                    { header: 'Payment Method', key: 'Payment Method', width: 18 },
+                    { header: 'Status', key: 'Status', width: 12 },
+                    { header: 'Request Date', key: 'Request Date', width: 15 },
+                    { header: 'Remarks', key: 'Remarks', width: 20 }
+                ];
+
+                // Add data rows
+                wsData.forEach(row => worksheet.addRow(row));
+
+                // Create buffer and trigger download
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'withdrawals.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
                 break
 
             case 'csv':
@@ -110,10 +137,35 @@ const withdrawalService = {
                     'Remarks': withdrawal.remarks || ''
                 }))
 
-                const csvWs = XLSX.utils.json_to_sheet(csvData)
-                const csvWb = XLSX.utils.book_new()
-                XLSX.utils.book_append_sheet(csvWb, csvWs, 'Withdrawals')
-                XLSX.writeFile(csvWb, 'withdrawals.csv')
+                // Using ExcelJS to generate CSV
+                const csvWorkbook = new ExcelJS.Workbook();
+                const csvWorksheet = csvWorkbook.addWorksheet('Withdrawals');
+
+                csvWorksheet.columns = [
+                    { header: 'User Name', key: 'User Name', width: 20 },
+                    { header: 'Email', key: 'Email', width: 25 },
+                    { header: 'Account Number', key: 'Account Number', width: 18 },
+                    { header: 'Balance', key: 'Balance', width: 15 },
+                    { header: 'Withdrawal Amount', key: 'Withdrawal Amount', width: 18 },
+                    { header: 'Plan Type', key: 'Plan Type', width: 15 },
+                    { header: 'Payment Method', key: 'Payment Method', width: 18 },
+                    { header: 'Status', key: 'Status', width: 12 },
+                    { header: 'Request Date', key: 'Request Date', width: 15 },
+                    { header: 'Remarks', key: 'Remarks', width: 20 }
+                ];
+
+                csvData.forEach(row => csvWorksheet.addRow(row));
+
+                const csvBuffer = await csvWorkbook.csv.writeBuffer();
+                const csvBlob = new Blob([csvBuffer], { type: 'text/csv' });
+                const csvUrl = window.URL.createObjectURL(csvBlob);
+                const csvLink = document.createElement('a');
+                csvLink.href = csvUrl;
+                csvLink.download = 'withdrawals.csv';
+                document.body.appendChild(csvLink);
+                csvLink.click();
+                document.body.removeChild(csvLink);
+                window.URL.revokeObjectURL(csvUrl);
                 break
 
             case 'docx':

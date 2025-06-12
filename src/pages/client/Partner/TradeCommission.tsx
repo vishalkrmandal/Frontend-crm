@@ -31,11 +31,11 @@ import {
     Mail,
     Globe
 } from "lucide-react";
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
-import React from 'react';
+import * as React from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -311,8 +311,69 @@ const TradeCommission = () => {
                 'Level': ''
             });
 
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
-            const workbook = XLSX.utils.book_new();
+            // Use exceljs for Excel export
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Commission Trades');
+
+            // Define columns
+            worksheet.columns = [
+                { header: 'AC NO', key: 'acNo', width: 12 },
+                { header: 'Open Time', key: 'openTime', width: 20 },
+                { header: 'Close Time', key: 'closeTime', width: 20 },
+                { header: 'Open Price', key: 'openPrice', width: 12 },
+                { header: 'Close Price', key: 'closePrice', width: 12 },
+                { header: 'Symbol', key: 'symbol', width: 12 },
+                { header: 'Profit', key: 'profit', width: 12 },
+                { header: 'Volume', key: 'volume', width: 10 },
+                { header: 'Commission', key: 'commission', width: 12 },
+                { header: 'Status', key: 'status', width: 10 },
+                { header: 'Level', key: 'level', width: 8 },
+            ];
+
+            // Add trade rows
+            trades.forEach(trade => {
+                worksheet.addRow({
+                    acNo: trade.acNo,
+                    openTime: formatDateTime(trade.openTime),
+                    closeTime: formatDateTime(trade.closeTime),
+                    openPrice: trade.openPrice,
+                    closePrice: trade.closePrice,
+                    symbol: trade.symbol,
+                    profit: trade.profit,
+                    volume: trade.volume,
+                    commission: trade.rebate,
+                    status: trade.status,
+                    level: trade.level || 'N/A'
+                });
+            });
+
+            // Add totals row
+            worksheet.addRow({
+                acNo: '',
+                openTime: '',
+                closeTime: '',
+                openPrice: '',
+                closePrice: '',
+                symbol: '',
+                profit: totals.totalProfit,
+                volume: totals.totalVolume,
+                commission: totals.totalRebate,
+                status: 'TOTAL',
+                level: ''
+            });
+
+            // Style header row
+            worksheet.getRow(1).font = { bold: true };
+
+            // Download file
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            const fileName = `commission_trades_${new Date().toISOString().split('T')[0]}.xlsx`;
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+            URL.revokeObjectURL(link.href);
 
             // Set column widths
             const colWidths = [
@@ -328,12 +389,9 @@ const TradeCommission = () => {
                 { wch: 10 }, // Status
                 { wch: 8 }   // Level
             ];
-            worksheet['!cols'] = colWidths;
-
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Commission Trades');
-
-            const fileName = `commission_trades_${new Date().toISOString().split('T')[0]}.xlsx`;
-            XLSX.writeFile(workbook, fileName);
+            worksheet.columns.forEach((_, i) => {
+                worksheet.getColumn(i + 1).width = colWidths[i].wch;
+            });
 
             toast.success("Excel file exported successfully!");
         } catch (error) {
