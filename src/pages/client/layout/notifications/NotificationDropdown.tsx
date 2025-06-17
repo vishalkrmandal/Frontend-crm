@@ -22,7 +22,7 @@ interface NotificationDropdownProps {
     onMarkAsRead: (notificationId: string) => Promise<void>
 }
 
-const getNotificationIcon = (type: Notification['type'], category: Notification['category']) => {
+const getNotificationIcon = (type: Notification['type']) => {
     const iconClass = "h-5 w-5"
 
     switch (type) {
@@ -222,7 +222,7 @@ function NotificationItem({ notification, onClick, isUnread }: NotificationItemP
             <div className="flex items-start space-x-3">
                 {/* Icon */}
                 <div className="flex-shrink-0 mt-0.5">
-                    {getNotificationIcon(notification.type, notification.category)}
+                    {getNotificationIcon(notification.type)}
                 </div>
 
                 {/* Content */}
