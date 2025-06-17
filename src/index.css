@@ -1,123 +1,849 @@
+/* Frontend\src\index.css */
+
+/* Import Tailwind CSS base styles, components, and utilities */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Define CSS custom properties (variables) for theming */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Light theme color variables using HSL values */
+    --background: 0 0% 96.1%;
+    /* #F5F5F5 - Background and header color */
+    --foreground: 240 10% 10%;
+    /* Very dark blue-gray text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 98.8%;
+    /* #FCFCFC - Card and sidebar color */
+    --card-foreground: 240 10% 10%;
+    /* Dark text on cards */
 
     --popover: 0 0% 100%;
+    /* White popover background */
     --popover-foreground: 222.2 84% 4.9%;
+    /* Dark text in popovers */
 
     --primary: 221.2 83.2% 53.3%;
+    /* Blue primary color */
     --primary-foreground: 210 40% 98%;
+    /* Very light text on primary */
 
     --secondary: 210 40% 96.1%;
+    /* Light gray secondary */
     --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Dark text on secondary */
 
     --muted: 210 40% 96.1%;
+    /* Light gray muted elements */
     --muted-foreground: 215.4 16.3% 46.9%;
+    /* Medium gray muted text */
 
     --accent: 210 40% 96.1%;
+    /* Light accent color */
     --accent-foreground: 222.2 47.4% 11.2%;
+    /* Dark text on accent */
 
     --destructive: 0 84.2% 60.2%;
+    /* Red for destructive actions */
     --destructive-foreground: 210 40% 98%;
+    /* Light text on destructive */
 
     --border: 214.3 31.8% 91.4%;
+    /* Light gray borders */
     --input: 214.3 31.8% 91.4%;
+    /* Light gray input backgrounds */
     --ring: 221.2 83.2% 53.3%;
+    /* Blue focus ring color */
 
-    --radius: 0.5rem;
+    --radius: 1rem;
+    /* Global border radius (16px) */
+    --sidebar-radius: 1.5rem;
+    /* Sidebar-specific border radius (24px) */
 
-    --sidebar-background: 0 0% 98%;
+    /* Sidebar-specific color variables */
+    --sidebar-background: 0 0% 98.8%;
+    /* #FCFCFC - Card and sidebar color */
     --sidebar-foreground: 240 5.3% 26.1%;
+    /* Dark sidebar text */
     --sidebar-primary: 221.2 83.2% 53.3%;
+    /* Blue sidebar primary */
     --sidebar-primary-foreground: 0 0% 98%;
+    /* Light text on sidebar primary */
     --sidebar-accent: 240 4.8% 95.9%;
+    /* Light sidebar accent */
     --sidebar-accent-foreground: 240 5.9% 10%;
+    /* Dark text on sidebar accent */
     --sidebar-border: 220 13% 91%;
+    /* Light sidebar borders */
     --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Bright blue sidebar focus ring */
+    --header-background: 0 0% 96.1%;
+
+    /* Global scrollbar color variables */
+    --scrollbar-track: hsl(var(--muted));
+    --scrollbar-thumb: hsl(var(--border));
+    --scrollbar-thumb-hover: hsl(var(--muted-foreground) / 0.3);
   }
 
+  /* Dark theme color overrides */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 210 10.53% 7.45%;
+    /* #111315 - Background and header color */
+    --foreground: 0 0% 98%;
+    /* Light text */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 210 7% 11%;
+    /* #1A1C1E - Card and sidebar color */
+    --card-foreground: 0 0% 98%;
+    /* Light text on cards */
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 216 22% 10.4%;
+    /* #1A1C1E - Dark popover background */
     --popover-foreground: 210 40% 98%;
+    /* Light text in popovers */
 
     --primary: 217.2 91.2% 59.8%;
+    /* Brighter blue primary in dark mode */
     --primary-foreground: 222.2 47.4% 11.2%;
+    /* Dark text on primary */
 
     --secondary: 217.2 32.6% 17.5%;
+    /* Dark gray secondary */
     --secondary-foreground: 210 40% 98%;
+    /* Light text on secondary */
 
     --muted: 217.2 32.6% 17.5%;
+    /* Dark gray muted elements */
     --muted-foreground: 215 20.2% 65.1%;
+    /* Light gray muted text */
 
     --accent: 217.2 32.6% 17.5%;
+    /* Dark accent color */
     --accent-foreground: 210 40% 98%;
+    /* Light text on accent */
 
     --destructive: 0 62.8% 30.6%;
+    /* Darker red for destructive actions */
     --destructive-foreground: 210 40% 98%;
+    /* Light text on destructive */
 
     --border: 217.2 32.6% 17.5%;
+    /* Dark borders */
     --input: 217.2 32.6% 17.5%;
+    /* Dark input backgrounds */
     --ring: 224.3 76.3% 48%;
+    /* Blue focus ring in dark mode */
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
+    /* Dark theme sidebar colors */
+    --sidebar-background: 240 5.3% 10.6%;
+    /* #1A1C1E - Card and sidebar color */
+    --sidebar-foreground: 0 0% 98%;
+    /* Light sidebar text */
     --sidebar-primary: 217.2 91.2% 59.8%;
+    /* Bright blue sidebar primary */
     --sidebar-primary-foreground: 240 5.9% 10%;
+    /* Dark text on sidebar primary */
     --sidebar-accent: 240 3.7% 15.9%;
+    /* Dark gray sidebar accent */
     --sidebar-accent-foreground: 240 4.8% 95.9%;
+    /* Light text on sidebar accent */
     --sidebar-border: 240 3.7% 15.9%;
+    /* Dark sidebar borders */
     --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Bright blue sidebar focus ring */
+
+    --header-background: 240 9% 7%;
+
+    /* Dark mode scrollbar colors */
+    --scrollbar-track: hsl(var(--background));
+    --scrollbar-thumb: hsl(var(--border));
+    --scrollbar-thumb-hover: hsl(var(--muted-foreground) / 0.4);
   }
 }
 
+/* Global base styles */
 @layer base {
+
+  /* Apply border color variable to all elements */
   * {
     @apply border-border;
   }
 
+  /* Set body background and text color, enable font features */
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Enable ligatures and contextual alternates */
   }
 }
 
-/* Mobile-specific optimizations */
+/* ========================================= */
+/* SEMANTIC COLOR UTILITY CLASSES */
+/* ========================================= */
+
+@layer utilities {
+
+  /* Background Colors */
+  .bg-background {
+    background-color: hsl(var(--background));
+  }
+
+  .bg-foreground {
+    background-color: hsl(var(--foreground));
+  }
+
+  .bg-card {
+    background-color: hsl(var(--card));
+  }
+
+  .bg-card-foreground {
+    background-color: hsl(var(--card-foreground));
+  }
+
+  .bg-popover {
+    background-color: hsl(var(--popover));
+  }
+
+  .bg-popover-foreground {
+    background-color: hsl(var(--popover-foreground));
+  }
+
+  .bg-primary {
+    background-color: hsl(var(--primary));
+  }
+
+  .bg-primary-foreground {
+    background-color: hsl(var(--primary-foreground));
+  }
+
+  .bg-secondary {
+    background-color: hsl(var(--secondary));
+  }
+
+  .bg-secondary-foreground {
+    background-color: hsl(var(--secondary-foreground));
+  }
+
+  .bg-muted {
+    background-color: hsl(var(--muted));
+  }
+
+  .bg-muted-foreground {
+    background-color: hsl(var(--muted-foreground));
+  }
+
+  .bg-accent {
+    background-color: hsl(var(--accent));
+  }
+
+  .bg-accent-foreground {
+    background-color: hsl(var(--accent-foreground));
+  }
+
+  .bg-destructive {
+    background-color: hsl(var(--destructive));
+  }
+
+  .bg-destructive-foreground {
+    background-color: hsl(var(--destructive-foreground));
+  }
+
+  .bg-border {
+    background-color: hsl(var(--border));
+  }
+
+  .bg-input {
+    background-color: hsl(var(--input));
+  }
+
+  .bg-ring {
+    background-color: hsl(var(--ring));
+  }
+
+  /* Sidebar Background Colors */
+  .bg-sidebar {
+    background-color: hsl(var(--sidebar-background));
+  }
+
+  .bg-sidebar-foreground {
+    background-color: hsl(var(--sidebar-foreground));
+  }
+
+  .bg-sidebar-primary {
+    background-color: hsl(var(--sidebar-primary));
+  }
+
+  .bg-sidebar-primary-foreground {
+    background-color: hsl(var(--sidebar-primary-foreground));
+  }
+
+  .bg-sidebar-accent {
+    background-color: hsl(var(--sidebar-accent));
+  }
+
+  .bg-sidebar-accent-foreground {
+    background-color: hsl(var(--sidebar-accent-foreground));
+  }
+
+  .bg-sidebar-border {
+    background-color: hsl(var(--sidebar-border));
+  }
+
+  .bg-sidebar-ring {
+    background-color: hsl(var(--sidebar-ring));
+  }
+
+  /* Text Colors */
+  .text-background {
+    color: hsl(var(--background));
+  }
+
+  .text-foreground {
+    color: hsl(var(--foreground));
+  }
+
+  .text-card {
+    color: hsl(var(--card));
+  }
+
+  .text-card-foreground {
+    color: hsl(var(--card-foreground));
+  }
+
+  .text-popover {
+    color: hsl(var(--popover));
+  }
+
+  .text-popover-foreground {
+    color: hsl(var(--popover-foreground));
+  }
+
+  .text-primary {
+    color: hsl(var(--primary));
+  }
+
+  .text-primary-foreground {
+    color: hsl(var(--primary-foreground));
+  }
+
+  .text-secondary {
+    color: hsl(var(--secondary));
+  }
+
+  .text-secondary-foreground {
+    color: hsl(var(--secondary-foreground));
+  }
+
+  .text-muted {
+    color: hsl(var(--muted));
+  }
+
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .text-accent {
+    color: hsl(var(--accent));
+  }
+
+  .text-accent-foreground {
+    color: hsl(var(--accent-foreground));
+  }
+
+  .text-destructive {
+    color: hsl(var(--destructive));
+  }
+
+  .text-destructive-foreground {
+    color: hsl(var(--destructive-foreground));
+  }
+
+  .text-border {
+    color: hsl(var(--border));
+  }
+
+  .text-input {
+    color: hsl(var(--input));
+  }
+
+  .text-ring {
+    color: hsl(var(--ring));
+  }
+
+  /* Sidebar Text Colors */
+  .text-sidebar {
+    color: hsl(var(--sidebar-background));
+  }
+
+  .text-sidebar-foreground {
+    color: hsl(var(--sidebar-foreground));
+  }
+
+  .text-sidebar-primary {
+    color: hsl(var(--sidebar-primary));
+  }
+
+  .text-sidebar-primary-foreground {
+    color: hsl(var(--sidebar-primary-foreground));
+  }
+
+  .text-sidebar-accent {
+    color: hsl(var(--sidebar-accent));
+  }
+
+  .text-sidebar-accent-foreground {
+    color: hsl(var(--sidebar-accent-foreground));
+  }
+
+  .text-sidebar-border {
+    color: hsl(var(--sidebar-border));
+  }
+
+  .text-sidebar-ring {
+    color: hsl(var(--sidebar-ring));
+  }
+
+  /* Border Colors */
+  .border-background {
+    border-color: hsl(var(--background));
+  }
+
+  .border-foreground {
+    border-color: hsl(var(--foreground));
+  }
+
+  .border-card {
+    border-color: hsl(var(--card));
+  }
+
+  .border-card-foreground {
+    border-color: hsl(var(--card-foreground));
+  }
+
+  .border-popover {
+    border-color: hsl(var(--popover));
+  }
+
+  .border-popover-foreground {
+    border-color: hsl(var(--popover-foreground));
+  }
+
+  .border-primary {
+    border-color: hsl(var(--primary));
+  }
+
+  .border-primary-foreground {
+    border-color: hsl(var(--primary-foreground));
+  }
+
+  .border-secondary {
+    border-color: hsl(var(--secondary));
+  }
+
+  .border-secondary-foreground {
+    border-color: hsl(var(--secondary-foreground));
+  }
+
+  .border-muted {
+    border-color: hsl(var(--muted));
+  }
+
+  .border-muted-foreground {
+    border-color: hsl(var(--muted-foreground));
+  }
+
+  .border-accent {
+    border-color: hsl(var(--accent));
+  }
+
+  .border-accent-foreground {
+    border-color: hsl(var(--accent-foreground));
+  }
+
+  .border-destructive {
+    border-color: hsl(var(--destructive));
+  }
+
+  .border-destructive-foreground {
+    border-color: hsl(var(--destructive-foreground));
+  }
+
+  .border-border {
+    border-color: hsl(var(--border));
+  }
+
+  .border-input {
+    border-color: hsl(var(--input));
+  }
+
+  .border-ring {
+    border-color: hsl(var(--ring));
+  }
+
+  /* Sidebar Border Colors */
+  .border-sidebar {
+    border-color: hsl(var(--sidebar-background));
+  }
+
+  .border-sidebar-foreground {
+    border-color: hsl(var(--sidebar-foreground));
+  }
+
+  .border-sidebar-primary {
+    border-color: hsl(var(--sidebar-primary));
+  }
+
+  .border-sidebar-primary-foreground {
+    border-color: hsl(var(--sidebar-primary-foreground));
+  }
+
+  .border-sidebar-accent {
+    border-color: hsl(var(--sidebar-accent));
+  }
+
+  .border-sidebar-accent-foreground {
+    border-color: hsl(var(--sidebar-accent-foreground));
+  }
+
+  .border-sidebar-border {
+    border-color: hsl(var(--sidebar-border));
+  }
+
+  .border-sidebar-ring {
+    border-color: hsl(var(--sidebar-ring));
+  }
+
+  /* Radius Classes */
+  .rounded-radius {
+    border-radius: var(--radius);
+  }
+
+  .rounded-sidebar {
+    border-radius: var(--sidebar-radius);
+  }
+
+  .rounded-sidebar-sm {
+    border-radius: calc(var(--sidebar-radius) * 0.5);
+  }
+
+  .rounded-sidebar-lg {
+    border-radius: calc(var(--sidebar-radius) * 1.5);
+  }
+
+  /* Sidebar-specific rounded classes */
+  .sidebar-rounded {
+    border-radius: var(--sidebar-radius);
+  }
+
+  .sidebar-rounded-t {
+    border-top-left-radius: var(--sidebar-radius);
+    border-top-right-radius: var(--sidebar-radius);
+  }
+
+  .sidebar-rounded-r {
+    border-top-right-radius: var(--sidebar-radius);
+    border-bottom-right-radius: var(--sidebar-radius);
+  }
+
+  .sidebar-rounded-b {
+    border-bottom-left-radius: var(--sidebar-radius);
+    border-bottom-right-radius: var(--sidebar-radius);
+  }
+
+  .sidebar-rounded-l {
+    border-top-left-radius: var(--sidebar-radius);
+    border-bottom-left-radius: var(--sidebar-radius);
+  }
+
+  .sidebar-rounded-tl {
+    border-top-left-radius: var(--sidebar-radius);
+  }
+
+  .sidebar-rounded-tr {
+    border-top-right-radius: var(--sidebar-radius);
+  }
+
+  .sidebar-rounded-br {
+    border-bottom-right-radius: var(--sidebar-radius);
+  }
+
+  .sidebar-rounded-bl {
+    border-bottom-left-radius: var(--sidebar-radius);
+  }
+
+  /* Hover States */
+  .hover\:bg-primary\/90:hover {
+    background-color: hsl(var(--primary) / 0.9);
+  }
+
+  .hover\:bg-secondary\/90:hover {
+    background-color: hsl(var(--secondary) / 0.9);
+  }
+
+  .hover\:bg-muted:hover {
+    background-color: hsl(var(--muted));
+  }
+
+  .hover\:text-primary:hover {
+    color: hsl(var(--primary));
+  }
+
+  .hover\:text-foreground:hover {
+    color: hsl(var(--foreground));
+  }
+
+  .hover\:text-primary\/80:hover {
+    color: hsl(var(--primary) / 0.8);
+  }
+
+  .hover\:border-primary\/50:hover {
+    border-color: hsl(var(--primary) / 0.5);
+  }
+
+  /* Focus States */
+  .focus\:ring-ring:focus {
+    --tw-ring-color: hsl(var(--ring));
+  }
+
+  .focus\:outline-none:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+
+  .focus\:ring-2:focus {
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+}
+
+/* ========================================= */
+/* SIDEBAR-SPECIFIC STYLES */
+/* ========================================= */
+
+@layer utilities {
+
+  /* Override Tailwind rounded classes for sidebar elements */
+  .sidebar-container .rounded-lg {
+    border-radius: var(--sidebar-radius) !important;
+  }
+
+  .sidebar-container .rounded-md {
+    border-radius: calc(var(--sidebar-radius) * 0.75) !important;
+  }
+
+  .sidebar-container .rounded-sm {
+    border-radius: calc(var(--sidebar-radius) * 0.5) !important;
+  }
+
+  .sidebar-container .rounded {
+    border-radius: calc(var(--sidebar-radius) * 0.5) !important;
+  }
+
+  /* Specific sidebar menu item styles */
+  .sidebar-menu-item {
+    border-radius: var(--sidebar-radius);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .sidebar-menu-item:hover {
+    background-color: hsl(var(--sidebar-accent));
+    color: hsl(var(--sidebar-accent-foreground));
+  }
+
+  .sidebar-menu-item.active {
+    background-color: hsl(var(--sidebar-primary));
+    color: hsl(var(--sidebar-primary-foreground));
+  }
+}
+
+/* ========================================= */
+/* LAYOUT IMPROVEMENTS */
+/* ========================================= */
+
+@layer utilities {
+
+  /* Reduced card gaps for tighter layout */
+  .card-grid {
+    gap: 0.75rem;
+    /* Reduced from default 1rem (16px) to 12px */
+  }
+
+  .card-grid-sm {
+    gap: 0.5rem;
+    /* Even smaller gap - 8px */
+  }
+
+  .card-grid-xs {
+    gap: 0.25rem;
+    /* Minimal gap - 4px */
+  }
+
+  /* Extra bottom margin for sidebar */
+  .sidebar-container {
+    padding-bottom: 4rem;
+    /* 64px extra bottom margin */
+    margin-bottom: 2rem;
+    /* Additional 32px margin */
+  }
+
+  /* Extra bottom margin for main content area */
+  .main-content {
+    padding-bottom: 4rem;
+    /* 64px extra bottom margin */
+    margin-bottom: 2rem;
+    /* Additional 32px margin */
+  }
+
+  /* Alternative larger bottom margins */
+  .sidebar-container-lg {
+    padding-bottom: 6rem;
+    /* 96px extra bottom margin */
+    margin-bottom: 3rem;
+    /* Additional 48px margin */
+  }
+
+  .main-content-lg {
+    padding-bottom: 6rem;
+    /* 96px extra bottom margin */
+    margin-bottom: 3rem;
+    /* Additional 48px margin */
+  }
+
+  /* Card-specific gap overrides */
+  .grid>.card,
+  .flex>.card {
+    margin-bottom: 0.75rem;
+    /* Reduced bottom margin between cards */
+  }
+
+  /* Responsive card gaps */
+  @media (max-width: 640px) {
+    .card-grid {
+      gap: 0.5rem;
+      /* Smaller gap on mobile */
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .card-grid {
+      gap: 1rem;
+      /* Slightly larger gap on desktop */
+    }
+  }
+}
+
+/* ========================================= */
+/* GLOBAL MODERN SCROLLBAR STYLES */
+/* ========================================= */
+
+/* Global scrollbar styling for all elements */
+@layer utilities {
+
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: calc(var(--radius) * 0.5);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: calc(var(--radius) * 0.5);
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+    transform: scale(1.05);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  /* Smooth scrolling for better UX */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar classes for specific use cases */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .scrollbar-thick::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  .scrollbar-rounded::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+  }
+
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Premium gradient scrollbar variant */
+  .scrollbar-gradient::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg,
+        hsl(var(--primary)),
+        hsl(var(--primary) / 0.8));
+  }
+
+  .scrollbar-gradient::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg,
+        hsl(var(--primary) / 0.9),
+        hsl(var(--primary) / 0.7));
+  }
+}
+
+/* Mobile-specific optimizations for screens 768px and below */
 @media (max-width: 768px) {
 
-  /* Ensure touch targets are at least 44px for better accessibility */
+  /* Ensure touch targets meet accessibility guidelines (minimum 44px) */
   .sidebar-menu-item {
-    min-height: 44px;
+    min-height: 4px;
     padding: 12px 16px;
   }
 
-  /* Prevent text selection on mobile menu items */
+  /* Prevent text selection on mobile menu items for better UX */
   .sidebar-nav {
     -webkit-user-select: none;
+    /* Safari */
     -moz-user-select: none;
+    /* Firefox */
     -ms-user-select: none;
+    /* Internet Explorer/Edge */
     user-select: none;
+    /* Standard */
   }
 
-  /* Smooth scrolling for mobile sidebar */
+  /* Enable momentum scrolling on iOS for smooth sidebar scrolling */
   .mobile-sidebar {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Better tap targets for mobile */
+  /* Ensure buttons and links have adequate touch targets */
   .sidebar-nav button,
   .sidebar-nav a {
     min-height: 44px;
@@ -125,32 +851,55 @@
     align-items: center;
   }
 
-  /* Prevent overscroll on mobile */
+  /* Prevent body from scrolling on mobile (lock scroll) */
   body {
     overflow: hidden;
   }
 
-  /* Ensure main content doesn't scroll when sidebar is open */
+  /* Additional scroll lock when sidebar is open */
   .sidebar-open {
     overflow: hidden;
   }
-}
 
-/* Tablet-specific adjustments */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .sidebar-menu-item {
-    min-height: 40px;
+  /* Mobile-specific bottom margins */
+  .sidebar-container,
+  .main-content {
+    padding-bottom: 3rem;
+    /* Smaller bottom padding on mobile */
+    margin-bottom: 1.5rem;
+    /* Smaller bottom margin on mobile */
   }
 }
 
-/* Custom scrollbar for sidebar */
+/* Tablet-specific adjustments for screens between 768px and 1024px */
+@media (min-width: 768px) and (max-width: 1024px) {
+
+  /* Slightly smaller touch targets for tablet */
+  .sidebar-menu-item {
+    min-height: 40px;
+  }
+
+  /* Tablet-specific bottom margins */
+  .sidebar-container,
+  .main-content {
+    padding-bottom: 3.5rem;
+    /* Medium bottom padding on tablet */
+    margin-bottom: 1.75rem;
+    /* Medium bottom margin on tablet */
+  }
+}
+
+/* Enhanced sidebar scrollbar - completely transparent/invisible */
 .sidebar-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+  /* Firefox - completely hide scrollbar */
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar {
-  width: 4px;
+  width: 0px;
+  height: 0px;
+  background: transparent;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-track {
@@ -158,124 +907,159 @@
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(155, 155, 155, 0.5);
-  border-radius: 20px;
+  background: transparent;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(155, 155, 155, 0.7);
+  background: transparent;
 }
 
-/* Dark mode scrollbar */
-.dark .sidebar-scrollbar {
-  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+.sidebar-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
-.dark .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(100, 100, 100, 0.5);
-}
-
-.dark .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(100, 100, 100, 0.7);
-}
-
-/* Smooth transitions for all interactive elements */
+/* Smooth transitions for all interactive sidebar elements */
 .sidebar-nav a,
 .sidebar-nav button {
   transition: all 0.2s ease-in-out;
+  /* Smooth transitions for hover effects */
 }
 
-/* Focus styles for accessibility */
+/* Focus styles for keyboard navigation accessibility */
 .sidebar-nav a:focus,
 .sidebar-nav button:focus {
   outline: 2px solid hsl(var(--ring));
+  /* Visible focus outline */
   outline-offset: 2px;
+  /* Space between element and outline */
 }
 
-/* Hover states for better UX */
+/* Hover effects for better user experience */
 .sidebar-nav a:hover,
 .sidebar-nav button:hover {
   transform: translateX(2px);
+  /* Slide element 2px to the right on hover */
 }
 
-/* Active state styling */
+/* Active state styling to show current page/selection */
 .sidebar-nav a.active,
 .sidebar-nav button.active {
   box-shadow: inset 3px 0 0 hsl(var(--primary));
+  /* Left border indicator */
 }
 
-/* Submenu indentation for better hierarchy */
+/* Submenu indentation and hierarchy visualization */
 .sidebar-nav ul ul {
   position: relative;
+  /* Enable absolute positioning for pseudo-element */
 }
 
+/* Vertical line to show submenu hierarchy */
 .sidebar-nav ul ul::before {
   content: '';
+  /* Empty pseudo-element */
   position: absolute;
   left: 12px;
+  /* Position from left */
   top: 0;
   bottom: 0;
+  /* Full height */
   width: 1px;
+  /* Thin vertical line */
   background-color: hsl(var(--border));
+  /* Use border color */
 }
 
-/* Loading states */
+/* Loading state styling */
 .loading {
   opacity: 0.7;
+  /* Semi-transparent when loading */
   pointer-events: none;
+  /* Disable interaction during loading */
 }
 
 /* Animation for menu expansion */
 @keyframes slideDown {
   from {
     opacity: 0;
+    /* Start invisible */
     transform: translateY(-10px);
+    /* Start 10px above final position */
   }
 
   to {
     opacity: 1;
+    /* End fully visible */
     transform: translateY(0);
+    /* End at final position */
   }
 }
 
+/* Apply slide-down animation to sidebar navigation lists */
 .sidebar-nav ul {
   animation: slideDown 0.2s ease-out;
 }
 
-/* Mobile overlay animation */
+/* Mobile overlay fade-in animation */
 @keyframes fadeIn {
   from {
     opacity: 0;
+    /* Start invisible */
   }
 
   to {
     opacity: 1;
+    /* End fully visible */
   }
 }
 
+/* Apply fade-in animation to mobile overlay */
 .mobile-overlay {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* High contrast mode support */
+/* High contrast mode support for accessibility */
 @media (prefers-contrast: high) {
 
+  /* Add transparent borders to interactive elements */
   .sidebar-nav a,
   .sidebar-nav button {
     border: 1px solid transparent;
   }
 
+  /* Make borders visible on hover in high contrast mode */
   .sidebar-nav a:hover,
   .sidebar-nav button:hover {
     border-color: currentColor;
+    /* Use current text color for border */
+  }
+
+  /* High contrast scrollbar adjustments */
+  ::-webkit-scrollbar-thumb {
+    border: 1px solid hsl(var(--foreground));
+  }
+
+  ::-webkit-scrollbar-track {
+    border: 1px solid hsl(var(--border));
   }
 }
 
-/* Reduced motion support */
+/* Reduced motion support for accessibility */
 @media (prefers-reduced-motion: reduce) {
+
+  /* Override all animations and transitions for users who prefer reduced motion */
   * {
     animation-duration: 0.01ms !important;
+    /* Make animations nearly instant */
     animation-iteration-count: 1 !important;
+    /* Run animations only once */
     transition-duration: 0.01ms !important;
+    /* Make transitions nearly instant */
+  }
+
+  /* Disable scrollbar animations for reduced motion */
+  ::-webkit-scrollbar-thumb {
+    transition: none !important;
+    transform: none !important;
   }
 }

@@ -11,7 +11,7 @@ function AppContent() {
     <>
       <Toaster
         richColors
-        position="top-right"
+        position="top-center"
         theme={theme === 'dark' ? 'dark' : 'light'} // Apply the theme from context
         toastOptions={{
           classNames: {

@@ -1,3 +1,5 @@
+// Frontend\src\pages\client\Dashboard\store\dashboardStore.ts
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 

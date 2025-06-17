@@ -1,3 +1,5 @@
+// Frontend\src\pages\client\account\AccountList.tsx
+
 import { useState, useEffect } from "react";
 import { Eye, ChevronLeft, ChevronRight, RefreshCw, Lock } from "lucide-react";
 import axios, { AxiosError } from "axios";

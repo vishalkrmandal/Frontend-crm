@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
@@ -36,18 +35,15 @@ interface MenuItem {
 
 export default function Sidebar({ open, isMobile = false, onItemClick }: SidebarProps) {
   const location = useLocation()
-  // Initialize expandedMenus based on current location
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({})
-  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null)
-
-  // Add timeout ref to handle hover delay
+  const [isHoveringCollapsed, setIsHoveringCollapsed] = useState(false)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const menuItems: MenuItem[] = [
     {
       title: "Dashboard",
       icon: Home,
-      path: "/client/dashboard", // FIXED: Now matches router configuration
+      path: "/client",
     },
     {
       title: "Financial Operations",
@@ -86,9 +82,6 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
         { title: "Partner Dashboard", path: "/client/partner/dashboard" },
         { title: "IB Commission", path: "/client/partner/ib-commission" },
         { title: "IB Withdrawal", path: "/client/partner/ib-withdrawal" },
-        // { title: "Summary", path: "/client/partner/summary" },
-        // { title: "IB Accounts", path: "/client/partner/ib-accounts" },
-        // { title: "Auto Rebate Report", path: "/client/partner/auto-rebate-report" },
       ],
     },
     {
@@ -96,25 +89,8 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
       icon: HeadphonesIcon,
       submenu: [{ title: "My Enquiries", path: "/client/support/clientportal" }],
     },
-    // Optional: Copy Trading (uncomment if needed)
-    // {
-    //   title: "Copy Trading",
-    //   icon: Copy,
-    //   submenu: [
-    //     { title: "Rating", path: "/client/copy-trading/rating" },
-    //     { title: "Copier Area", path: "/client/copy-trading/copier-area" },
-    //     { title: "Master Area", path: "/client/copy-trading/master-area" },
-    //     { title: "Terms & Conditions", path: "/client/copy-trading/terms" },
-    //   ],
-    // },
-    // {
-    //   title: "Trading Signals",
-    //   icon: LineChart,
-    //   path: "/client/trading-signals",
-    // },
   ]
 
-  // Function to toggle menu expansion
   const toggleMenu = (title: string) => {
     setExpandedMenus((prev) => ({
       ...prev,
@@ -122,49 +98,46 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
     }))
   }
 
-  // Check if a path is active - exact match
   const isActive = (path: string) => {
     return location.pathname === path
   }
 
-  // Check if any submenu item is active
   const isSubmenuActive = (submenu: { title: string; path: string }[]) => {
     return submenu.some(item => location.pathname === item.path)
   }
 
-  // Handle mouse enter for hover effect with delay (desktop only)
-  const handleMouseEnter = (title: string) => {
-    // Only use hover on desktop when sidebar is collapsed
-    if (!isMobile && !open) {
-      // Clear any existing timeout
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current)
-      }
-      // Set a small delay to prevent accidental triggers
-      hoverTimeoutRef.current = setTimeout(() => {
-        setHoveredMenu(title)
-      }, 50)
-    }
-  }
-
-  // Handle mouse leave for hover effect with delay
-  const handleMouseLeave = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current)
-    }
-    hoverTimeoutRef.current = setTimeout(() => {
-      setHoveredMenu(null)
-    }, 300) // Longer delay when leaving to make it easier to move to submenu
-  }
-
-  // Handle menu item click
   const handleItemClick = () => {
     if (onItemClick) {
       onItemClick()
     }
   }
 
-  // Clean up timeout on unmount
+  // Handle hover for collapsed sidebar
+  const handleSidebarMouseEnter = () => {
+    if (!isMobile && !open) {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+      hoverTimeoutRef.current = setTimeout(() => {
+        setIsHoveringCollapsed(true)
+      }, 50) // Reduced delay for faster response
+    }
+  }
+
+  const handleSidebarMouseLeave = () => {
+    if (!isMobile && !open) {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+      hoverTimeoutRef.current = setTimeout(() => {
+        setIsHoveringCollapsed(false)
+      }, 150) // Optimized delay for smooth exit
+    }
+  }
+
+  // Determine if sidebar should show expanded view
+  const shouldShowExpanded = open || isMobile || (!isMobile && !open && isHoveringCollapsed)
+
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
@@ -173,49 +146,37 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
     }
   }, [])
 
-  // Initialize expanded menus on component mount based on current location
   useEffect(() => {
     const initializeExpandedMenus = () => {
       const newExpandedMenus: Record<string, boolean> = {}
-
       menuItems.forEach(item => {
         if (item.submenu) {
-          // Check if any submenu item matches current path
           const hasActiveItem = item.submenu.some(subItem => location.pathname === subItem.path)
           if (hasActiveItem) {
             newExpandedMenus[item.title] = true
           }
         }
       })
-
-      console.log('Initializing expanded menus for path:', location.pathname, newExpandedMenus)
       setExpandedMenus(newExpandedMenus)
     }
-
-    // Initialize on mount
     initializeExpandedMenus()
-  }, []) // Only run on mount
+  }, [])
 
-  // Update expanded menus when location changes (preserve user-expanded menus)
   useEffect(() => {
     const updateExpandedMenus = () => {
       setExpandedMenus(prev => {
         const newExpandedMenus = { ...prev }
-
         menuItems.forEach(item => {
           if (item.submenu) {
             const hasActiveItem = item.submenu.some(subItem => location.pathname === subItem.path)
             if (hasActiveItem && !newExpandedMenus[item.title]) {
-              // Only expand if not already expanded by user
               newExpandedMenus[item.title] = true
             }
           }
         })
-
         return newExpandedMenus
       })
     }
-
     updateExpandedMenus()
   }, [location.pathname])
 
@@ -225,96 +186,126 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
         ${isMobile
           ? `fixed left-0 top-0 z-50 h-full w-64 transform transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full'
           }`
-          : `${open ? "w-64" : "w-20"} transition-all duration-300 ease-in-out`
+          : `${shouldShowExpanded ? "w-64" : "w-20"} transition-all duration-500 ease-in-out`
         } 
-        flex-shrink-0 overflow-y-auto border-r bg-white dark:bg-gray-900 sidebar-scrollbar
+         flex-shrink-0 overflow-hidden h-full bg-[#F5F5F5] dark:bg-[#111315]
       `}
+      onMouseEnter={handleSidebarMouseEnter}
+      onMouseLeave={handleSidebarMouseLeave}
     >
-      <div className="flex h-16 items-center justify-center border-b px-4 dark:border-gray-700">
-        {(open || isMobile) ? (
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white">TestCRM</h2>
-        ) : (
-          <BarChart2 className="h-8 w-8 text-gray-800 dark:text-white" />
-        )}
+      {/* Header */}
+      <div className="flex h-16 items-center justify-center border-gray-200 dark:border-gray-700 transition-all duration-500 ease-in-out">
+        <div className={`transition-all duration-500 ease-in-out ${shouldShowExpanded ? 'opacity-100 scale-100' : 'opacity-100 scale-100'}`}>
+          {shouldShowExpanded ? (
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white whitespace-nowrap transition-all duration-500 ease-in-out">TestCRM</h2>
+          ) : (
+            <BarChart2 className="h-8 w-8 text-gray-800 dark:text-white transition-all duration-500 ease-in-out" />
+          )}
+        </div>
       </div>
-      <nav className="mt-2 px-2 sidebar-nav">
+
+      {/* Navigation */}
+      <nav className="mt-2 px-2 mb-4 overflow-y-auto flex-1">
         <ul className="space-y-1">
           {menuItems.map((item) => (
-            <li
-              key={item.title}
-              className="relative group"
-              onMouseEnter={() => handleMouseEnter(item.title)}
-              onMouseLeave={handleMouseLeave}
-            >
+            <li key={item.title} className="relative">
               {item.submenu ? (
                 <div>
+                  {/* Parent Menu Item */}
                   <button
                     onClick={() => toggleMenu(item.title)}
-                    className={`flex w-full items-center rounded-md px-3 py-2 text-sm font-medium sidebar-menu-item transition-colors duration-200 ${isSubmenuActive(item.submenu)
-                      ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                      } ${(open || isMobile) ? "" : "justify-center"}`}
+                    className={`flex w-full items-center rounded-sidebar px-3 py-2 text-sm font-medium transition-all duration-300 ease-in-out ${isSubmenuActive(item.submenu)
+                      ? "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100 font-semibold"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      } ${shouldShowExpanded ? "" : "justify-center"}`}
                   >
-                    <item.icon className={`h-5 w-5 ${isSubmenuActive(item.submenu)
-                      ? "text-white dark:text-gray-900"
+                    <item.icon className={`h-5 w-5 transition-all duration-300 ease-in-out ${isSubmenuActive(item.submenu)
+                      ? "text-gray-900 dark:text-gray-100"
                       : "text-gray-500 dark:text-gray-400"
                       }`} />
-                    {(open || isMobile) && (
-                      <>
-                        <span className="ml-3 flex-1 text-left">{item.title}</span>
-                        {expandedMenus[item.title] ? (
-                          <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 transition-transform duration-200" />
-                        )}
-                      </>
-                    )}
+                    <div className={`ml-3 flex-1 flex items-center justify-between transition-all duration-500 ease-in-out overflow-hidden ${shouldShowExpanded ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 ml-0'
+                      }`}>
+                      <span className="text-left whitespace-nowrap">{item.title}</span>
+                      {expandedMenus[item.title] ? (
+                        <ChevronDown className="h-4 w-4 transition-all duration-300 ease-in-out flex-shrink-0" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 transition-all duration-300 ease-in-out flex-shrink-0" />
+                      )}
+                    </div>
                   </button>
 
-                  {/* Show submenu either when expanded in open state or when hovered in collapsed state */}
-                  {(((open || isMobile) && expandedMenus[item.title]) ||
-                    (!isMobile && !open && hoveredMenu === item.title)) && (
-                      <ul
-                        className={`${(open || isMobile)
-                          ? "mt-1 space-y-1 pl-8"
-                          : "absolute left-full top-0 z-50 mt-0 ml-1 min-w-48 rounded-md border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800"
-                          }`}
-                        style={{
-                          // Ensure the popup menu is positioned correctly
-                          display: (!isMobile && !open && hoveredMenu === item.title) ? 'block' : '',
-                        }}
-                      >
-                        {item.submenu.map((subItem) => (
-                          <li key={subItem.title}>
-                            <Link
-                              to={subItem.path}
-                              onClick={handleItemClick}
-                              className={`block rounded-md px-3 py-2 text-sm font-medium sidebar-menu-item transition-colors duration-200 ${isActive(subItem.path)
-                                ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
-                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                                }`}
+                  {/* Expanded Submenu with Hierarchical Lines */}
+                  <div className={`relative mt-1 transition-all duration-400 ease-in-out overflow-hidden ${shouldShowExpanded && expandedMenus[item.title]
+                    ? 'opacity-100 max-h-96'
+                    : 'opacity-0 max-h-0'
+                    }`}>
+                    <ul className="space-y-1">
+                      {item.submenu.map((subItem, index) => (
+                        <li key={subItem.title} className="relative">
+                          {/* Curved Hierarchical Line for each item */}
+                          <div className={`absolute left-6 top-0 h-full w-8 flex items-center transition-all duration-400 ease-in-out ${shouldShowExpanded && expandedMenus[item.title] ? 'opacity-100' : 'opacity-0'
+                            }`}>
+                            <svg
+                              className="w-8 h-12 text-gray-300 dark:text-gray-600"
+                              viewBox="0 0 32 48"
+                              fill="none"
                             >
-                              {subItem.title}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                              {/* Vertical line from top */}
+                              {index > 0 && (
+                                <path
+                                  d="M 12 0 L 12 24"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  fill="none"
+                                />
+                              )}
+
+                              {/* Curved connection to horizontal line */}
+                              <path
+                                d={index === item.submenu!.length - 1
+                                  ? "M 12 24 Q 12 28 16 28 L 32 28" // Last item: curved corner only
+                                  : "M 12 24 Q 12 28 16 28 L 32 28 M 12 28 L 12 48" // Middle items: curve + continue down
+                                }
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                fill="none"
+                              />
+                            </svg>
+                          </div>
+
+                          <Link
+                            to={subItem.path}
+                            onClick={handleItemClick}
+                            className={`block rounded-sidebar ml-12 px-3 py-2 text-sm font-medium transition-all duration-300 ease-in-out ${isActive(subItem.path)
+                              ? "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100 font-semibold"
+                              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+                              }`}
+                          >
+                            <span className="whitespace-nowrap">{subItem.title}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               ) : (
+                /* Single Menu Item */
                 <Link
                   to={item.path || "#"}
                   onClick={handleItemClick}
-                  className={`flex items-center rounded-md px-3 py-2 text-sm font-medium sidebar-menu-item transition-colors duration-200 ${isActive(item.path || "")
-                    ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 font-semibold"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    } ${(open || isMobile) ? "" : "justify-center"}`}
+                  className={`flex items-center rounded-sidebar px-3 py-2 text-sm font-medium transition-all duration-300 ease-in-out ${isActive(item.path || "")
+                    ? "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100 font-semibold"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    } ${shouldShowExpanded ? "" : "justify-center"}`}
                 >
-                  <item.icon className={`h-5 w-5 ${isActive(item.path || "")
-                    ? "text-white dark:text-gray-900"
+                  <item.icon className={`h-5 w-5 transition-all duration-300 ease-in-out ${isActive(item.path || "")
+                    ? "text-gray-900 dark:text-gray-100"
                     : "text-gray-500 dark:text-gray-400"
                     }`} />
-                  {(open || isMobile) && <span className="ml-3">{item.title}</span>}
+                  <span className={`ml-3 whitespace-nowrap transition-all duration-500 ease-in-out overflow-hidden ${shouldShowExpanded ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 ml-0'
+                    }`}>
+                    {item.title}
+                  </span>
                 </Link>
               )}
             </li>

@@ -1,59 +1,12 @@
+// Frontend/src/pages/client/Dashboard/Dashboard.tsx
+
 import { useState, useEffect } from 'react';
 import {
   TrendingUp, TrendingDown, DollarSign, Activity,
   RefreshCw, ArrowUpRight, ArrowDownRight, Search, MoreHorizontal,
-  Eye, EyeOff, AlertCircle, Moon, Sun, Clock, ChevronUp, ChevronDown,
-  Wifi, WifiOff
+  Eye, EyeOff, AlertCircle, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { useDashboardStore, useThemeStore } from './store/dashboardStore';
-
-// Theme Toggle Component
-import { useTheme } from '@/context/ThemeContext';
-
-const ThemeToggle = () => {
-  const { theme, toggleTheme } = useTheme();
-
-  return (
-    <button
-      onClick={toggleTheme}
-      className="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-    >
-      {theme === 'light' ? (
-        <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-      ) : (
-        <Sun className="h-5 w-5 text-yellow-500" />
-      )}
-    </button>
-  );
-};
-
-// Auto Refresh Toggle
-
-const AutoRefreshToggle = () => {
-  const { autoRefreshEnabled, toggleAutoRefresh } = useDashboardStore();
-
-  return (
-    <button
-      onClick={toggleAutoRefresh}
-      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${autoRefreshEnabled
-        ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400'
-        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-        }`}
-    >
-      {autoRefreshEnabled ? (
-        <>
-          <Wifi className="h-4 w-4" />
-          <span>Live</span>
-        </>
-      ) : (
-        <>
-          <WifiOff className="h-4 w-4" />
-          <span>Paused</span>
-        </>
-      )}
-    </button>
-  );
-};
 
 // Statistics Card
 type StatCardProps = {
@@ -93,7 +46,7 @@ const StatCard: React.FC<StatCardProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200">
+    <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6 hover:shadow-md transition-all duration-200">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-3 rounded-lg ${getColorClasses(color)}`}>
           <Icon className="h-6 w-6 text-white" />
@@ -107,20 +60,20 @@ const StatCard: React.FC<StatCardProps> = ({
 
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-2xl font-bold text-foreground">
             {isVisible ? value : '••••••'}
           </h3>
           <button
             onClick={() => setIsVisible(!isVisible)}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            className="p-1 hover:bg-muted rounded transition-colors"
           >
             {isVisible ?
-              <Eye className="h-4 w-4 text-gray-400" /> :
-              <EyeOff className="h-4 w-4 text-gray-400" />
+              <Eye className="h-4 w-4 text-muted-foreground" /> :
+              <EyeOff className="h-4 w-4 text-muted-foreground" />
             }
           </button>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+        <p className="text-sm text-muted-foreground">{title}</p>
       </div>
     </div>
   );
@@ -165,23 +118,23 @@ const PerformanceChart = () => {
   const winRate = filteredData.length > 0 ? (filteredData.filter(d => d.profit > 0).length / filteredData.length * 100).toFixed(1) : 0;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-4">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trading Performance</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Last {filteredData.length} trades • Real-time data</p>
+          <h3 className="text-lg font-semibold text-foreground">Trading Performance</h3>
+          <p className="text-sm text-muted-foreground">Last {filteredData.length} trades • Real-time data</p>
         </div>
 
         <div className="flex space-x-2">
           <button
             onClick={() => setShowProfit(!showProfit)}
-            className={`px-3 py-1 text-xs rounded transition-all ${showProfit ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}
+            className={`px-3 py-1 text-xs rounded transition-all ${showProfit ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}
           >
             Profit
           </button>
           <button
             onClick={() => setShowLoss(!showLoss)}
-            className={`px-3 py-1 text-xs rounded transition-all ${showLoss ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}
+            className={`px-3 py-1 text-xs rounded transition-all ${showLoss ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400' : 'bg-muted text-muted-foreground'}`}
           >
             Loss
           </button>
@@ -189,21 +142,21 @@ const PerformanceChart = () => {
       </div>
 
       {/* Performance Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+      <div className="grid grid-cols-3 gap-2 mb-6 p-2 bg-muted rounded-lg">
         <div className="text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Total Profit</p>
+          <p className="text-xs text-muted-foreground">Total Profit</p>
           <p className="text-lg font-semibold text-green-600 dark:text-green-400">${totalProfit.toFixed(2)}</p>
           <ChevronUp className="h-3 w-3 text-green-500 mx-auto" />
         </div>
         <div className="text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Total Loss</p>
+          <p className="text-xs text-muted-foreground">Total Loss</p>
           <p className="text-lg font-semibold text-red-600 dark:text-red-400">${totalLoss.toFixed(2)}</p>
           <ChevronDown className="h-3 w-3 text-red-500 mx-auto" />
         </div>
         <div className="text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Win Rate</p>
+          <p className="text-xs text-muted-foreground">Win Rate</p>
           <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">{winRate}%</p>
-          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1 mt-1">
+          <div className="w-full bg-border rounded-full h-1 mt-1">
             <div
               className="bg-blue-500 h-1 rounded-full transition-all duration-500"
               style={{ width: `${winRate}%` }}
@@ -213,7 +166,7 @@ const PerformanceChart = () => {
       </div>
 
       {/* Chart */}
-      <div className="h-64 flex items-end justify-between space-x-1 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+      <div className="h-64 flex items-end justify-between space-x-1 bg-muted rounded-lg p-4">
         {filteredData.map((item, index) => {
           const height = maxValue > 0 ? Math.abs(item.profit) / maxValue * 100 : 50;
           const isProfit = item.profit >= 0;
@@ -234,12 +187,12 @@ const PerformanceChart = () => {
               </div>
 
               {/* Tooltip */}
-              <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+              <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap z-10 border border-border shadow-lg">
                 <div className="font-medium">{item.symbol}</div>
                 <div className={isProfit ? 'text-green-400' : 'text-red-400'}>
                   ${item.profit.toFixed(2)}
                 </div>
-                <div className="text-gray-300">{item.date}</div>
+                <div className="text-muted-foreground">{item.date}</div>
               </div>
             </div>
           );
@@ -247,7 +200,7 @@ const PerformanceChart = () => {
       </div>
 
       {/* Legend */}
-      <div className="flex justify-between items-center mt-4 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex justify-between items-center mt-4 text-xs text-muted-foreground">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1">
             <div className="w-3 h-3 bg-green-500 rounded"></div>
@@ -292,39 +245,39 @@ const TransactionHistory = () => {
       case 'approved': return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900';
       case 'pending': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900';
       case 'rejected': return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900';
-      default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
+      default: return 'text-muted-foreground bg-muted';
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-3">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Latest activity on your accounts</p>
+          <h3 className="text-lg font-semibold text-foreground">Recent Transactions</h3>
+          <p className="text-sm text-muted-foreground">Latest activity on your accounts</p>
         </div>
-        <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 text-sm font-medium flex items-center space-x-1">
+        <button className="text-primary hover:text-primary/80 text-sm font-medium flex items-center space-x-1">
           <span>View All</span>
-          <ArrowUpRight className="h-4 w-4" />
+          <ArrowUpRight className="h-2 w-2" />
         </button>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search transactions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="pl-10 pr-4 py-2 w-full border border-input rounded-md text-sm bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border border-input rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="all">All Types</option>
           <option value="deposit">Deposits</option>
@@ -335,7 +288,7 @@ const TransactionHistory = () => {
       {/* Transaction List */}
       <div className="space-y-3 max-h-80 overflow-y-auto">
         {filteredTransactions.length > 0 ? filteredTransactions.map((transaction) => (
-          <div key={transaction._id} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <div key={transaction._id} className="flex items-center justify-between p-3 hover:bg-muted rounded-lg transition-colors">
             <div className="flex items-center space-x-3">
               <div className={`p-2 rounded-full ${transaction.type === 'Deposit' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`}>
                 {transaction.type === 'Deposit' ?
@@ -345,12 +298,12 @@ const TransactionHistory = () => {
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <p className="font-medium text-gray-900 dark:text-white">{transaction.type}</p>
+                  <p className="font-medium text-foreground">{transaction.type}</p>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
                     {transaction.status}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   {transaction.account} • {transaction.method}
                 </p>
               </div>
@@ -359,14 +312,14 @@ const TransactionHistory = () => {
               <p className={`font-semibold ${transaction.type === 'Deposit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 {transaction.formattedAmount || `${transaction.type === 'Deposit' ? '+' : '-'}$${transaction.amount.toFixed(2)}`}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 {new Date(transaction.date).toLocaleDateString()}
               </p>
             </div>
           </div>
         )) : (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <AlertCircle className="h-8 w-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+          <div className="text-center py-8 text-muted-foreground">
+            <AlertCircle className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
             <p>No transactions found</p>
             <p className="text-sm mt-1">Try adjusting your filters</p>
           </div>
@@ -404,21 +357,21 @@ const ActiveAccounts = () => {
       case 'standard': return 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400';
       case 'pro': return 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-400';
       case 'vip': return 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-400';
-      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-3">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Accounts</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{activeAccounts.length} accounts connected</p>
+          <h3 className="text-lg font-semibold text-foreground">Active Accounts</h3>
+          <p className="text-sm text-muted-foreground">{activeAccounts.length} accounts connected</p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="flex items-center space-x-1 px-3 py-1 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors rounded-lg hover:bg-muted"
         >
           <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
@@ -429,34 +382,34 @@ const ActiveAccounts = () => {
         {activeAccounts.length > 0 ? activeAccounts.map((account) => (
           <div
             key={account._id}
-            className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors cursor-pointer"
+            className="border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer"
           >
             <div className="flex items-start justify-between mb-3">
               <div>
                 <div className="flex items-center space-x-2">
-                  <h4 className="font-medium text-gray-900 dark:text-white">{account.name}</h4>
+                  <h4 className="font-medium text-foreground">{account.name}</h4>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getAccountTypeColor(account.accountType)}`}>
                     {account.accountType}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">MT5: {account.mt5Account}</p>
+                <p className="text-sm text-muted-foreground">MT5: {account.mt5Account}</p>
               </div>
-              <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded">
-                <MoreHorizontal className="h-4 w-4 text-gray-400" />
+              <button className="p-1 hover:bg-muted rounded">
+                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
               </button>
             </div>
 
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Balance</p>
-                <p className="font-semibold text-gray-900 dark:text-white">${account.balance.toLocaleString()}</p>
+                <p className="text-muted-foreground text-xs mb-1">Balance</p>
+                <p className="font-semibold text-foreground">${account.balance.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Equity</p>
-                <p className="font-semibold text-gray-900 dark:text-white">${account.equity.toLocaleString()}</p>
+                <p className="text-muted-foreground text-xs mb-1">Equity</p>
+                <p className="font-semibold text-foreground">${account.equity.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">P&L</p>
+                <p className="text-muted-foreground text-xs mb-1">P&L</p>
                 <p className={`font-semibold flex items-center ${account.profitLoss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {account.profitLoss >= 0 ? <ChevronUp className="h-3 w-3 mr-1" /> : <ChevronDown className="h-3 w-3 mr-1" />}
                   {account.profitLoss >= 0 ? '+' : ''}${account.profitLoss.toFixed(2)}
@@ -464,16 +417,16 @@ const ActiveAccounts = () => {
               </div>
             </div>
 
-            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-600">
-              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+            <div className="mt-3 pt-3 border-t border-border">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Leverage: {account.leverage}</span>
                 <span>Group: {account.groupName}</span>
               </div>
             </div>
           </div>
         )) : (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <AlertCircle className="h-8 w-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+          <div className="text-center py-8 text-muted-foreground">
+            <AlertCircle className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
             <p>No active accounts found</p>
             <p className="text-sm mt-1">Connect your trading accounts to get started</p>
           </div>
@@ -512,7 +465,7 @@ const TradingViewWidget = () => {
       "theme": theme,
       "style": "1",
       "locale": "en",
-      "toolbar_bg": theme === 'dark' ? "#1f2937" : "#f1f3f6",
+      "toolbar_bg": theme === 'dark' ? "#1A1C1E" : "#FCFCFC",
       "enable_publishing": false,
       "allow_symbol_change": true,
       "calendar": false,
@@ -527,17 +480,17 @@ const TradingViewWidget = () => {
   }, [selectedSymbol, theme]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Live Market Data</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Real-time trading charts</p>
+          <h3 className="text-lg font-semibold text-foreground">Live Market Data</h3>
+          <p className="text-sm text-muted-foreground">Real-time trading charts</p>
         </div>
         <div className="flex items-center space-x-3">
           <select
             value={selectedSymbol}
             onChange={(e) => setSelectedSymbol(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-input rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             {symbols.map(symbol => (
               <option key={symbol.value} value={symbol.value}>{symbol.label}</option>
@@ -545,14 +498,14 @@ const TradingViewWidget = () => {
           </select>
           <button
             onClick={() => window.open(`https://www.tradingview.com/chart/?symbol=${selectedSymbol}`, '_blank')}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             title="Open in TradingView"
           >
             <ArrowUpRight className="h-4 w-4" />
           </button>
         </div>
       </div>
-      <div className="h-96 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
+      <div className="h-96 rounded-lg overflow-hidden border border-border">
         <div id="tradingview_widget" className="h-full w-full"></div>
       </div>
     </div>
@@ -566,7 +519,6 @@ const Dashboard = () => {
     loading,
     error,
     refreshing,
-    lastUpdated,
     autoRefreshEnabled,
     refreshInterval,
     fetchDashboardData,
@@ -596,14 +548,14 @@ const Dashboard = () => {
 
   if (loading && !stats.totalBalance) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading your dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="text-foreground">Loading your dashboard...</p>
           <div className="flex space-x-2">
-            <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
           </div>
         </div>
       </div>
@@ -612,24 +564,24 @@ const Dashboard = () => {
 
   if (error && !stats.totalBalance) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md p-6">
-          <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500 dark:text-red-400" />
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Unable to load dashboard</h2>
-          <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
-            <p className="text-red-700 dark:text-red-400 text-sm font-medium">Error Details:</p>
-            <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error}</p>
+          <AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Unable to load dashboard</h2>
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4">
+            <p className="text-destructive text-sm font-medium">Error Details:</p>
+            <p className="text-destructive text-sm mt-1">{error}</p>
           </div>
           <div className="space-y-2">
             <button
               onClick={() => fetchDashboardData()}
-              className="w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg transition-colors"
+              className="w-full px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
             >
               Try Again
             </button>
             <button
               onClick={clearError}
-              className="w-full px-6 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
+              className="w-full px-6 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg transition-colors"
             >
               Clear Errors
             </button>
@@ -640,44 +592,13 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 text-white shadow-lg mb-8">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Welcome Back, Trader</h1>
-              <p className="text-orange-100 dark:text-orange-200 mt-1">Your comprehensive trading overview</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              {lastUpdated && (
-                <div className="flex items-center space-x-2 text-orange-100 dark:text-orange-200 text-sm bg-white bg-opacity-10 dark:bg-black dark:bg-opacity-20 rounded-lg px-3 py-2">
-                  <Clock className="h-4 w-4" />
-                  <span>Last updated: {new Date(lastUpdated).toLocaleTimeString()}</span>
-                  {refreshing && <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>}
-                </div>
-              )}
-              <AutoRefreshToggle />
-              <button
-                onClick={() => fetchDashboardData(true)}
-                disabled={refreshing}
-                className="flex items-center space-x-2 bg-white bg-opacity-20 hover:bg-opacity-30 dark:bg-black dark:bg-opacity-20 dark:hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span>Refresh</span>
-              </button>
-              <ThemeToggle />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 pb-8">
+    <div className="bg-background min-h-screen">
+      <div className="max-w-7xl mx-auto">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 mb-4">
           <StatCard
             title="Total Balance"
-            value={`${stats.totalBalance.toLocaleString()}`}
+            value={`$${stats.totalBalance.toLocaleString()}`}
             icon={DollarSign}
             color="blue"
             change="+2.5%"
@@ -685,7 +606,7 @@ const Dashboard = () => {
           />
           <StatCard
             title="Total Deposits"
-            value={`${stats.totalDeposits.toLocaleString()}`}
+            value={`$${stats.totalDeposits.toLocaleString()}`}
             icon={TrendingUp}
             color="green"
             change="+5.2%"
@@ -693,7 +614,7 @@ const Dashboard = () => {
           />
           <StatCard
             title="Total Withdrawals"
-            value={`${stats.totalWithdrawals.toLocaleString()}`}
+            value={`$${stats.totalWithdrawals.toLocaleString()}`}
             icon={TrendingDown}
             color="red"
           />
@@ -722,17 +643,17 @@ const Dashboard = () => {
         </div>
 
         {/* Trading Chart Widget */}
-        <div className="mb-8">
+        <div className="mb-2">
           <TradingViewWidget />
         </div>
 
         {/* Performance Chart */}
-        <div className="mb-8">
+        <div className="mb-2">
           <PerformanceChart />
         </div>
 
         {/* Bottom Section - Transactions and Accounts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
           <TransactionHistory />
           <ActiveAccounts />
         </div>
@@ -740,8 +661,8 @@ const Dashboard = () => {
 
       {/* Loading Overlay */}
       {refreshing && (
-        <div className="fixed top-4 right-4 bg-blue-600 dark:bg-blue-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 z-50">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+        <div className="fixed top-4 right-4 bg-primary text-primary-foreground px-3 py-2 rounded-lg shadow-lg flex items-center space-x-2 z-50">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
           <span className="text-sm font-medium">Updating data...</span>
         </div>
       )}
@@ -756,7 +677,7 @@ const Dashboard = () => {
 
       {/* Error notification */}
       {error && stats.totalBalance > 0 && (
-        <div className="fixed top-4 left-4 bg-red-600 dark:bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 z-50 max-w-sm">
+        <div className="fixed top-4 left-4 bg-destructive text-destructive-foreground px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 z-50 max-w-sm">
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium">Update failed</p>
@@ -764,7 +685,7 @@ const Dashboard = () => {
           </div>
           <button
             onClick={clearError}
-            className="text-white hover:text-gray-200 transition-colors"
+            className="text-destructive-foreground hover:text-destructive-foreground/80 transition-colors"
           >
             ×
           </button>
