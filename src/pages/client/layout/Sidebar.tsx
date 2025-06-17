@@ -188,13 +188,13 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
           }`
           : `${shouldShowExpanded ? "w-64" : "w-20"} transition-all duration-500 ease-in-out`
         } 
-         flex-shrink-0 overflow-hidden h-full bg-[#F5F5F5] dark:bg-[#111315]
+        flex flex-col flex-shrink-0 overflow-hidden h-full bg-[#F5F5F5] dark:bg-[#111315]
       `}
       onMouseEnter={handleSidebarMouseEnter}
       onMouseLeave={handleSidebarMouseLeave}
     >
       {/* Header */}
-      <div className="flex h-16 items-center justify-center border-gray-200 dark:border-gray-700 transition-all duration-500 ease-in-out">
+      <div className="flex h-16 items-center justify-center border-gray-200 dark:border-gray-700 transition-all duration-500 ease-in-out flex-shrink-0">
         <div className={`transition-all duration-500 ease-in-out ${shouldShowExpanded ? 'opacity-100 scale-100' : 'opacity-100 scale-100'}`}>
           {shouldShowExpanded ? (
             <h2 className="text-xl font-bold text-gray-800 dark:text-white whitespace-nowrap transition-all duration-500 ease-in-out">TestCRM</h2>
@@ -205,7 +205,7 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
       </div>
 
       {/* Navigation */}
-      <nav className="mt-2 px-2 mb-4 overflow-y-auto flex-1">
+      <nav className="mt-2 px-2 mb-4 overflow-y-auto flex-1 scrollbar-hidden min-h-0">
         <ul className="space-y-1">
           {menuItems.map((item) => (
             <li key={item.title} className="relative">

@@ -97,7 +97,7 @@ export default function Layout() {
           )}
 
           {/* Sidebar Container */}
-          <div className={`${isMobile ? 'fixed z-50' : 'relative z-10'} transition-all duration-300 ease-in-out sidebar-scrollbar overflow-y-auto`}>
+          <div className={`${isMobile ? 'fixed z-50' : 'relative z-10'} transition-all duration-300 ease-in-out`}>
             <Sidebar
               open={sidebarOpen}
               setOpen={setSidebarOpen}
