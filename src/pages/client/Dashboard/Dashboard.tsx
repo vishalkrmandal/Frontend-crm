@@ -540,11 +540,6 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, [fetchDashboardData, autoRefreshEnabled, refreshInterval]);
 
-  // Initialize theme on mount
-  useEffect(() => {
-    const { theme } = useThemeStore.getState();
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, []);
 
   if (loading && !stats.totalBalance) {
     return (
