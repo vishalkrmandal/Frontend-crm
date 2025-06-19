@@ -1,4 +1,5 @@
 // Frontend/src/pages/client/layout/Header.tsx
+
 "use client"
 
 import { useState, useEffect, useRef } from "react"

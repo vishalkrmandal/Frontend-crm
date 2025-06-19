@@ -1,39 +1,123 @@
 // Frontend\src\pages\admin\layout\Layout.tsx
 
 "use client"
-import { useState } from "react"
+
+import { useState, useEffect } from "react"
+import { Outlet, useLocation } from "react-router-dom"
 import Sidebar from "./Sidebar"
 import Header from "./Header"
-import { Outlet } from "react-router-dom"
-import ImpersonationBanner from '@/pages/auth/ImpersonationBanner';
+import ImpersonationBanner from '@/pages/auth/ImpersonationBanner'
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+  const location = useLocation()
+
+  // Preserve scroll position and URL state on reload
+  useEffect(() => {
+    // Save current scroll position and URL to sessionStorage
+    const saveState = () => {
+      sessionStorage.setItem('scrollPosition', window.scrollY.toString())
+      sessionStorage.setItem('currentPath', location.pathname)
+    }
+
+    // Restore state on mount
+    const restoreState = () => {
+      const savedScroll = sessionStorage.getItem('scrollPosition')
+
+      if (savedScroll) {
+        setTimeout(() => {
+          window.scrollTo(0, parseInt(savedScroll))
+        }, 100)
+      }
+    }
+
+    // Add event listeners
+    window.addEventListener('beforeunload', saveState)
+
+    // Restore state on component mount
+    restoreState()
+
+    return () => {
+      window.removeEventListener('beforeunload', saveState)
+    }
+  }, [location.pathname])
+
+  // Handle responsive sidebar behavior
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+
+      // Auto-adjust sidebar based on screen size
+      if (mobile && sidebarOpen) {
+        setSidebarOpen(false)
+      } else if (!mobile && !sidebarOpen) {
+        setSidebarOpen(true)
+      }
+    }
+
+    // Set initial state
+    const mobile = window.innerWidth < 768
+    setIsMobile(mobile)
+    setSidebarOpen(!mobile)
+
+    // Add resize listener
+    window.addEventListener('resize', checkScreenSize)
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
+
+  const closeSidebar = () => {
+    if (isMobile) {
+      setSidebarOpen(false)
+    }
+  }
 
   return (
-    <div className={sidebarOpen ? "sidebar-open" : ""}>
+    <div className="relative min-h-screen bg-background">
       <ImpersonationBanner />
+
+      {/* Main layout container with background */}
       <div className="flex h-screen bg-background">
-        {/* Mobile overlay - appears behind sidebar on mobile when open */}
-        {sidebarOpen && (
+        {/* Mobile Overlay */}
+        {isMobile && sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/50 lg:hidden mobile-overlay z-40"
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden="true"
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+            onClick={closeSidebar}
+            aria-label="Close sidebar"
           />
         )}
 
-        {/* Sidebar */}
-        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+        {/* Sidebar Container */}
+        <div className={`${isMobile ? 'fixed z-50' : 'relative z-10'} transition-all duration-300 ease-in-out`}>
+          <Sidebar
+            open={sidebarOpen}
+            setOpen={setSidebarOpen}
+            isMobile={isMobile}
+            onItemClick={closeSidebar}
+          />
+        </div>
 
-        {/* Main content area */}
-        <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Main Content Area */}
+        <div className="flex flex-1 flex-col overflow-hidden bg-background">
           {/* Header */}
-          <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+          <Header
+            toggleSidebar={toggleSidebar}
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
 
-          {/* Main content */}
-          <main className="flex-1 overflow-auto p-6 bg-background">
-            <Outlet />
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto relative bg-background">
+            <div className="mx-auto p-2 md:p-6 mb-20 max-w-7xl">
+              <div className="min-h-full">
+                <Outlet />
+              </div>
+            </div>
           </main>
         </div>
       </div>
