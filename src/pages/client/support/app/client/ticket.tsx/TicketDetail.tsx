@@ -1,3 +1,5 @@
+// Frontend\src\pages\client\support\app\client\ticket.tsx\TicketDetail.tsx
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -317,7 +319,7 @@ export default function TicketDetail() {
             <div className="flex min-h-screen flex-col">
                 <header className="border-b bg-background">
                     <div className="container mx-auto flex h-16 items-center px-4">
-                        <Link to="/client/support" className="flex items-center gap-2">
+                        <Link to="/client/support/clientportal?tab=notifications" className="flex items-center gap-2">
                             <ChevronLeft className="h-4 w-4" />
                             <span>Back to Tickets</span>
                         </Link>
@@ -338,7 +340,7 @@ export default function TicketDetail() {
             <div className="flex min-h-screen flex-col">
                 <header className="border-b bg-background">
                     <div className="container mx-auto flex h-16 items-center px-4">
-                        <Link to="/client/support" className="flex items-center gap-2">
+                        <Link to="/client/support/clientportal?tab=notifications" className="flex items-center gap-2">
                             <ChevronLeft className="h-4 w-4" />
                             <span>Back to Tickets</span>
                         </Link>
@@ -368,7 +370,7 @@ export default function TicketDetail() {
         <div className="flex min-h-screen flex-col">
             <header className="border-b bg-background">
                 <div className="container mx-auto flex h-16 items-center px-4">
-                    <Link to="/client/support" className="flex items-center gap-2">
+                    <Link to="/client/support/clientportal?tab=notifications" className="flex items-center gap-2">
                         <ChevronLeft className="h-4 w-4" />
                         <span>Back to Tickets</span>
                     </Link>

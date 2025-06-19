@@ -1,6 +1,6 @@
-import { Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   allowedRoles: string[];
@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const { activeRole, switchRole } = useAuth();
-  const navigate = useNavigate();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Get role-specific tokens
   const adminToken = localStorage.getItem('adminToken');
@@ -16,22 +16,30 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const superadminToken = localStorage.getItem('superadminToken');
 
   useEffect(() => {
-    // Only perform role switching if not already authenticated with correct role
-    if (allowedRoles.includes('admin') || allowedRoles.includes('superadmin')) {
-      // Check for admin user
-      if (allowedRoles.includes('admin') && adminToken && activeRole !== 'admin') {
-        switchRole('admin', navigate);
-      }
-      // Check for superadmin user
-      else if (allowedRoles.includes('superadmin') && superadminToken && activeRole !== 'superadmin') {
-        switchRole('superadmin', navigate);
-      }
+    // Determine which role should be active based on available tokens
+    let expectedRole: string | null = null;
+
+    if (allowedRoles.includes('superadmin') && superadminToken) {
+      expectedRole = 'superadmin';
+    } else if (allowedRoles.includes('admin') && adminToken) {
+      expectedRole = 'admin';
+    } else if (allowedRoles.includes('client') && clientToken) {
+      expectedRole = 'client';
     }
-    // Check for client user
-    else if (allowedRoles.includes('client') && clientToken && activeRole !== 'client') {
-      switchRole('client', navigate);
+
+    // Only switch role if we have a token but no active role, or wrong active role
+    if (expectedRole && activeRole !== expectedRole) {
+      // Don't navigate on role switch - let the current URL stay
+      switchRole(expectedRole, undefined); // Pass undefined instead of navigate
     }
-  }, [activeRole, allowedRoles, adminToken, clientToken, superadminToken, navigate, switchRole]);
+
+    setIsInitialized(true);
+  }, [activeRole, allowedRoles, adminToken, clientToken, superadminToken, switchRole]);
+
+  // Don't render anything until we've determined the correct role
+  if (!isInitialized) {
+    return <div>Loading...</div>; // Or your loading component
+  }
 
   // Get user based on current activeRole
   const userString = activeRole ? localStorage.getItem(`${activeRole}User`) : null;

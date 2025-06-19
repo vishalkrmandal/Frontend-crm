@@ -438,7 +438,7 @@ export default function TransactionHistory() {
         {/* Transactions Table */}
         {!loading && !error && (
           <div className="mt-6 overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full whitespace-nowrap">
               <thead>
                 <tr className="border-b">
                   <th className="pb-2 text-left font-medium">Date & Time</th>
@@ -453,8 +453,8 @@ export default function TransactionHistory() {
                 {transactions.length > 0 ? (
                   transactions.map((transaction) => (
                     <tr key={transaction._id} className="border-b last:border-0">
-                      <td className="py-3 text-sm">{transaction.date}</td>
-                      <td className="py-3 text-sm">
+                      <td className="p-3 text-sm ">{transaction.date}</td>
+                      <td className="p-3 text-sm">
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.type === "Deposit"
                             ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
@@ -466,15 +466,15 @@ export default function TransactionHistory() {
                           {transaction.type}
                         </span>
                       </td>
-                      <td className="py-3 text-sm">{transaction.description}</td>
+                      <td className="p-3 text-sm">{transaction.description}</td>
                       <td
-                        className={`py-3 text-sm font-medium ${transaction.amount.startsWith("+") ? "text-green-600" : "text-red-600"
+                        className={`p-3 text-sm font-medium ${transaction.amount.startsWith("+") ? "text-green-600" : "text-red-600"
                           }`}
                       >
                         {transaction.amount}
                       </td>
-                      <td className="py-3 text-sm">{transaction.account}</td>
-                      <td className="py-3 text-sm">
+                      <td className="p-3 text-sm">{transaction.account}</td>
+                      <td className="p-3 text-sm">
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.status === "Completed"
                             ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"

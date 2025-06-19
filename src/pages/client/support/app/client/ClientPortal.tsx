@@ -1,14 +1,27 @@
+// Frontend\src\pages\client\support\app\client\ClientPortal.tsx
+
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChevronLeft } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import EnquiryForm from "@/pages/client/support/app/client/EnquiryForm"
 import TicketList from "@/pages/client/support/app/client/TicketList"
 
 export default function ClientPortal() {
-    const [activeTab, setActiveTab] = useState("enquiry")
+    const [searchParams] = useSearchParams()
+    const tabFromUrl = searchParams.get('tab')
+
+    // Set initial tab based on URL parameter, default to 'enquiry'
+    const [activeTab, setActiveTab] = useState(tabFromUrl || "enquiry")
+
+    // Update tab when URL parameters change
+    useEffect(() => {
+        if (tabFromUrl) {
+            setActiveTab(tabFromUrl)
+        }
+    }, [tabFromUrl])
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
