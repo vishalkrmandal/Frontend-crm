@@ -12,10 +12,10 @@ export default function TradingPlatforms() {
                 <p className="text-muted-foreground">Download and access from all platforms.</p>
             </div>
 
-            <div className={`rounded-xl border ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'} p-6 shadow-sm`}>
+            <div className={`rounded-xl ${theme === 'dark' ? 'bg-card' : 'bg-card'} shadow-sm`}>
                 <div className="min-h-screen flex flex-col">
                     {/* Hero Section with Background Image */}
-                    <div className={`relative flex-1 rounded-xl border overflow-hidden ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <div className={`relative flex-1 rounded-xl overflow-hidden ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
                         <div className="absolute inset-0 w-full h-full rounded-xl">
                             <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-gradient-to-r from-black/80 to-gray-900/30' : 'bg-gradient-to-r from-gray-100/90 to-white/70'}`} />
                         </div>

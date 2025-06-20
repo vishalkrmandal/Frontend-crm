@@ -378,7 +378,7 @@ export default function TicketDetail() {
                 </div>
             </header>
             <main className="flex-1 py-8">
-                <div className="container mx-auto px-4">
+                <div className="container mx-auto px-1">
                     <Card>
                         <CardHeader>
                             <div className="flex items-center justify-between">
@@ -508,7 +508,7 @@ export default function TicketDetail() {
                                         onInput={handleTyping}
                                         className="min-h-[100px]"
                                     />
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex justify-center gap-4">
                                         <Button
                                             variant="outline"
                                             type="button"

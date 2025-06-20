@@ -24,7 +24,7 @@ import SignIn from './pages/auth/sign-in/SignIn';
 import SignUp from './pages/auth/sign-in/SignUp';
 import ClientPortal from './pages/client/support/app/client/ClientPortal';
 import AdminPortal from './pages/admin/support/admin/AdminPortal';
-import TicketDetail from './pages/client/support/app/client/ticket.tsx/TicketDetail';
+import TicketDetail from './pages/client/support/app/client/ticket/TicketDetail';
 import AdminTicketDetail from './pages/admin/support/admin/ticket/AdminTicketDetail';
 import AdminNewTicket from './pages/admin/support/admin/CreateTicket';
 import AdminClientDetail from './pages/admin/support/admin/ticket/ClientDetail';

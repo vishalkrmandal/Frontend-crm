@@ -396,7 +396,7 @@ const TradingContest = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+        <div className="min-h-screen transition-colors duration-200">
             <div className="space-y-6 p-4 max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4">
@@ -414,13 +414,13 @@ const TradingContest = () => {
                             size="sm"
                             onClick={fetchCurrentTabData}
                             disabled={isLoading}
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
+                            className="bg-card border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
                         >
                             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                             {isLoading ? 'Loading...' : 'Refresh'}
                         </Button>
                         {lastUpdated && (
-                            <div className="text-sm text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <div className="text-sm text-slate-500 dark:text-slate-400 bg-card px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
                                 Updated: {lastUpdated.toLocaleTimeString()}
                             </div>
                         )}
@@ -429,7 +429,7 @@ const TradingContest = () => {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                    <div className="bg-card border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                                 <Activity className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -445,7 +445,7 @@ const TradingContest = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                    <div className="bg-card border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
                                 <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -457,7 +457,7 @@ const TradingContest = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                    <div className="bg-card border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
                                 <TrendingDown className="h-6 w-6 text-red-600 dark:text-red-400" />
@@ -469,7 +469,7 @@ const TradingContest = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                    <div className="bg-card border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
                                 <Activity className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -485,7 +485,7 @@ const TradingContest = () => {
                 </div>
 
                 {/* Main Content Card */}
-                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm">
+                <div className="bg-card border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm">
                     {/* Tab Navigation */}
                     <div className="border-b border-slate-200 dark:border-slate-700 p-6">
                         <div className="flex flex-wrap items-center gap-2">
@@ -494,8 +494,8 @@ const TradingContest = () => {
                                 size="sm"
                                 onClick={() => setActiveTab("all")}
                                 className={`transition-all duration-200 ${activeTab === "all"
-                                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                                        : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
+                                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                                    : "bg-card border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
                                     }`}
                             >
                                 <Activity className="mr-2 h-4 w-4" />
@@ -506,8 +506,8 @@ const TradingContest = () => {
                                 size="sm"
                                 onClick={() => setActiveTab("open")}
                                 className={`transition-all duration-200 ${activeTab === "open"
-                                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                                        : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
+                                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                                    : "bg-card border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
                                     }`}
                             >
                                 <Clock className="mr-2 h-4 w-4" />
@@ -518,8 +518,8 @@ const TradingContest = () => {
                                 size="sm"
                                 onClick={() => setActiveTab("closed")}
                                 className={`transition-all duration-200 ${activeTab === "closed"
-                                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                                        : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
+                                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                                    : "bg-card border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
                                     }`}
                             >
                                 <CheckCircle className="mr-2 h-4 w-4" />
@@ -529,7 +529,7 @@ const TradingContest = () => {
                     </div>
 
                     {/* Filters */}
-                    <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-card">
                         <div className="space-y-4">
                             {/* Search and Clear */}
                             <div className="flex flex-col sm:flex-row gap-4">
@@ -538,7 +538,7 @@ const TradingContest = () => {
                                     <Input
                                         type="text"
                                         placeholder="Search by symbol, account, or account name..."
-                                        className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200"
+                                        className="pl-10 bg-card border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
@@ -546,7 +546,7 @@ const TradingContest = () => {
                                 <Button
                                     variant="outline"
                                     onClick={clearFilters}
-                                    className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200"
+                                    className="bg-card border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200"
                                 >
                                     <Filter className="mr-2 h-4 w-4" />
                                     Clear Filters
@@ -556,10 +556,10 @@ const TradingContest = () => {
                             {/* Filter Dropdowns */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <Select value={symbolFilter} onValueChange={setSymbolFilter}>
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                    <SelectTrigger className="bg-card border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                                         <SelectValue placeholder="Filter by Symbol" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectContent className="bg-card border-slate-200 dark:border-slate-700">
                                         <SelectItem value="all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Symbols</SelectItem>
                                         {availableSymbols.map(symbol => (
                                             <SelectItem key={symbol} value={symbol} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">{symbol}</SelectItem>
@@ -568,10 +568,10 @@ const TradingContest = () => {
                                 </Select>
 
                                 <Select value={accountFilter} onValueChange={setAccountFilter}>
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                    <SelectTrigger className="bg-card border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                                         <SelectValue placeholder="Filter by Account" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectContent className="bg-card border-slate-200 dark:border-slate-700">
                                         <SelectItem value="all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Accounts</SelectItem>
                                         {availableAccounts.map(account => (
                                             <SelectItem key={account} value={account} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">{account}</SelectItem>
@@ -580,10 +580,10 @@ const TradingContest = () => {
                                 </Select>
 
                                 <Select value={profitFilter} onValueChange={setProfitFilter}>
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                    <SelectTrigger className="bg-card border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                                         <SelectValue placeholder="Filter by P&L" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectContent className="bg-card border-slate-200 dark:border-slate-700">
                                         <SelectItem value="all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All P&L</SelectItem>
                                         <SelectItem value="profit" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Profitable Only</SelectItem>
                                         <SelectItem value="loss" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Loss Only</SelectItem>
@@ -597,7 +597,7 @@ const TradingContest = () => {
                     {/* Mobile Card View */}
                     <div className="p-6 block md:hidden space-y-4">
                         {paginatedTrades.map((trade, i) => (
-                            <div key={`${trade.ticket}-${i}`} className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:shadow-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all duration-200">
+                            <div key={`${trade.ticket}-${i}`} className="bg-card border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:shadow-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all duration-200">
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex items-center gap-2">
                                         <span className="font-semibold text-lg text-slate-900 dark:text-slate-100">{trade.symbol}</span>
@@ -637,7 +637,7 @@ const TradingContest = () => {
                     {/* Desktop Table View */}
                     <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 dark:bg-slate-900/50">
+                            <thead className="bg-card">
                                 <tr>
                                     <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Account</th>
                                     <th className="px-2 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Symbol</th>
@@ -658,7 +658,7 @@ const TradingContest = () => {
                                     <th className="px-2 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                            <tbody className="bg-card divide-y divide-slate-200 dark:divide-slate-700">
                                 {paginatedTrades.map((trade, i) => (
                                     <tr key={`${trade.ticket}-${i}`} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150">
                                         <td className="px-3 py-2">
@@ -732,7 +732,7 @@ const TradingContest = () => {
                     {/* No Data Message */}
                     {filteredTrades.length === 0 && (
                         <div className="p-12 text-center">
-                            <div className="mx-auto w-24 h-24 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
+                            <div className="mx-auto w-24 h-24 bg-card rounded-full flex items-center justify-center mb-4">
                                 <Activity className="h-12 w-12 text-slate-400 dark:text-slate-500" />
                             </div>
                             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">No trades found</h3>
@@ -747,7 +747,7 @@ const TradingContest = () => {
 
                     {/* Pagination */}
                     {filteredTrades.length > 0 && (
-                        <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+                        <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-card">
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <p className="text-sm text-slate-600 dark:text-slate-400">
                                     Showing <span className="font-medium text-slate-900 dark:text-slate-100">{startIndex + 1}</span> to{" "}
@@ -760,7 +760,7 @@ const TradingContest = () => {
                                         size="sm"
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
-                                        className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                        className="bg-card border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                                     >
                                         Previous
                                     </Button>
@@ -774,8 +774,8 @@ const TradingContest = () => {
                                                     size="sm"
                                                     onClick={() => setCurrentPage(pageNum)}
                                                     className={`w-10 h-10 ${currentPage === pageNum
-                                                            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                                                            : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
+                                                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                                                        : "bg-card border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
                                                         } transition-all duration-200`}
                                                 >
                                                     {pageNum}
@@ -790,8 +790,8 @@ const TradingContest = () => {
                                                     size="sm"
                                                     onClick={() => setCurrentPage(totalPages)}
                                                     className={`w-10 h-10 ${currentPage === totalPages
-                                                            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                                                            : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
+                                                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                                                        : "bg-card border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
                                                         } transition-all duration-200`}
                                                 >
                                                     {totalPages}
@@ -804,7 +804,7 @@ const TradingContest = () => {
                                         size="sm"
                                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                         disabled={currentPage === totalPages}
-                                        className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                        className="bg-card border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                                     >
                                         Next
                                     </Button>

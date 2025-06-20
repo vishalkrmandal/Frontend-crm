@@ -39,7 +39,7 @@ export default function ClientPortal() {
                 </div>
             </header>
             <main className="flex-1 py-8">
-                <div className="container mx-auto px-4">
+                <div className="container mx-auto px-1">
                     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="enquiry">Submit Enquiry</TabsTrigger>
