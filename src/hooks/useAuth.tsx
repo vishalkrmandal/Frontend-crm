@@ -31,6 +31,7 @@ interface AuthContextType {
     switchRole: (role: string, navigate?: NavigateFunction) => void;
     endImpersonation: (navigate?: NavigateFunction) => void;
     hasMultipleRoles: () => boolean;
+    getToken: (userType: 'client' | 'admin') => string | null; // ADD THIS LINE
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,6 +47,18 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
     const [isImpersonated, setIsImpersonated] = useState(false);
     const [impersonationInfo, setImpersonationInfo] = useState<{ clientName: string; clientEmail: any; adminName: string } | null>(null);
+
+    // Get token based on user type for notifications
+    const getToken = (userType: 'client' | 'admin'): string | null => {
+        if (userType === 'admin') {
+            // For admin, check both admin and superadmin tokens
+            return localStorage.getItem('adminToken') || localStorage.getItem('superadminToken');
+        } else {
+            // For client, get client token
+            return localStorage.getItem('clientToken');
+        }
+    };
+
 
     // Check if the user is authenticated on initial load
     useEffect(() => {
@@ -311,7 +324,8 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
                 logout,
                 switchRole,
                 hasMultipleRoles,
-                endImpersonation: handleEndImpersonation
+                endImpersonation: handleEndImpersonation,
+                getToken
             }}
         >
             {children}

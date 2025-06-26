@@ -1,11 +1,13 @@
-// Frontend\src\pages\admin\layout\Layout.tsx
+// Frontend/src/pages/admin/layout/Layout.tsx
 
 "use client"
 
 import { useState, useEffect } from "react"
 import { Outlet, useLocation } from "react-router-dom"
+import { Toaster } from 'react-hot-toast'
 import Sidebar from "./Sidebar"
 import Header from "./Header"
+import { NotificationProvider } from "@/context/NotificationContext"
 import ImpersonationBanner from '@/pages/auth/ImpersonationBanner'
 
 export default function AdminLayout() {
@@ -78,49 +80,76 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background">
-      <ImpersonationBanner />
+    <NotificationProvider userType="admin">
+      {/* Toast notifications */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: 'var(--background)',
+            color: 'var(--foreground)',
+            border: '1px solid var(--border)',
+          },
+          success: {
+            iconTheme: {
+              primary: 'var(--primary)',
+              secondary: 'var(--primary-foreground)',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: 'var(--destructive)',
+              secondary: 'var(--destructive-foreground)',
+            },
+          },
+        }}
+      />
 
-      {/* Main layout container with background */}
-      <div className="flex h-screen bg-background">
-        {/* Mobile Overlay */}
-        {isMobile && sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
-            onClick={closeSidebar}
-            aria-label="Close sidebar"
-          />
-        )}
+      <div className="relative min-h-screen bg-background">
+        <ImpersonationBanner />
 
-        {/* Sidebar Container */}
-        <div className={`${isMobile ? 'fixed z-50' : 'relative z-10'} transition-all duration-300 ease-in-out`}>
-          <Sidebar
-            open={sidebarOpen}
-            setOpen={setSidebarOpen}
-            isMobile={isMobile}
-            onItemClick={closeSidebar}
-          />
-        </div>
+        {/* Main layout container with background */}
+        <div className="flex h-screen bg-background">
+          {/* Mobile Overlay */}
+          {isMobile && sidebarOpen && (
+            <div
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+              onClick={closeSidebar}
+              aria-label="Close sidebar"
+            />
+          )}
 
-        {/* Main Content Area */}
-        <div className="flex flex-1 flex-col overflow-hidden bg-background">
-          {/* Header */}
-          <Header
-            toggleSidebar={toggleSidebar}
-            sidebarOpen={sidebarOpen}
-            isMobile={isMobile}
-          />
+          {/* Sidebar Container */}
+          <div className={`${isMobile ? 'fixed z-50' : 'relative z-10'} transition-all duration-300 ease-in-out`}>
+            <Sidebar
+              open={sidebarOpen}
+              setOpen={setSidebarOpen}
+              isMobile={isMobile}
+              onItemClick={closeSidebar}
+            />
+          </div>
 
-          {/* Main Content */}
-          <main className="flex-1 overflow-auto relative bg-background">
-            <div className="mx-auto p-2 md:p-6 mb-20 max-w-7xl">
-              <div className="min-h-full">
-                <Outlet />
+          {/* Main Content Area */}
+          <div className="flex flex-1 flex-col overflow-hidden bg-background">
+            {/* Header */}
+            <Header
+              toggleSidebar={toggleSidebar}
+              sidebarOpen={sidebarOpen}
+              isMobile={isMobile}
+            />
+
+            {/* Main Content */}
+            <main className="flex-1 overflow-auto relative bg-background">
+              <div className="mx-auto p-2 md:p-6 mb-20 max-w-7xl">
+                <div className="min-h-full">
+                  <Outlet />
+                </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </NotificationProvider>
   )
 }

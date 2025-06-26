@@ -2175,7 +2175,7 @@ const ClientsPage = () => {
 
                     {/* Dialog Content */}
                     <div className={`
-            relative w-[95vw] max-w-4xl h-[90vh] max-h-[90vh] rounded-lg shadow-xl
+            relative w-[95vw] max-w-4xl h-[90vh] max-h-[90vh] rounded-lg shadow-xl bg-background
             ${theme === 'dark'
                             ? 'bg-gray-900 border border-gray-700'
                             : 'bg-white border border-gray-200'
@@ -2271,7 +2271,7 @@ const ClientsPage = () => {
                                     <div className="p-4 space-y-4">
                                         {/* Account Summary Cards */}
                                         <div className={`
-                                grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 sm:p-4 rounded-lg
+                                grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 sm:p-4 rounded-lg bg-card
                                 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}
                             `}>
                                             <div className="text-center">
@@ -2433,7 +2433,7 @@ const ClientsPage = () => {
                                             <div className="overflow-x-auto">
                                                 <table className="w-full">
                                                     <thead className={`
-                                            sticky top-0 z-10
+                                            sticky top-0 z-10 bg-card
                                             ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}
                                         `}>
                                                         <tr className={`

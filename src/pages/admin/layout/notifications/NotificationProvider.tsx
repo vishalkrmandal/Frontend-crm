@@ -1,4 +1,4 @@
-// Frontend/src/pages/client/layout/notifications/NotificationProvider.tsx
+// Frontend/src/pages/admin/layout/notifications/NotificationProvider.tsx
 "use client"
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
@@ -33,55 +33,49 @@ interface NotificationProviderProps {
     userId?: string
 }
 
-export default function NotificationProvider({ children, userId }: NotificationProviderProps) {
+export default function AdminNotificationProvider({ children, userId }: NotificationProviderProps) {
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
     const [isConnected, setIsConnected] = useState(false)
     const [socket, setSocket] = useState<Socket | null>(null)
-    const { activeRole, getToken } = useAuth()
-
-    // Get appropriate token based on active role
-    const getCurrentToken = () => {
-        if (activeRole === 'admin' || activeRole === 'superadmin') {
-            return getToken('admin')
-        }
-        return getToken('client')
-    }
+    const { getToken } = useAuth()
 
     // Initialize socket connection
     useEffect(() => {
-        const token = getCurrentToken()
+        const adminToken = getToken('admin')
 
-        if (!token || !userId) {
+        if (!adminToken || !userId) {
             return
         }
 
         const socketInstance = io(import.meta.env.VITE_API_URL, {
             auth: {
-                token: token
+                token: adminToken
             },
             transports: ['websocket', 'polling']
         })
 
         socketInstance.on('connect', () => {
-            console.log('Connected to notification service')
+            console.log('Admin connected to notification service')
             setIsConnected(true)
+            // Join admin room
+            socketInstance.emit('joinAdminRoom', 'general')
             // Request notification count on connect
             socketInstance.emit('getNotificationCount')
         })
 
         socketInstance.on('disconnect', () => {
-            console.log('Disconnected from notification service')
+            console.log('Admin disconnected from notification service')
             setIsConnected(false)
         })
 
         socketInstance.on('connected', (data) => {
-            console.log('Notification service ready:', data)
+            console.log('Admin notification service ready:', data)
         })
 
         // Listen for new notifications
         socketInstance.on('newNotification', (notification: Notification) => {
-            console.log('New notification received:', notification)
+            console.log('New admin notification received:', notification)
             setNotifications(prev => [notification, ...prev])
             setUnreadCount(prev => prev + 1)
 
@@ -126,7 +120,7 @@ export default function NotificationProvider({ children, userId }: NotificationP
         })
 
         socketInstance.on('error', (error) => {
-            console.error('Socket error:', error)
+            console.error('Admin socket error:', error)
         })
 
         setSocket(socketInstance)
@@ -134,19 +128,19 @@ export default function NotificationProvider({ children, userId }: NotificationP
         return () => {
             socketInstance.disconnect()
         }
-    }, [userId, activeRole])
+    }, [userId])
 
     // Fetch initial notifications
     useEffect(() => {
-        const token = getCurrentToken()
+        const adminToken = getToken('admin')
 
-        if (!token) return
+        if (!adminToken) return
 
         const fetchNotifications = async () => {
             try {
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications?limit=50`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': `Bearer ${adminToken}`,
                         'Content-Type': 'application/json'
                     }
                 })
@@ -159,12 +153,12 @@ export default function NotificationProvider({ children, userId }: NotificationP
                     }
                 }
             } catch (error) {
-                console.error('Error fetching notifications:', error)
+                console.error('Error fetching admin notifications:', error)
             }
         }
 
         fetchNotifications()
-    }, [activeRole])
+    }, [])
 
     // Request notification permission
     useEffect(() => {
@@ -174,15 +168,15 @@ export default function NotificationProvider({ children, userId }: NotificationP
     }, [])
 
     const markAsRead = async (notificationId: string) => {
-        const token = getCurrentToken()
+        const adminToken = getToken('admin')
 
-        if (!token) return
+        if (!adminToken) return
 
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${notificationId}/read`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${adminToken}`,
                     'Content-Type': 'application/json'
                 }
             })
@@ -199,15 +193,15 @@ export default function NotificationProvider({ children, userId }: NotificationP
     }
 
     const markAllAsRead = async () => {
-        const token = getCurrentToken()
+        const adminToken = getToken('admin')
 
-        if (!token) return
+        if (!adminToken) return
 
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/mark-all-read`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${adminToken}`,
                     'Content-Type': 'application/json'
                 }
             })
@@ -224,15 +218,15 @@ export default function NotificationProvider({ children, userId }: NotificationP
     }
 
     const deleteNotification = async (notificationId: string) => {
-        const token = getCurrentToken()
+        const adminToken = getToken('admin')
 
-        if (!token) return
+        if (!adminToken) return
 
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${notificationId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${adminToken}`,
                     'Content-Type': 'application/json'
                 }
             })
@@ -264,10 +258,10 @@ export default function NotificationProvider({ children, userId }: NotificationP
     )
 }
 
-export const useNotifications = () => {
+export const useAdminNotifications = () => {
     const context = useContext(NotificationContext)
     if (context === undefined) {
-        throw new Error('useNotifications must be used within a NotificationProvider')
+        throw new Error('useAdminNotifications must be used within an AdminNotificationProvider')
     }
     return context
 }

@@ -1,4 +1,4 @@
-// Frontend\src\pages\admin\layout\Header.tsx
+// Frontend/src/pages/admin/layout/Header.tsx
 
 "use client"
 
@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTheme } from "@/context/ThemeContext"
 import { useAuth } from "@/hooks/useAuth"
+import { useNotifications } from "@/context/NotificationContext"
 import {
   Menu,
   Moon,
@@ -20,7 +21,7 @@ import {
   ChevronDown,
   X,
 } from "lucide-react"
-import NotificationCard from "./NotificationCard"
+import NotificationDropdown from "@/components/notifications/NotificationDropdown"
 
 interface HeaderProps {
   toggleSidebar: () => void
@@ -37,6 +38,15 @@ interface UserData {
 export default function Header({ toggleSidebar, isMobile }: HeaderProps) {
   const { theme, toggleTheme } = useTheme()
   const { user, logout, activeRole } = useAuth()
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    loading,
+    isConnected
+  } = useNotifications()
   const navigate = useNavigate()
 
   const [showNotifications, setShowNotifications] = useState(false)
@@ -225,19 +235,30 @@ export default function Header({ toggleSidebar, isMobile }: HeaderProps) {
               className="group relative rounded-lg p-2 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground active:scale-95"
               aria-label="Notifications"
             >
-              <Bell className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12" />
-              <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-xs font-bold text-white items-center justify-center">
-                  2
-                </span>
-              </div>
+              <Bell className={`h-5 w-5 transition-transform duration-200 group-hover:rotate-12 ${!isConnected ? 'text-muted-foreground/50' : ''}`} />
+              {unreadCount > 0 && (
+                <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-xs font-bold text-white items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                </div>
+              )}
+              {!isConnected && (
+                <div className="absolute -bottom-1 -right-1 h-2 w-2 rounded-full bg-yellow-500" title="Reconnecting..." />
+              )}
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 top-full mt-2">
-                <NotificationCard />
-              </div>
+              <NotificationDropdown
+                notifications={notifications}
+                onClose={() => setShowNotifications(false)}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+                onDeleteNotification={deleteNotification}
+                loading={loading}
+                unreadCount={unreadCount}
+              />
             )}
           </div>
 

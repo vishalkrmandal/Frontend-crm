@@ -1,4 +1,4 @@
-// Frontend/src/pages/client/layout/notifications/NotificationDropdown.tsx
+// Frontend/src/pages/admin/layout/notifications/NotificationDropdown.tsx
 "use client"
 
 import { useState } from 'react'
@@ -12,7 +12,10 @@ import {
     AlertCircle,
     Info,
     CheckCircle,
-    AlertTriangle
+    AlertTriangle,
+    Users,
+    CreditCard,
+    UserPlus
 } from 'lucide-react'
 
 interface Notification {
@@ -35,7 +38,7 @@ interface NotificationDropdownProps {
     onDeleteNotification?: (notificationId: string) => void
 }
 
-export default function NotificationDropdown({
+export default function AdminNotificationDropdown({
     notifications,
     onClose,
     onMarkAsRead,
@@ -51,19 +54,19 @@ export default function NotificationDropdown({
             case 'account_created':
                 return <CheckCircle className={`${iconClass} text-green-500`} />
             case 'deposit_status':
-                return <Info className={`${iconClass} text-blue-500`} />
+                return <CreditCard className={`${iconClass} text-blue-500`} />
             case 'withdrawal_status':
-                return <AlertCircle className={`${iconClass} text-orange-500`} />
+                return <CreditCard className={`${iconClass} text-orange-500`} />
             case 'transfer_success':
                 return <CheckCircle className={`${iconClass} text-green-500`} />
             case 'new_referral':
-                return <Info className={`${iconClass} text-purple-500`} />
+                return <Users className={`${iconClass} text-purple-500`} />
             case 'ticket_update':
                 return <AlertCircle className={`${iconClass} text-yellow-500`} />
             case 'profile_update':
                 return <Info className={`${iconClass} text-blue-500`} />
             case 'new_signup':
-                return <Info className={`${iconClass} text-green-500`} />
+                return <UserPlus className={`${iconClass} text-green-500`} />
             default:
                 if (priority === 'high' || priority === 'urgent') {
                     return <AlertTriangle className={`${iconClass} text-red-500`} />
@@ -84,6 +87,29 @@ export default function NotificationDropdown({
                 return 'border-l-gray-400'
             default:
                 return 'border-l-gray-400'
+        }
+    }
+
+    const getNotificationTypeLabel = (type: string) => {
+        switch (type) {
+            case 'account_created':
+                return 'Account Created'
+            case 'deposit_status':
+                return 'Deposit Update'
+            case 'withdrawal_status':
+                return 'Withdrawal Update'
+            case 'transfer_success':
+                return 'Transfer'
+            case 'new_referral':
+                return 'New Referral'
+            case 'ticket_update':
+                return 'Support Ticket'
+            case 'profile_update':
+                return 'Profile Update'
+            case 'new_signup':
+                return 'New Registration'
+            default:
+                return 'Notification'
         }
     }
 
@@ -113,7 +139,7 @@ export default function NotificationDropdown({
             <div className="flex items-center justify-between p-4 border-b border-border/50">
                 <div className="flex items-center space-x-2">
                     <Bell className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Notifications</h3>
+                    <h3 className="font-semibold text-foreground">Admin Notifications</h3>
                     {unreadNotifications.length > 0 && (
                         <span className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium bg-primary text-primary-foreground">
                             {unreadNotifications.length}
@@ -145,7 +171,7 @@ export default function NotificationDropdown({
                     <div className="flex flex-col items-center justify-center p-8 text-center">
                         <Bell className="h-12 w-12 text-muted-foreground/50 mb-3" />
                         <p className="text-muted-foreground font-medium">No notifications</p>
-                        <p className="text-sm text-muted-foreground/70">You're all caught up!</p>
+                        <p className="text-sm text-muted-foreground/70">All quiet on the admin front!</p>
                     </div>
                 ) : (
                     <div className="p-2 space-y-1">
@@ -167,10 +193,15 @@ export default function NotificationDropdown({
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between">
-                                            <h4 className={`text-sm font-medium ${notification.read ? 'text-muted-foreground' : 'text-foreground'
-                                                } truncate pr-2`}>
-                                                {notification.title}
-                                            </h4>
+                                            <div className="flex-1 min-w-0 pr-2">
+                                                <h4 className={`text-sm font-medium ${notification.read ? 'text-muted-foreground' : 'text-foreground'
+                                                    } truncate`}>
+                                                    {notification.title}
+                                                </h4>
+                                                <p className="text-xs text-primary font-medium mt-0.5">
+                                                    {getNotificationTypeLabel(notification.type)}
+                                                </p>
+                                            </div>
 
                                             <div className="flex items-center space-x-1 flex-shrink-0">
                                                 {!notification.read && (
@@ -224,6 +255,13 @@ export default function NotificationDropdown({
                                                 </span>
                                             )}
                                         </div>
+
+                                        {/* Additional data display for admin */}
+                                        {notification.data && notification.data.clientId && (
+                                            <div className="mt-1 text-xs text-muted-foreground/60">
+                                                Client ID: {notification.data.clientId}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

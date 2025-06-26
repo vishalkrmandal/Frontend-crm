@@ -4,9 +4,10 @@
 
 import { useState, useEffect } from "react"
 import { Outlet, useLocation } from "react-router-dom"
+import { Toaster } from 'react-hot-toast'
 import Sidebar from "./Sidebar"
 import Header from "./Header"
-import NotificationProvider from "./notifications/NotificationProvider"
+import { NotificationProvider } from "@/context/NotificationContext"
 import ImpersonationBanner from '@/pages/auth/ImpersonationBanner'
 import { useAuth } from "@/hooks/useAuth"
 
@@ -14,7 +15,7 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const location = useLocation()
-  const { user } = useAuth()
+  useAuth()
 
   // Preserve scroll position and URL state on reload
   useEffect(() => {
@@ -81,7 +82,32 @@ export default function Layout() {
   }
 
   return (
-    <NotificationProvider userId={user?.id}>
+    <NotificationProvider userType="client">
+      {/* Toast notifications */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: 'var(--background)',
+            color: 'var(--foreground)',
+            border: '1px solid var(--border)',
+          },
+          success: {
+            iconTheme: {
+              primary: 'var(--primary)',
+              secondary: 'var(--primary-foreground)',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: 'var(--destructive)',
+              secondary: 'var(--destructive-foreground)',
+            },
+          },
+        }}
+      />
+
       {/* Main app container with background */}
       <div className="relative min-h-screen bg-background">
         <ImpersonationBanner />
