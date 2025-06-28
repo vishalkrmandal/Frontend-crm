@@ -8,11 +8,8 @@ import { Link, useLocation } from "react-router-dom"
 import {
   ChevronDown,
   ChevronRight,
-  BarChart2,
   HeadphonesIcon,
-  Home,
   Settings,
-  HandshakeIcon,
 } from "lucide-react"
 
 interface SidebarProps {
