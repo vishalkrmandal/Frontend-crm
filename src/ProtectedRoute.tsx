@@ -1,3 +1,5 @@
+// Frontend\src\ProtectedRoute.tsx
+
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useEffect, useState } from 'react';
@@ -14,6 +16,7 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const adminToken = localStorage.getItem('adminToken');
   const clientToken = localStorage.getItem('clientToken');
   const superadminToken = localStorage.getItem('superadminToken');
+  const agentToken = localStorage.getItem('agentToken');
 
   useEffect(() => {
     // Determine which role should be active based on available tokens
@@ -23,6 +26,8 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
       expectedRole = 'superadmin';
     } else if (allowedRoles.includes('admin') && adminToken) {
       expectedRole = 'admin';
+    } else if (allowedRoles.includes('agent') && agentToken) { // ADD THIS
+      expectedRole = 'agent';
     } else if (allowedRoles.includes('client') && clientToken) {
       expectedRole = 'client';
     }
@@ -34,7 +39,7 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     }
 
     setIsInitialized(true);
-  }, [activeRole, allowedRoles, adminToken, clientToken, superadminToken, switchRole]);
+  }, [activeRole, allowedRoles, adminToken, clientToken, superadminToken, agentToken, switchRole]);
 
   // Don't render anything until we've determined the correct role
   if (!isInitialized) {
@@ -57,8 +62,13 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
 
   if (!isAuthorized) {
     // Redirect based on available roles - use specific dashboard routes
-    if ((adminToken || superadminToken) && (userRole === 'admin' || userRole === 'superadmin')) {
+    // PRIORITY ORDER: superadmin > admin > agent > client
+    if ((superadminToken) && (userRole === 'superadmin')) {
       return <Navigate to="/admin/dashboard" replace />;
+    } else if ((adminToken) && (userRole === 'admin')) {
+      return <Navigate to="/admin/dashboard" replace />;
+    } else if (agentToken && userRole === 'agent') { // ADD THIS
+      return <Navigate to="/agent/dashboard" replace />;
     } else if (clientToken && userRole === 'client') {
       return <Navigate to="/client/dashboard" replace />;
     } else {

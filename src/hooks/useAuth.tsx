@@ -12,26 +12,27 @@ interface User {
     firstname: string;
     lastname: string;
     email: string;
-    role: string;
+    role: 'superadmin' | 'admin' | 'agent' | 'client'; // Add agent role
     isEmailVerified: boolean;
 }
 
 interface AuthContextType {
     user: User | null;
     adminUser: User | null;
+    agentUser: User | null;
     clientUser: User | null;
     superadminUser: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
     isImpersonated: boolean;
-    activeRole: string | null; // 'client', 'admin', or 'superadmin'
+    activeRole: 'client' | 'admin' | 'agent' | 'superadmin' | null; // Add agent and allow null
     impersonationInfo: any;
     login: (email: string, password: string, navigate: NavigateFunction) => Promise<void>;
     logout: (role?: string, navigate?: NavigateFunction) => void;
     switchRole: (role: string, navigate?: NavigateFunction) => void;
     endImpersonation: (navigate?: NavigateFunction) => void;
     hasMultipleRoles: () => boolean;
-    getToken: (userType: 'client' | 'admin') => string | null; // ADD THIS LINE
+    getToken: (userType: 'client' | 'admin' | 'agent') => string | null; // ADD THIS LINE
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,25 +41,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 function AuthProviderComponent({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [adminUser, setAdminUser] = useState<User | null>(null);
+    const [agentUser, setAgentUser] = useState<User | null>(null);
     const [clientUser, setClientUser] = useState<User | null>(null);
     const [superadminUser, setSuperadminUser] = useState<User | null>(null);
-    const [activeRole, setActiveRole] = useState<string | null>(null);
+    const [activeRole, setActiveRole] = useState<'client' | 'admin' | 'agent' | 'superadmin' | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isImpersonated, setIsImpersonated] = useState(false);
     const [impersonationInfo, setImpersonationInfo] = useState<{ clientName: string; clientEmail: any; adminName: string } | null>(null);
 
     // Get token based on user type for notifications
-    const getToken = (userType: 'client' | 'admin'): string | null => {
+    const getToken = (userType: 'client' | 'admin' | 'agent'): string | null => {
         if (userType === 'admin') {
-            // For admin, check both admin and superadmin tokens
+            // For admin requests, superadmin can also access (inheritance)
             return localStorage.getItem('adminToken') || localStorage.getItem('superadminToken');
+        } else if (userType === 'agent') {
+            // For agent requests, admin and superadmin can also access
+            return localStorage.getItem('agentToken') || localStorage.getItem('adminToken') || localStorage.getItem('superadminToken');
         } else {
-            // For client, get client token
+            // For client, only client token
             return localStorage.getItem('clientToken');
         }
     };
-
 
     // Check if the user is authenticated on initial load
     useEffect(() => {
@@ -70,14 +74,19 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
                 const adminToken = localStorage.getItem('adminToken');
                 const clientToken = localStorage.getItem('clientToken');
                 const superadminToken = localStorage.getItem('superadminToken');
+                const agentToken = localStorage.getItem('agentToken');
+
+
                 const adminUserStr = localStorage.getItem('adminUser');
                 const clientUserStr = localStorage.getItem('clientUser');
                 const superadminUserStr = localStorage.getItem('superadminUser');
+                const agentUserStr = localStorage.getItem('agentUser'); // Add this
 
                 // Set all available user objects
                 if (adminUserStr) setAdminUser(JSON.parse(adminUserStr));
                 if (clientUserStr) setClientUser(JSON.parse(clientUserStr));
                 if (superadminUserStr) setSuperadminUser(JSON.parse(superadminUserStr));
+                if (agentUserStr) setAgentUser(JSON.parse(agentUserStr));
 
                 // Check if impersonation is active
                 if (isImpersonationActive() && clientToken && clientUserStr) {
@@ -102,16 +111,16 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
                     setUser(userData);
                     setActiveRole('admin');
                     setIsAuthenticated(true);
+                } else if (agentToken && agentUserStr) { // Add agent priority
+                    const userData = JSON.parse(agentUserStr);
+                    setUser(userData);
+                    setActiveRole('agent');
+                    setIsAuthenticated(true);
                 } else if (clientToken && clientUserStr) {
                     const userData = JSON.parse(clientUserStr);
                     setUser(userData);
                     setActiveRole('client');
                     setIsAuthenticated(true);
-                } else {
-                    // No valid tokens found
-                    setUser(null);
-                    setActiveRole(null);
-                    setIsAuthenticated(false);
                 }
             } catch (error) {
                 console.error('Authentication error:', error);
@@ -132,12 +141,13 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
         if (localStorage.getItem('adminToken')) roleCount++;
         if (localStorage.getItem('clientToken')) roleCount++;
         if (localStorage.getItem('superadminToken')) roleCount++;
+        if (localStorage.getItem('agentToken')) roleCount++; // Add agent role check
         return roleCount > 1;
     };
 
     // Function to switch between roles if multiple logins exist
     const switchRole = (role: string, navigate?: NavigateFunction) => {
-        if (!['admin', 'client', 'superadmin'].includes(role)) {
+        if (!['admin', 'client', 'superadmin', 'agent'].includes(role)) {
             console.error('Invalid role specified');
             return;
         }
@@ -152,7 +162,7 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
 
         const userData = JSON.parse(userStr);
         setUser(userData);
-        setActiveRole(role);
+        setActiveRole(role as 'superadmin' | 'admin' | 'agent' | 'client');
         setIsAuthenticated(true);
 
         // Update axios default headers
@@ -165,8 +175,10 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
         if (navigate) {
             if (role === 'client') {
                 navigate('/client');
+            } else if (role === 'agent') {
+                navigate('/agent'); // New route for agents
             } else {
-                navigate('/admin');
+                navigate('/admin'); // superadmin and admin go to admin panel
             }
         }
     };
@@ -191,6 +203,8 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
                     setAdminUser(user);
                 } else if (role === 'superadmin') {
                     setSuperadminUser(user);
+                } else if (role === 'agent') {
+                    setAgentUser(user); // Add this
                 } else if (role === 'client') {
                     setClientUser(user);
                 }
@@ -206,6 +220,8 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
                 // Redirect based on role
                 if (role === 'admin' || role === 'superadmin') {
                     navigate('/admin');
+                } else if (role === 'agent') {
+                    navigate('/agent'); // New route
                 } else {
                     navigate('/client');
                 }
@@ -223,28 +239,33 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
             localStorage.removeItem(`${role}User`);
 
             // Update state for that role
+            // Update state for that role
             if (role === 'admin') {
                 setAdminUser(null);
             } else if (role === 'superadmin') {
                 setSuperadminUser(null);
+            } else if (role === 'agent') {
+                setAgentUser(null); // Add this
             } else if (role === 'client') {
                 setClientUser(null);
             }
 
             // If current active role is being logged out, switch to another available role
             if (activeRole === role) {
-                // Find another role to switch to
+                // Priority order: superadmin > admin > agent > client
                 if (role !== 'superadmin' && localStorage.getItem('superadminToken')) {
                     switchRole('superadmin', navigate);
                     return;
                 } else if (role !== 'admin' && localStorage.getItem('adminToken')) {
                     switchRole('admin', navigate);
                     return;
+                } else if (role !== 'agent' && localStorage.getItem('agentToken')) {
+                    switchRole('agent', navigate);
+                    return;
                 } else if (role !== 'client' && localStorage.getItem('clientToken')) {
                     switchRole('client', navigate);
                     return;
                 } else {
-                    // No other roles available, log out completely
                     logoutAll(navigate);
                 }
             }
@@ -265,6 +286,8 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('clientUser');
         localStorage.removeItem('superadminToken');
         localStorage.removeItem('superadminUser');
+        localStorage.removeItem('agentToken'); // Add this
+        localStorage.removeItem('agentUser');
         localStorage.removeItem('isImpersonated');
 
         // Reset all auth state
@@ -272,6 +295,7 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
         setAdminUser(null);
         setClientUser(null);
         setSuperadminUser(null);
+        setAgentUser(null); // Add this
         setActiveRole(null);
         setIsAuthenticated(false);
         setIsImpersonated(false);
@@ -313,6 +337,7 @@ function AuthProviderComponent({ children }: { children: React.ReactNode }) {
             value={{
                 user,
                 adminUser,
+                agentUser, // Add this line
                 clientUser,
                 superadminUser,
                 isAuthenticated,

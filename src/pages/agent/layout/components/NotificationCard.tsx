@@ -1,5 +1,3 @@
-// Frontend\src\pages\client\layout\NotificationCard.tsx
-
 import React from "react";
 import { BellIcon, CheckIcon } from "@radix-ui/react-icons";
 

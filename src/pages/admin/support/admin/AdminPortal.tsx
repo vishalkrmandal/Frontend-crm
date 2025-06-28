@@ -79,16 +79,77 @@ export default function AdminPortal() {
     })
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [userRole, setUserRole] = useState<string>("")
     const navigate = useNavigate()
 
     useEffect(() => {
         fetchTickets()
         fetchStats()
+        determineUserRole()
     }, [filter])
 
+    // UPDATED: Support multiple token types (admin, superadmin, agent)
     const getToken = () => {
         const adminToken = localStorage.getItem("adminToken")
-        return adminToken ? adminToken : null
+        const superadminToken = localStorage.getItem("superadminToken")
+        const agentToken = localStorage.getItem("agentToken")
+
+        // Priority: superadmin > admin > agent
+        return superadminToken || adminToken || agentToken || null
+    }
+
+    // UPDATED: Determine user role and set appropriate navigation paths
+    const determineUserRole = () => {
+        const adminToken = localStorage.getItem("adminToken")
+        const superadminToken = localStorage.getItem("superadminToken")
+        const agentToken = localStorage.getItem("agentToken")
+
+        if (superadminToken) {
+            const user = JSON.parse(localStorage.getItem("superadminUser") || "{}")
+            setUserRole(user.role || "superadmin")
+        } else if (adminToken) {
+            const user = JSON.parse(localStorage.getItem("adminUser") || "{}")
+            setUserRole(user.role || "admin")
+        } else if (agentToken) {
+            const user = JSON.parse(localStorage.getItem("agentUser") || "{}")
+            setUserRole(user.role || "agent")
+        }
+    }
+
+    // UPDATED: Get appropriate back navigation path based on user role
+    const getBackPath = () => {
+        switch (userRole) {
+            case "agent":
+                return "/agent/dashboard"
+            case "admin":
+            case "superadmin":
+            default:
+                return "/admin/dashboard"
+        }
+    }
+
+    // UPDATED: Get appropriate new ticket path based on user role
+    const getNewTicketPath = () => {
+        switch (userRole) {
+            case "agent":
+                return "/agent/support/new-ticket"
+            case "admin":
+            case "superadmin":
+            default:
+                return "/admin/support/new-ticket"
+        }
+    }
+
+    // UPDATED: Get appropriate ticket detail path based on user role
+    const getTicketDetailPath = (ticketId: string) => {
+        switch (userRole) {
+            case "agent":
+                return `/agent/support/ticket/${ticketId}`
+            case "admin":
+            case "superadmin":
+            default:
+                return `/admin/support/ticket/${ticketId}`
+        }
     }
 
     const fetchTickets = async () => {
@@ -313,15 +374,19 @@ export default function AdminPortal() {
         <div className="flex min-h-screen flex-col">
             <header className="border-b bg-background">
                 <div className="container mx-auto flex h-16 items-center px-4">
-                    <Link to="/admin" className="flex items-center gap-2">
+                    <Link to={getBackPath()} className="flex items-center gap-2">
                         <ChevronLeft className="h-4 w-4" />
-                        <span>Back to Home</span>
+                        <span>Back to Dashboard</span>
                     </Link>
                     <h1 className="mx-auto text-xl font-semibold">Support Dashboard</h1>
+                    {/* UPDATED: Show user role badge */}
+                    <Badge variant="outline" className="ml-auto">
+                        {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                    </Badge>
                 </div>
             </header>
             <main className="flex-1 py-8">
-                <div className="container mx-auto px-4">
+                <div className="container mx-auto px-2">
                     <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                         <h2 className="text-3xl font-bold tracking-tight">Tickets</h2>
                         <div className="flex gap-2">
@@ -341,7 +406,7 @@ export default function AdminPortal() {
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <Link to="/admin/support/new-ticket">
+                            <Link to={getNewTicketPath()}>
                                 <Button>
                                     <Plus className="mr-2 h-4 w-4" />
                                     Add New Ticket
@@ -407,16 +472,18 @@ export default function AdminPortal() {
                     <div className="mt-8">
                         <Tabs defaultValue="all" value={filter} onValueChange={setFilter}>
                             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                                <TabsList>
-                                    <TabsTrigger value="all">All Tickets</TabsTrigger>
-                                    <TabsTrigger value="new">New</TabsTrigger>
-                                    <TabsTrigger value="open">Open</TabsTrigger>
-                                    <TabsTrigger value="inProgress">In Progress</TabsTrigger>
-                                    <TabsTrigger value="resolved">Resolved</TabsTrigger>
-                                    <TabsTrigger value="closed">Closed</TabsTrigger>
-                                </TabsList>
+                                <div className="w-full sm:w-auto overflow-x-auto">
+                                    <TabsList className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-0 w-full sm:w-auto min-w-max">
+                                        <TabsTrigger value="all" className="data-[state=active]:bg-card">All Tickets</TabsTrigger>
+                                        <TabsTrigger value="new" className="data-[state=active]:bg-card">New</TabsTrigger>
+                                        <TabsTrigger value="open" className="data-[state=active]:bg-card">Open</TabsTrigger>
+                                        <TabsTrigger value="inProgress" className="data-[state=active]:bg-card">In Progress</TabsTrigger>
+                                        <TabsTrigger value="resolved" className="data-[state=active]:bg-card">Resolved</TabsTrigger>
+                                        <TabsTrigger value="closed" className="data-[state=active]:bg-card">Closed</TabsTrigger>
+                                    </TabsList>
+                                </div>
                                 <div className="flex w-full gap-2 sm:w-auto">
-                                    <div className="relative flex-1 sm:w-64">
+                                    <div className="relative flex-1 sm:w-76">
                                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             placeholder="Search tickets..."
@@ -425,9 +492,6 @@ export default function AdminPortal() {
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                         />
                                     </div>
-                                    <Button variant="outline" size="icon">
-                                        <Filter className="h-4 w-4" />
-                                    </Button>
                                 </div>
                             </div>
 
@@ -453,9 +517,9 @@ export default function AdminPortal() {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
-                                                        <TableHead>Ticket ID</TableHead>
-                                                        <TableHead>Subject</TableHead>
-                                                        <TableHead>Status</TableHead>
+                                                        <TableHead className="pr-8">Ticket ID</TableHead>
+                                                        <TableHead className="pr-8">Subject</TableHead>
+                                                        <TableHead className="pr-16">Status</TableHead>
                                                         <TableHead>Category</TableHead>
                                                         <TableHead>Created By</TableHead>
                                                         <TableHead>Assigned To</TableHead>
@@ -490,8 +554,8 @@ export default function AdminPortal() {
                                                                 {new Date(ticket.updatedAt).toLocaleDateString()}
                                                             </TableCell>
                                                             <TableCell className="text-right">
-                                                                <Button variant="ghost" size="sm" asChild>
-                                                                    <Link to={`/admin/support/ticket/${ticket._id}`}>
+                                                                <Button className="border" variant="ghost" size="sm" asChild>
+                                                                    <Link to={getTicketDetailPath(ticket._id)}>
                                                                         View
                                                                     </Link>
                                                                 </Button>
@@ -506,8 +570,8 @@ export default function AdminPortal() {
                             </TabsContent>
                         </Tabs>
                     </div>
-                </div>
-            </main>
-        </div>
+                </div >
+            </main >
+        </div >
     )
 }

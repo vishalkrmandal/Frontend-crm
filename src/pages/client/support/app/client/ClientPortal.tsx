@@ -42,8 +42,8 @@ export default function ClientPortal() {
                 <div className="container mx-auto px-1">
                     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="enquiry">Submit Enquiry</TabsTrigger>
-                            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+                            <TabsTrigger value="enquiry" className="data-[state=active]:bg-card">Submit Enquiry</TabsTrigger>
+                            <TabsTrigger value="notifications" className="data-[state=active]:bg-card">Notifications</TabsTrigger>
                         </TabsList>
                         <TabsContent value="enquiry" className="mt-6">
                             <EnquiryForm onTabChange={handleTabChange} />

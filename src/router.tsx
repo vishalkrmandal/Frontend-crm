@@ -15,16 +15,21 @@ import CreatePartnerAccount from './pages/client/Partner/CreatePartnerAccount';
 import IBDashboard from './pages/client/Partner/IBDashboard';
 import IBAccounts from './pages/client/Partner/IBAccounts';
 import AutoRebateReport from './pages/client/Partner/AutoRebateReport';
-import Rating from './pages/client/copytrading/Rating';
-import CopierArea from './pages/client/copytrading/CopierArea';
-import MasterArea from './pages/client/copytrading/MasterArea';
-import TermsConditions from './pages/client/copytrading/TermsConditions';
-import TradingSignals from './pages/client/trading-signals/TradingSignals';
-import SignIn from './pages/auth/sign-in/SignIn';
-import SignUp from './pages/auth/sign-in/SignUp';
-import ClientPortal from './pages/client/support/app/client/ClientPortal';
-import AdminPortal from './pages/admin/support/admin/AdminPortal';
 import TicketDetail from './pages/client/support/app/client/ticket/TicketDetail';
+import ClientPortal from './pages/client/support/app/client/ClientPortal';
+import ProfilePage from './pages/client/layout/profile/ProfilePage';
+import IBWithdrawal from './pages/client/Partner/IBWithdrawal';
+import TradeCommission from './pages/client/Partner/TradeCommission';
+import PartnerSummary from './pages/client/Partner/Commission/PartnerSummary';
+import AgentLayout from './pages/agent/layout/Layout';
+
+// import Rating from './pages/client/copytrading/Rating';
+// import CopierArea from './pages/client/copytrading/CopierArea';
+// import MasterArea from './pages/client/copytrading/MasterArea';
+// import TermsConditions from './pages/client/copytrading/TermsConditions';
+// import TradingSignals from './pages/client/trading-signals/TradingSignals';
+
+import AdminPortal from './pages/admin/support/admin/AdminPortal';
 import AdminTicketDetail from './pages/admin/support/admin/ticket/AdminTicketDetail';
 import AdminNewTicket from './pages/admin/support/admin/CreateTicket';
 import AdminClientDetail from './pages/admin/support/admin/ticket/ClientDetail';
@@ -33,23 +38,25 @@ import AdminDashboard from './pages/admin/dashboard/AdminDashboard';
 import ClientsPage from './pages/admin/features/ClientsPage';
 import DepositsPage from './pages/admin/features/DepositsPage';
 import WithdrawalsPage from './pages/admin/features/WithdrawalsPage';
-import TransactionsPage from './pages/admin/features/TrasactionsPage';
+import TransactionsPage from './pages/admin/features/TransactionsPage';
 import IBPartnersPage from './pages/admin/Ibpartner/IBPartnersPage';
 import ConfigurationPage from './pages/admin/configure/ConfigurePage';
-import ProtectedRoute from './ProtectedRoute';
-import ResetPassword from './pages/auth/sign-in/components/ResetPassword';
-import ProfilePage from './pages/client/layout/profile/ProfilePage';
 import ClientTickets from './pages/admin/support/admin/ticket/ClientTickets';
-import ReferralRouteHandler from './pages/auth/sign-in/ReferralRouteHandler';
-import IBWithdrawal from './pages/client/Partner/IBWithdrawal';
-import TradeCommission from './pages/client/Partner/TradeCommission';
-import PartnerSummary from './pages/client/Partner/Commission/PartnerSummary';
 import IBWithdrawalManagement from './pages/admin/Ibpartner/IBWithdrawalManagement';
+import SignIn from './pages/auth/sign-in/SignIn';
+import SignUp from './pages/auth/sign-in/SignUp';
+import ReferralRouteHandler from './pages/auth/sign-in/ReferralRouteHandler';
+import ResetPassword from './pages/auth/sign-in/components/ResetPassword';
+import ProtectedRoute from './ProtectedRoute';
 import { Navigate } from 'react-router-dom';
 
 const routes: RouteObject[] = [
   {
     path: '/',
+    element: <SignIn />
+  },
+  {
+    path: '/login',
     element: <SignIn />
   },
   {
@@ -205,33 +212,33 @@ const routes: RouteObject[] = [
           },
 
           // Copy Trading
-          {
-            path: 'copy-trading',
-            children: [
-              {
-                path: 'rating',
-                element: <Rating />
-              },
-              {
-                path: 'copier-area',
-                element: <CopierArea />
-              },
-              {
-                path: 'master-area',
-                element: <MasterArea />
-              },
-              {
-                path: 'terms',
-                element: <TermsConditions />
-              }
-            ]
-          },
+          // {
+          //   path: 'copy-trading',
+          //   children: [
+          //     {
+          //       path: 'rating',
+          //       element: <Rating />
+          //     },
+          //     {
+          //       path: 'copier-area',
+          //       element: <CopierArea />
+          //     },
+          //     {
+          //       path: 'master-area',
+          //       element: <MasterArea />
+          //     },
+          //     {
+          //       path: 'terms',
+          //       element: <TermsConditions />
+          //     }
+          //   ]
+          // },
 
           // Trading Signals
-          {
-            path: 'trading-signals',
-            element: <TradingSignals />
-          }
+          // {
+          //   path: 'trading-signals',
+          //   element: <TradingSignals />
+          // }
         ]
       }
     ]
@@ -299,6 +306,57 @@ const routes: RouteObject[] = [
           },
 
           // Admin Support
+          {
+            path: 'support',
+            children: [
+              {
+                path: 'portal',
+                element: <AdminPortal />
+              },
+              {
+                path: 'ticket/:id',
+                element: <AdminTicketDetail />
+              },
+              {
+                path: 'new-ticket',
+                element: <AdminNewTicket />
+              },
+              {
+                path: 'client/:id',
+                element: <AdminClientDetail />
+              },
+              {
+                path: 'client/:id/tickets',
+                element: <ClientTickets />
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  // Agent routes (protected)
+  {
+    element: <ProtectedRoute allowedRoles={['agent', 'admin', 'superadmin']} />,
+    children: [
+      {
+        path: '/agent',
+        element: <AgentLayout />,
+        children: [
+          // FIXED: Add explicit redirect from /agent to /agent/dashboard
+          {
+            index: true,
+            element: <Navigate to="/agent/dashboard" replace />
+          },
+
+          // FIXED: Add explicit agent dashboard route
+          {
+            path: 'dashboard',
+            element: <AdminPortal />
+          },
+
+          // Agent Support
           {
             path: 'support',
             children: [

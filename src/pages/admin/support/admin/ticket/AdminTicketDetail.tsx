@@ -98,6 +98,8 @@ type Admin = {
     role: string
 }
 
+
+
 export default function AdminTicketDetail() {
     const [newMessage, setNewMessage] = useState("")
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -112,11 +114,83 @@ export default function AdminTicketDetail() {
     const [typingUser, setTypingUser] = useState<string | null>(null)
     const [isTyping, setIsTyping] = useState(false)
     const [socket, setSocket] = useState<Socket | null>(null)
+    const [userRole, setUserRole] = useState<string>("")
     const { id } = useParams()
     const navigate = useNavigate()
     const messageEndRef = useRef<HTMLDivElement | null>(null)
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const [clientStats, setClientStats] = useState({ totalTickets: 0 });
+
+    // UPDATED: Support multiple token types (admin, superadmin, agent)
+    const getToken = () => {
+        const adminToken = localStorage.getItem("adminToken")
+        const superadminToken = localStorage.getItem("superadminToken")
+        const agentToken = localStorage.getItem("agentToken")
+
+        // Priority: superadmin > admin > agent
+        return superadminToken || adminToken || agentToken || null
+    }
+
+    // Get user info from localStorage
+    const getUserInfo = () => {
+        const adminToken = localStorage.getItem("adminToken")
+        const superadminToken = localStorage.getItem("superadminToken")
+        const agentToken = localStorage.getItem("agentToken")
+
+        if (superadminToken) {
+            const userJson = localStorage.getItem("superadminUser")
+            return userJson ? JSON.parse(userJson) : null
+        } else if (adminToken) {
+            const userJson = localStorage.getItem("adminUser")
+            return userJson ? JSON.parse(userJson) : null
+        } else if (agentToken) {
+            const userJson = localStorage.getItem("agentUser")
+            return userJson ? JSON.parse(userJson) : null
+        }
+        return null
+    }
+
+    // UPDATED: Determine user role and set appropriate navigation paths
+    const determineUserRole = () => {
+        const adminToken = localStorage.getItem("adminToken")
+        const superadminToken = localStorage.getItem("superadminToken")
+        const agentToken = localStorage.getItem("agentToken")
+
+        if (superadminToken) {
+            const user = JSON.parse(localStorage.getItem("superadminUser") || "{}")
+            setUserRole(user.role || "superadmin")
+        } else if (adminToken) {
+            const user = JSON.parse(localStorage.getItem("adminUser") || "{}")
+            setUserRole(user.role || "admin")
+        } else if (agentToken) {
+            const user = JSON.parse(localStorage.getItem("agentUser") || "{}")
+            setUserRole(user.role || "agent")
+        }
+    }
+
+    // UPDATED: Get appropriate back navigation path based on user role
+    const getBackPath = () => {
+        switch (userRole) {
+            case "agent":
+                return "/agent/support/portal"
+            case "admin":
+            case "superadmin":
+            default:
+                return "/admin/support/portal"
+        }
+    }
+
+    // UPDATED: Get appropriate client detail path based on user role
+    const getClientDetailPath = (clientId: string) => {
+        switch (userRole) {
+            case "agent":
+                return `/agent/support/client/${clientId}`
+            case "admin":
+            case "superadmin":
+            default:
+                return `/admin/support/client/${clientId}`
+        }
+    }
 
     const fetchClientStats = async (clientId: string) => {
         try {
@@ -139,6 +213,7 @@ export default function AdminTicketDetail() {
             console.error("Error fetching client stats:", error);
         }
     };
+
     // Call this function when ticket loads
     useEffect(() => {
         if (ticket?.createdBy?._id) {
@@ -149,6 +224,7 @@ export default function AdminTicketDetail() {
     useEffect(() => {
         fetchTicket()
         fetchAdmins()
+        determineUserRole()
 
         // Initialize socket connection
         const token = getToken()
@@ -207,8 +283,8 @@ export default function AdminTicketDetail() {
 
     // Scroll to bottom when messages change
     useEffect(() => {
-        messageEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, [ticket?.messages])
+        messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [ticket?.messages]);
 
     // Set status and assignee when ticket is loaded
     useEffect(() => {
@@ -217,21 +293,6 @@ export default function AdminTicketDetail() {
             setAssignee(ticket.assignedTo?._id || "unassigned")
         }
     }, [ticket])
-
-    const getToken = () => {
-        return localStorage.getItem("adminToken")
-    }
-
-    // const getUserInfo = () => {
-    //     const userJson = localStorage.getItem("adminUser")
-    //     if (!userJson) return null
-    //     try {
-    //         return JSON.parse(userJson)
-    //     } catch (error) {
-    //         console.error("Error parsing user info:", error)
-    //         return null
-    //     }
-    // }
 
     const fetchTicket = async () => {
         try {
@@ -280,8 +341,9 @@ export default function AdminTicketDetail() {
                 return;
             }
 
+            // UPDATED: Include agents in the assignable users list
             const response = await axios.get(
-                `${API_BASE_URL}/api/admin/clients?role=admin,superadmin`,
+                `${API_BASE_URL}/api/admin/clients?role=admin,superadmin,agent`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -290,14 +352,14 @@ export default function AdminTicketDetail() {
             );
 
             if (response.data.success) {
-                // Filter to make sure we only include admin users
-                const adminUsers = response.data.data.filter(
-                    (user: Admin) => user.role === 'admin' || user.role === 'superadmin'
+                // Filter to make sure we only include admin/agent users
+                const assignableUsers = response.data.data.filter(
+                    (user: Admin) => ['admin', 'superadmin', 'agent'].includes(user.role)
                 );
-                setAdmins(adminUsers);
+                setAdmins(assignableUsers);
             }
         } catch (error) {
-            console.error("Error fetching admins:", error);
+            console.error("Error fetching assignable users:", error);
         }
     };
 
@@ -453,12 +515,18 @@ export default function AdminTicketDetail() {
         return (
             <div className="flex min-h-screen flex-col">
                 <header className="border-b bg-background">
-                    <div className="container mx-auto flex h-16 items-center px-4">
-                        <Link to="/admin/support/portal" className="flex items-center gap-2">
+                    <div className="container mx-auto flex h-16 items-center px-2">
+                        <Link to={getBackPath()} className="flex items-center gap-2">
                             <ChevronLeft className="h-4 w-4" />
                             <span>Back to Dashboard</span>
                         </Link>
                         <h1 className="mx-auto text-xl font-semibold">Loading Ticket Details...</h1>
+                        {/* UPDATED: Show user role badge */}
+                        {userRole && (
+                            <Badge variant="outline" className="ml-auto">
+                                {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                            </Badge>
+                        )}
                     </div>
                 </header>
                 <main className="flex-1 py-8">
@@ -475,11 +543,17 @@ export default function AdminTicketDetail() {
             <div className="flex min-h-screen flex-col">
                 <header className="border-b bg-background">
                     <div className="container mx-auto flex h-16 items-center px-4">
-                        <Link to="/admin/support/portal" className="flex items-center gap-2">
+                        <Link to={getBackPath()} className="flex items-center gap-2">
                             <ChevronLeft className="h-4 w-4" />
                             <span>Back to Dashboard</span>
                         </Link>
                         <h1 className="mx-auto text-xl font-semibold">Error</h1>
+                        {/* UPDATED: Show user role badge */}
+                        {userRole && (
+                            <Badge variant="outline" className="ml-auto">
+                                {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                            </Badge>
+                        )}
                     </div>
                 </header>
                 <main className="flex-1 py-8">
@@ -499,25 +573,30 @@ export default function AdminTicketDetail() {
     }
 
     const isClosed = ticket.status === "closed"
-    // const user = getUserInfo()
+    const user = getUserInfo()
 
     return (
         <div className="flex min-h-screen flex-col">
             <header className="border-b bg-background">
                 <div className="container mx-auto flex h-16 items-center px-4">
-                    <Link to="/admin/support/portal" className="flex items-center gap-2">
+                    <Link to={getBackPath()} className="flex items-center gap-2">
                         <ChevronLeft className="h-4 w-4" />
                         <span>Back to Dashboard</span>
                     </Link>
                     <h1 className="mx-auto text-xl font-semibold">Ticket Details</h1>
+                    {/* UPDATED: Show user role badge */}
+                    <Badge variant="outline" className="ml-auto">
+                        {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                    </Badge>
                 </div>
             </header>
             <main className="flex-1 py-8">
-                <div className="container mx-auto px-4">
-                    <div className="grid gap-6 md:grid-cols-3">
+                <div className="container mx-auto px-1">
+                    {/* Desktop Layout */}
+                    <div className="hidden lg:grid gap-6 md:grid-cols-3">
                         <div className="md:col-span-2">
                             <Card>
-                                <CardHeader>
+                                <CardHeader className="flex-shrink-0">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <CardTitle>{ticket.subject}</CardTitle>
@@ -529,7 +608,22 @@ export default function AdminTicketDetail() {
                                     </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="space-y-6 max-h-[500px] overflow-y-auto p-2">
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <p className="text-sm font-medium">Category</p>
+                                            <p className="text-sm text-muted-foreground">{ticket.category}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium">Created</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {new Date(ticket.createdAt).toLocaleString()}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <Separator className="my-6" />
+
+                                    <div className="space-y-6 max-h-[400px] overflow-y-auto p-2">
                                         {ticket.messages.map((message, index) => {
                                             const isAdmin = message.sender.role !== "client"
 
@@ -543,8 +637,11 @@ export default function AdminTicketDetail() {
                                                     >
                                                         <div className="mb-1 flex items-center justify-between gap-2">
                                                             <span className="text-xs font-medium">
-                                                                {message.sender.firstname} {message.sender.lastname}
-                                                                {isAdmin && ` (${message.sender.role})`}
+                                                                {isAdmin && user && message.sender._id === user.id
+                                                                    ? "You"
+                                                                    : isAdmin
+                                                                        ? `${message.sender.firstname} ${message.sender.lastname}`
+                                                                        : `${message.sender.firstname} ${message.sender.lastname}`}
                                                             </span>
                                                             <span className="text-xs opacity-70">
                                                                 {new Date(message.createdAt).toLocaleTimeString([], {
@@ -554,9 +651,9 @@ export default function AdminTicketDetail() {
                                                             </span>
                                                         </div>
                                                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                                                        {Array.isArray(message.attachments) && message.attachments.length > 0 && (
+                                                        {(message.attachments?.length ?? 0) > 0 && (
                                                             <div className="mt-2">
-                                                                {message.attachments.map((attachment) => {
+                                                                {message.attachments?.map((attachment) => {
                                                                     const isImage = attachment.fileType.startsWith("image/")
                                                                     const fileUrl = `${API_BASE_URL}/${attachment.filePath}`
 
@@ -610,67 +707,65 @@ export default function AdminTicketDetail() {
                                         <div ref={messageEndRef} />
                                     </div>
                                 </CardContent>
-                                <CardFooter>
-                                    <form onSubmit={handleSubmit} className="w-full space-y-4">
-                                        <Textarea
-                                            placeholder="Type your response here..."
-                                            value={newMessage}
-                                            onChange={(e) => setNewMessage(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter" && !e.shiftKey) {
-                                                    e.preventDefault()
-                                                    // Find the closest form and submit it programmatically
-                                                    const form = (e.target as HTMLElement).closest("form");
-                                                    if (form) {
-                                                        form.requestSubmit();
+                                {!isClosed ? (
+                                    <CardFooter>
+                                        <form onSubmit={handleSubmit} className="w-full space-y-4" id="admin-ticket-message-form">
+                                            <Textarea
+                                                placeholder="Type your response here..."
+                                                value={newMessage}
+                                                onChange={(e) => setNewMessage(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter" && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        const form = document.getElementById("admin-ticket-message-form") as HTMLFormElement | null;
+                                                        form?.requestSubmit();
                                                     }
-                                                }
-                                            }}
-                                            onInput={handleTyping}
-                                            className="min-h-[100px]"
-                                            disabled={isClosed}
-                                        />
-                                        <div className="flex items-center gap-4">
-                                            <Button
-                                                variant="outline"
-                                                type="button"
-                                                onClick={() => {
-                                                    const fileInput = document.getElementById("admin-message-file");
-                                                    if (fileInput) fileInput.click();
                                                 }}
-                                                disabled={isClosed || sending}
-                                            >
-                                                <Upload className="mr-2 h-4 w-4" />
-                                                Attach File
-                                            </Button>
-                                            <Input
-                                                id="admin-message-file"
-                                                type="file"
-                                                className="hidden"
-                                                onChange={handleFileChange}
-                                                accept=".pdf,.jpg,.jpeg,.png,.gif"
-                                                disabled={isClosed}
+                                                onInput={handleTyping}
+                                                className="min-h-[100px]"
                                             />
-                                            {selectedFile && (
-                                                <span className="text-sm text-muted-foreground">
-                                                    {selectedFile.name}
-                                                </span>
-                                            )}
-                                            <Button
-                                                type="submit"
-                                                className="ml-auto"
-                                                disabled={sending || isClosed}
-                                            >
-                                                <Send className="mr-2 h-4 w-4" />
-                                                {sending ? "Sending..." : "Send Response"}
-                                            </Button>
+                                            <div className="flex justify-center gap-4">
+                                                <Button
+                                                    variant="outline"
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const fileInput = document.getElementById("admin-message-file");
+                                                        if (fileInput) fileInput.click();
+                                                    }}
+                                                >
+                                                    <Upload className="mr-2 h-4 w-4" />
+                                                    Attach File
+                                                </Button>
+                                                <Input
+                                                    id="admin-message-file"
+                                                    type="file"
+                                                    className="hidden"
+                                                    onChange={handleFileChange}
+                                                    accept=".pdf,.jpg,.jpeg,.png,.gif"
+                                                />
+                                                {selectedFile && (
+                                                    <span className="text-sm text-muted-foreground">
+                                                        {selectedFile.name}
+                                                    </span>
+                                                )}
+                                                <Button type="submit" className="ml-auto" disabled={sending}>
+                                                    <Send className="mr-2 h-4 w-4" />
+                                                    {sending ? "Sending..." : "Send Response"}
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    </CardFooter>
+                                ) : (
+                                    <CardFooter>
+                                        <div className="w-full rounded-lg bg-muted p-4 text-center text-sm">
+                                            This ticket is closed. No further communication is allowed.
                                         </div>
-                                    </form>
-                                </CardFooter>
+                                    </CardFooter>
+                                )}
                             </Card>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-6 h-full overflow-y-auto">
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Ticket Information</CardTitle>
@@ -703,13 +798,13 @@ export default function AdminTicketDetail() {
                                             disabled={updating}
                                         >
                                             <SelectTrigger className="mt-1">
-                                                <SelectValue placeholder="Select agent" />
+                                                <SelectValue placeholder="Select assignee" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="unassigned">Unassigned</SelectItem>
                                                 {admins.map((admin) => (
                                                     <SelectItem key={admin._id} value={admin._id}>
-                                                        {admin.firstname} {admin.lastname}
+                                                        {admin.firstname} {admin.lastname} ({admin.role})
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -772,7 +867,7 @@ export default function AdminTicketDetail() {
                                             variant="outline"
                                             asChild
                                         >
-                                            <Link to={`/admin/support/client/${ticket.createdBy?._id}`}>
+                                            <Link to={getClientDetailPath(ticket.createdBy?._id || "")}>
                                                 View Customer Profile
                                             </Link>
                                         </Button>
@@ -780,6 +875,297 @@ export default function AdminTicketDetail() {
                                 </CardContent>
                             </Card>
                         </div>
+                    </div>
+
+                    {/* Mobile Layout */}
+                    <div className="lg:hidden">
+                        {/* Ticket Info Cards */}
+                        <div className="space-y-4 pb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Card>
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-sm">Ticket Information</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        <div>
+                                            <p className="text-xs font-medium">Status</p>
+                                            <Select
+                                                value={status}
+                                                onValueChange={setStatus}
+                                                disabled={updating}
+                                            >
+                                                <SelectTrigger className="mt-1 h-8">
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="new">New</SelectItem>
+                                                    <SelectItem value="open">Open</SelectItem>
+                                                    <SelectItem value="inProgress">In Progress</SelectItem>
+                                                    <SelectItem value="closed">Closed</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-xs font-medium">Assigned To</p>
+                                            <Select
+                                                value={assignee}
+                                                onValueChange={setAssignee}
+                                                disabled={updating}
+                                            >
+                                                <SelectTrigger className="mt-1 h-8">
+                                                    <SelectValue placeholder="Select assignee" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                                                    {admins.map((admin) => (
+                                                        <SelectItem key={admin._id} value={admin._id}>
+                                                            {admin.firstname} {admin.lastname} ({admin.role})
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-xs font-medium">Category</p>
+                                            <p className="text-xs text-muted-foreground">{ticket.category}</p>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm font-medium">Created</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {new Date(ticket.createdAt).toLocaleString()}
+                                            </p>
+                                        </div>
+
+
+                                        <div className="flex justify-end">
+                                            <Button onClick={updateTicket} disabled={updating} size="sm">
+                                                {updating ? "Updating..." : "Update"}
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card>
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="text-sm">Customer Information</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        <div className="flex items-center gap-2 pb-2">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src="" />
+                                                <AvatarFallback>
+                                                    <User className="h-3 w-3" />
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="text-xs font-medium">
+                                                    {ticket.createdBy?.firstname} {ticket.createdBy?.lastname}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {ticket.createdBy?.email}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <Separator />
+
+                                        <div>
+                                            <br />
+                                            <p className="text-xs font-medium pb-2">Total Tickets</p>
+                                            <p className="text-xs text-muted-foreground pb-8">
+                                                {clientStats.totalTickets || "0"}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex justify-end">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                            >
+                                                <Link to={getClientDetailPath(ticket.createdBy?._id || "")}>
+                                                    View Customer Profile
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
+
+                        {/* Chat Section - Fixed at bottom */}
+                        <Card>
+                            <CardHeader> {/* 🔄 CHANGED: Added proper CardHeader like main section */}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle>{ticket.subject}</CardTitle>
+                                        <CardDescription>Ticket #{ticket.ticketNumber}</CardDescription>
+                                    </div>
+                                    <Badge variant={getStatusVariant(ticket.status)}>
+                                        {formatStatus(ticket.status)}
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid gap-4 md:grid-cols-2"> {/* 🔄 CHANGED: Added category/created info like main */}
+                                    <div>
+                                        <p className="text-sm font-medium">Category</p>
+                                        <p className="text-sm text-muted-foreground">{ticket.category}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium">Created</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {new Date(ticket.createdAt).toLocaleString()}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <Separator className="my-6" /> {/* 🔄 CHANGED: Added separator like main */}
+
+                                <div className="space-y-6 max-h-[400px] overflow-y-auto p-2"> {/* 🔄 CHANGED: Same container as main */}
+                                    {ticket.messages.map((message, index) => {
+                                        const isAdmin = message.sender.role !== "client"
+
+                                        return (
+                                            <div key={index} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
+                                                <div
+                                                    className={`max-w-[80%] rounded-lg p-4 ${isAdmin /* 🔄 CHANGED: max-w-[80%] and p-4 (was max-w-[85%] and p-3) */
+                                                        ? "bg-primary text-primary-foreground"
+                                                        : "bg-muted"
+                                                        }`}
+                                                >
+                                                    <div className="mb-1 flex items-center justify-between gap-2">
+                                                        <span className="text-xs font-medium">
+                                                            {isAdmin && user && message.sender._id === user.id
+                                                                ? "You"
+                                                                : isAdmin
+                                                                    ? `${message.sender.firstname} ${message.sender.lastname}`
+                                                                    : `${message.sender.firstname} ${message.sender.lastname}`}
+                                                        </span>
+                                                        <span className="text-xs opacity-70">
+                                                            {new Date(message.createdAt).toLocaleTimeString([], {
+                                                                hour: "2-digit",
+                                                                minute: "2-digit",
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                                    {(message.attachments?.length ?? 0) > 0 && (
+                                                        <div className="mt-2">
+                                                            {message.attachments?.map((attachment) => {
+                                                                const isImage = attachment.fileType.startsWith("image/")
+                                                                const fileUrl = `${API_BASE_URL}/${attachment.filePath}`
+
+                                                                return (
+                                                                    <div
+                                                                        key={attachment._id}
+                                                                        className="flex flex-col mt-2"
+                                                                    >
+                                                                        {isImage ? (
+                                                                            <a
+                                                                                href={fileUrl}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="mt-2"
+                                                                            >
+                                                                                <img
+                                                                                    src={fileUrl}
+                                                                                    alt={attachment.fileName}
+                                                                                    className="max-w-full max-h-48 rounded-md" /* 🔄 CHANGED: max-h-48 (was max-h-32) */
+                                                                                />
+                                                                            </a>
+                                                                        ) : (
+                                                                            <a
+                                                                                href={fileUrl}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="flex items-center gap-1 rounded-md bg-background/10 px-2 py-1 text-xs hover:underline"
+                                                                            >
+                                                                                <Paperclip className="h-3 w-3" />
+                                                                                <span>{attachment.fileName}</span> {/* 🔄 CHANGED: Removed break-all */}
+                                                                            </a>
+                                                                        )}
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                    {typingUser && (
+                                        <div className="flex justify-start">
+                                            <div className="max-w-[80%] rounded-lg p-2 bg-muted"> {/* 🔄 CHANGED: max-w-[80%] (was max-w-[85%]) */}
+                                                <p className="text-xs text-muted-foreground">
+                                                    {typingUser} is typing...
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={messageEndRef} />
+                                </div>
+                            </CardContent>
+                            {!isClosed ? (
+                                <CardFooter>
+                                    <form onSubmit={handleSubmit} className="w-full space-y-4" id="admin-mobile-ticket-message-form">
+                                        <Textarea
+                                            placeholder="Type your response here..."
+                                            value={newMessage}
+                                            onChange={(e) => setNewMessage(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" && !e.shiftKey) {
+                                                    e.preventDefault();
+                                                    const form = document.getElementById("admin-mobile-ticket-message-form") as HTMLFormElement | null;
+                                                    form?.requestSubmit();
+                                                }
+                                            }}
+                                            onInput={handleTyping}
+                                            className="min-h-[100px]" /* 🔄 CHANGED: min-h-[100px] (was min-h-[60px] resize-none) */
+                                        />
+                                        <div className="flex justify-center gap-4"> {/* 🔄 CHANGED: justify-center gap-4 (was items-center gap-2 flex-wrap) */}
+                                            <Button
+                                                variant="outline"
+                                                type="button"
+                                                onClick={() => {
+                                                    const fileInput = document.getElementById("admin-message-file-mobile");
+                                                    if (fileInput) fileInput.click();
+                                                }}
+                                            /* 🔄 CHANGED: Removed size="sm" */
+                                            >
+                                                <Upload className="mr-2 h-4 w-4" /> {/* 🔄 CHANGED: mr-2 h-4 w-4 (was mr-1 h-3 w-3) */}
+                                                Attach File {/* 🔄 CHANGED: "Attach File" (was "Attach") */}
+                                            </Button>
+                                            <Input
+                                                id="admin-message-file-mobile"
+                                                type="file"
+                                                className="hidden"
+                                                onChange={handleFileChange}
+                                                accept=".pdf,.jpg,.jpeg,.png,.gif"
+                                            />
+                                            {selectedFile && (
+                                                <span className="text-sm text-muted-foreground"> {/* 🔄 CHANGED: Removed break-all flex-1 */}
+                                                    {selectedFile.name}
+                                                </span>
+                                            )}
+                                            <Button type="submit" className="ml-auto" disabled={sending}> {/* 🔄 CHANGED: Removed size="sm" */}
+                                                <Send className="mr-2 h-4 w-4" /> {/* 🔄 CHANGED: mr-2 h-4 w-4 (was mr-1 h-3 w-3) */}
+                                                {sending ? "Sending..." : "Send Response"} {/* 🔄 CHANGED: "Send Response" (was "Send") */}
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </CardFooter>
+                            ) : (
+                                <CardFooter>
+                                    <div className="w-full rounded-lg bg-muted p-4 text-center text-sm">
+                                        This ticket is closed. No further communication is allowed.
+                                    </div>
+                                </CardFooter>
+                            )}
+                        </Card>
                     </div>
                 </div>
             </main>

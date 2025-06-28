@@ -144,7 +144,7 @@ export default function Layout() {
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto relative bg-background">
-              <div className="mx-auto p-2 md:p-6 mb-20 max-w-7xl">
+              <div className="mx-auto p-2 max-w-7xl">
                 <div className="min-h-full">
                   <Outlet />
                 </div>

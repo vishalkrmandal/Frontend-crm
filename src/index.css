@@ -822,7 +822,7 @@
 
   /* Ensure touch targets meet accessibility guidelines (minimum 44px) */
   .sidebar-menu-item {
-    min-height: 4px;
+    min-height: 44px;
     padding: 12px 16px;
   }
 
@@ -853,7 +853,12 @@
 
   /* Prevent body from scrolling on mobile (lock scroll) */
   body {
-    overflow: hidden;
+    overflow-x: hidden;
+    /* Only hide horizontal overflow */
+    overflow-y: auto;
+    /* Allow vertical scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
   }
 
   /* Additional scroll lock when sidebar is open */

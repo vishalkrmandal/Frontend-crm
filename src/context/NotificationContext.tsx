@@ -33,7 +33,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 interface NotificationProviderProps {
     children: React.ReactNode
-    userType: 'client' | 'admin'
+    userType: 'client' | 'admin' | 'superadmin' | 'agent'
 }
 
 export function NotificationProvider({ children, userType }: NotificationProviderProps) {
@@ -52,7 +52,7 @@ export function NotificationProvider({ children, userType }: NotificationProvide
     const initializeSocket = useCallback(() => {
         if (!user || !isAuthenticated) return
 
-        const token = getToken(userType)
+        const token = getToken(userType as 'client' | 'admin' | 'agent')
         if (!token) return
 
         try {
@@ -72,6 +72,10 @@ export function NotificationProvider({ children, userType }: NotificationProvide
                 // Join appropriate rooms based on user type and role
                 if (userType === 'admin' && ['admin', 'superadmin'].includes(activeRole || '')) {
                     socketInstance.emit('joinAdminRoom', 'notifications')
+                } else if (userType === 'agent' && activeRole === 'agent') {
+                    socketInstance.emit('joinAgentRoom', 'notifications')
+                } else if (userType === 'client' && activeRole === 'client') {
+                    socketInstance.emit('joinClientRoom', 'notifications')
                 }
             })
 
@@ -173,7 +177,7 @@ export function NotificationProvider({ children, userType }: NotificationProvide
     const fetchNotifications = useCallback(async (page = 1, limit = 20) => {
         if (!user || !isAuthenticated) return
 
-        const token = getToken(userType)
+        const token = getToken(userType as 'client' | 'admin' | 'agent')
         if (!token) return
 
         setLoading(true)
@@ -204,7 +208,7 @@ export function NotificationProvider({ children, userType }: NotificationProvide
 
     // Mark notification as read
     const markAsRead = useCallback(async (notificationId: string) => {
-        const token = getToken(userType)
+        const token = getToken(userType as 'client' | 'admin' | 'agent')
         if (!token) return
 
         try {
@@ -233,7 +237,7 @@ export function NotificationProvider({ children, userType }: NotificationProvide
 
     // Mark all notifications as read
     const markAllAsRead = useCallback(async () => {
-        const token = getToken(userType)
+        const token = getToken(userType as 'client' | 'admin' | 'agent')
         if (!token) return
 
         try {
@@ -260,7 +264,7 @@ export function NotificationProvider({ children, userType }: NotificationProvide
 
     // Delete notification
     const deleteNotification = useCallback(async (notificationId: string) => {
-        const token = getToken(userType)
+        const token = getToken(userType as 'client' | 'admin' | 'agent')
         if (!token) return
 
         try {

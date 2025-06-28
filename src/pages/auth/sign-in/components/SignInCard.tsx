@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import ForgotPassword from './ForgotPassword';
 
@@ -41,14 +41,20 @@ export default function SignInCard() {
         }
     });
 
-    // Check if user already has active sessions
+    // Check if user already has active sessions - ADD AGENT TOKEN CHECK
     React.useEffect(() => {
         const adminToken = localStorage.getItem('adminToken');
         const clientToken = localStorage.getItem('clientToken');
         const superadminToken = localStorage.getItem('superadminToken');
+        const agentToken = localStorage.getItem('agentToken'); // ADD THIS
 
-        if (adminToken || superadminToken) {
+        // Priority order: superadmin > admin > agent > client
+        if (superadminToken) {
             navigate('/admin');
+        } else if (adminToken) {
+            navigate('/admin');
+        } else if (agentToken) { // ADD THIS
+            navigate('/agent');
         } else if (clientToken) {
             navigate('/client');
         }
@@ -84,8 +90,11 @@ export default function SignInCard() {
                     });
 
                     setTimeout(() => {
+                        // FIX: Add proper agent role handling
                         if (userRole === 'admin' || userRole === 'superadmin') {
                             window.location.href = '/admin';
+                        } else if (userRole === 'agent') { // ADD THIS
+                            window.location.href = '/agent';
                         } else {
                             window.location.href = '/client';
                         }
@@ -261,7 +270,6 @@ export default function SignInCard() {
                 open={showForgotPassword}
                 handleClose={() => setShowForgotPassword(false)}
             />
-            <Toaster richColors position="top-right" />
         </>
     );
 }
