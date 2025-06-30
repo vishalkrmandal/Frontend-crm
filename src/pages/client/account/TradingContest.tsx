@@ -104,6 +104,57 @@ const TradingContest = () => {
         )
     }
 
+    const formatPrice = (price: string | number | undefined) => {
+        if (!price) return 'N/A'
+        const numPrice = typeof price === 'string' ? parseFloat(price) : price
+        return isNaN(numPrice) ? price : numPrice.toFixed(5)
+    }
+
+    const formatProfit = (profit: string | number) => {
+        if (!profit) return '$0.00'
+
+        if (typeof profit === 'string' && profit.includes('$')) {
+            return profit
+        }
+
+        const value = typeof profit === 'number' ? profit : parseFloat(profit || "0")
+        return value >= 0 ? `+$${value.toFixed(2)}` : `-$${Math.abs(value).toFixed(2)}`
+    }
+
+    const getProfitNumber = (profit: string | number) => {
+        if (!profit) return 0
+
+        if (typeof profit === 'string' && profit.includes('$')) {
+            const numStr = profit.replace(/[$+\-,]/g, '')
+            const num = parseFloat(numStr)
+            return profit.includes('-') ? -num : num
+        }
+
+        return typeof profit === 'number' ? profit : parseFloat(profit || "0")
+    }
+
+    const formatDateTime = (dateTime: string | undefined) => {
+        if (!dateTime || dateTime === 'N/A') return '-'
+        try {
+            let date: Date
+            if (dateTime.includes(' ')) {
+                const normalizedDate = dateTime.replace(/\./g, '-').replace(' ', 'T')
+                date = new Date(normalizedDate)
+            } else {
+                date = new Date(dateTime)
+            }
+
+            if (isNaN(date.getTime())) {
+                return dateTime
+            }
+
+            return date.toLocaleString()
+        } catch {
+            return dateTime
+        }
+    }
+
+
     const fetchAllTrades = useCallback(async () => {
         if (isRequestPending) return
 
@@ -297,55 +348,7 @@ const TradingContest = () => {
     const startIndex = (currentPage - 1) * itemsPerPage
     const paginatedTrades = filteredTrades.slice(startIndex, startIndex + itemsPerPage)
 
-    const formatPrice = (price: string | number | undefined) => {
-        if (!price) return 'N/A'
-        const numPrice = typeof price === 'string' ? parseFloat(price) : price
-        return isNaN(numPrice) ? price : numPrice.toFixed(5)
-    }
 
-    const formatProfit = (profit: string | number) => {
-        if (!profit) return '$0.00'
-
-        if (typeof profit === 'string' && profit.includes('$')) {
-            return profit
-        }
-
-        const value = typeof profit === 'number' ? profit : parseFloat(profit || "0")
-        return value >= 0 ? `+$${value.toFixed(2)}` : `-$${Math.abs(value).toFixed(2)}`
-    }
-
-    const getProfitNumber = (profit: string | number) => {
-        if (!profit) return 0
-
-        if (typeof profit === 'string' && profit.includes('$')) {
-            const numStr = profit.replace(/[$+\-,]/g, '')
-            const num = parseFloat(numStr)
-            return profit.includes('-') ? -num : num
-        }
-
-        return typeof profit === 'number' ? profit : parseFloat(profit || "0")
-    }
-
-    const formatDateTime = (dateTime: string | undefined) => {
-        if (!dateTime || dateTime === 'N/A') return '-'
-        try {
-            let date: Date
-            if (dateTime.includes(' ')) {
-                const normalizedDate = dateTime.replace(/\./g, '-').replace(' ', 'T')
-                date = new Date(normalizedDate)
-            } else {
-                date = new Date(dateTime)
-            }
-
-            if (isNaN(date.getTime())) {
-                return dateTime
-            }
-
-            return date.toLocaleString()
-        } catch {
-            return dateTime
-        }
-    }
 
     // Get statistics based on current tab
     const getStatistics = () => {

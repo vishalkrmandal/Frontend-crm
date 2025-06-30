@@ -385,13 +385,13 @@ export default function AccountList() {
                         </td>
                         <td className="px-4 py-4 text-sm">
                           <div className="flex items-center space-x-2">
-                            <button
+                            {/* <button
                               className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                               title="View Details"
                               onClick={() => window.location.href = `/accounts/${account._id}`}
                             >
                               <Eye className="h-4 w-4" />
-                            </button>
+                            </button> */}
                             <button
                               className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                               title="Change Passwords"
@@ -399,13 +399,13 @@ export default function AccountList() {
                             >
                               <Lock className="h-4 w-4" />
                             </button>
-                            <button
+                            {/* <button
                               className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                               title="Refresh Account"
                               onClick={() => handleRefresh(account._id)}
                             >
                               <RefreshCw className="h-4 w-4" />
-                            </button>
+                            </button> */}
                           </div>
                         </td>
                       </tr>

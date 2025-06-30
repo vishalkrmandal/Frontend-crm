@@ -25,6 +25,8 @@ export const RecentTransactions = ({ transactions }: RecentTransactionsProps) =>
         return transaction.type.toLowerCase() === filter
     })
 
+    console.log('Filtered Transactions:', filteredTransactions)
+
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
             case 'approved':

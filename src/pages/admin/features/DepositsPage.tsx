@@ -188,10 +188,10 @@ const DepositsPage = () => {
     useEffect(() => {
         const fetchFilterOptions = async () => {
             try {
-                // const response = await axios.get('http://localhost:5000/api/admindeposits/filters', getAuthHeaders());
-                // setStatusOptions(response.data.statuses || []);
-                // setPlanTypeOptions(response.data.planTypes || []);
-                // setPaymentMethodOptions(response.data.paymentMethods || []);
+                const response = await axios.get('http://localhost:5000/api/admindeposits/filters', getAuthHeaders());
+                setStatusOptions(response.data.statuses || []);
+                setPlanTypeOptions(response.data.planTypes || []);
+                setPaymentMethodOptions(response.data.paymentMethods || []);
             } catch (error) {
                 console.error('Error fetching filter options:', error);
                 // Fallback to current data
