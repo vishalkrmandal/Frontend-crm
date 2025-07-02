@@ -188,7 +188,7 @@ const DepositsPage = () => {
     useEffect(() => {
         const fetchFilterOptions = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/admindeposits/filters', getAuthHeaders());
+                const response = await axios.get(`${API_BASE_URL}/api/admindeposits/filters`, getAuthHeaders());
                 setStatusOptions(response.data.statuses || []);
                 setPlanTypeOptions(response.data.planTypes || []);
                 setPaymentMethodOptions(response.data.paymentMethods || []);
@@ -208,7 +208,7 @@ const DepositsPage = () => {
         };
 
         fetchFilterOptions();
-    }, []);
+    }, [deposits.length]);
 
     // Filter deposits based on search and filters
     const filteredDeposits = deposits.filter((deposit) => {

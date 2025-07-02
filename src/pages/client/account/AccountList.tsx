@@ -1,7 +1,7 @@
 // Frontend\src\pages\client\account\AccountList.tsx
 
 import { useState, useEffect } from "react";
-import { Eye, ChevronLeft, ChevronRight, RefreshCw, Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, Lock } from "lucide-react";
 import axios, { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -141,20 +141,20 @@ export default function AccountList() {
   };
 
   // Refresh account data
-  const handleRefresh = async (accountId: string) => {
-    try {
-      const token = localStorage.getItem("clientToken");
-      await axios.post(`${API_BASE_URL}/api/accounts/${accountId}/refresh`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      fetchAccounts();
-    } catch (err) {
-      console.error("Error refreshing account:", err);
-      alert("Failed to refresh account data. Please try again.");
-    }
-  };
+  // const handleRefresh = async (accountId: string) => {
+  //   try {
+  //     const token = localStorage.getItem("clientToken");
+  //     await axios.post(`${API_BASE_URL}/api/accounts/${accountId}/refresh`, {}, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`
+  //       }
+  //     });
+  //     fetchAccounts();
+  //   } catch (err) {
+  //     console.error("Error refreshing account:", err);
+  //     alert("Failed to refresh account data. Please try again.");
+  //   }
+  // };
 
   // Open new account handler
   const handleOpenNewAccount = () => {
@@ -499,7 +499,7 @@ export default function AccountList() {
       {/* Password Change Dialog */}
       {passwordDialog.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+          <div className="w-full max-w-md rounded-lg  p-6 shadow-lg bg-card">
             <h3 className="mb-4 text-lg font-medium">Account Passwords</h3>
 
             <div className="space-y-4">
@@ -508,7 +508,7 @@ export default function AccountList() {
                   <label className="text-sm font-medium">Account</label>
                   <input
                     type="text"
-                    className="mt-1 w-full rounded-md border border-input bg-gray-100 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={passwordDialog.accountNumber}
                     disabled
                   />
@@ -517,7 +517,7 @@ export default function AccountList() {
                   <label className="text-sm font-medium">Leverage</label>
                   <input
                     type="text"
-                    className="mt-1 w-full rounded-md border border-input bg-gray-100 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={`1:${passwordDialog.leverage}`}
                     disabled
                   />
@@ -525,7 +525,7 @@ export default function AccountList() {
               </div>
 
               {/* Investor Password Section */}
-              <div className="rounded-md border p-3">
+              <div className="rounded-md border p-3 ">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium">Investor Password</h4>
                   <button
@@ -537,7 +537,7 @@ export default function AccountList() {
                 </div>
 
                 {passwordDialog.isChangingInvestor ? (
-                  <div className="mt-2 space-y-2">
+                  <div className="mt-2 space-y-2 bg-card">
                     <div>
                       <input
                         type="password"
@@ -561,7 +561,7 @@ export default function AccountList() {
                   <div className="mt-2">
                     <input
                       type="password"
-                      className="w-full rounded-md border border-input bg-gray-100 px-3 py-2 text-sm"
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={passwordDialog.investor_pwd}
                       disabled
                     />
@@ -606,7 +606,7 @@ export default function AccountList() {
                   <div className="mt-2">
                     <input
                       type="password"
-                      className="w-full rounded-md border border-input bg-gray-100 px-3 py-2 text-sm"
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={passwordDialog.master_pwd}
                       disabled
                     />

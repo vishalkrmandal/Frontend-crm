@@ -13,7 +13,7 @@ type ActiveAccount = {
     equity: number;
     profitLoss: number;
     leverage: string;
-    groupName: string;
+    // groupName: string;
 };
 
 interface ActiveAccountsProps {
@@ -103,7 +103,7 @@ const ActiveAccounts: React.FC<ActiveAccountsProps> = ({
                         <div className="mt-3 pt-3 border-t border-border">
                             <div className="flex justify-between text-xs text-muted-foreground">
                                 <span>Leverage: {account.leverage}</span>
-                                <span>Group: {account.groupName}</span>
+                                {/* <span>Group: {account.groupName}</span> */}
                             </div>
                         </div>
                     </div>
