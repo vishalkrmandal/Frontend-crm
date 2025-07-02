@@ -55,8 +55,8 @@ export const endImpersonation = () => {
     localStorage.removeItem('clientToken');
     localStorage.removeItem('clientUser');
     localStorage.removeItem('isImpersonated');
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
+    // localStorage.removeItem('adminToken');
+    // localStorage.removeItem('adminUser');
 
     // Redirect to admin panel
     window.location.href = `${window.location.origin}/admin`;

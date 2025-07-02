@@ -35,6 +35,8 @@ import { toast } from "sonner"
 import { impersonateClient } from "@/utils/impersonation"
 import { useTheme } from '@/context/ThemeContext'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 interface Client {
     id: string;
     name: string;
@@ -118,7 +120,7 @@ const ClientsPage = () => {
         if (!documentPath) return '';
         // Replace backslashes with forward slashes for URL compatibility
         const formattedPath = documentPath.replace(/\\/g, '/');
-        return `http://localhost:5000/${formattedPath}`;
+        return `${API_BASE_URL}/${formattedPath}`;
     };
 
     useEffect(() => {
@@ -209,10 +211,12 @@ const ClientsPage = () => {
                 // Handle the impersonation - this will open a new tab
                 impersonateClient(response.clientToken, response.user);
             } else {
+                toast.dismiss();
                 toast.error("Failed to access client account");
             }
         } catch (error) {
             console.error("Error impersonating client:", error);
+            toast.dismiss();
             toast.error("Failed to access client account. Please try again.");
         }
     };

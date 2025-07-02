@@ -440,8 +440,8 @@ export default function PaymentMethod() {
         <>
 
             <div className="space-y-8">
-                <div className="rounded-md border">
-                    <div className="p-4 bg-muted/50 flex justify-between items-center">
+                <div className="rounded-md border bg-card">
+                    <div className="p-4 bg-muted/50 rounded-md flex justify-between items-center">
                         <h2 className="text-xl font-semibold">List Of Payment Details</h2>
                         <div className="flex gap-2">
                             <Button
@@ -919,8 +919,8 @@ export default function PaymentMethod() {
                 </div>
 
                 {/* exchanges Table */}
-                <div className="rounded-md border">
-                    <div className="p-4 bg-muted/50 flex justify-between items-center">
+                <div className="rounded-md border bg-card">
+                    <div className="p-4 bg-muted/50 rounded-md flex justify-between items-center">
                         <h2 className="text-xl font-semibold">List of Exchanges</h2>
                         <Button
                             variant="outline"

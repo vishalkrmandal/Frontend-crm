@@ -8,11 +8,8 @@ import { Link, useLocation } from "react-router-dom"
 import {
   ChevronDown,
   ChevronRight,
-  BarChart2,
-  HeadphonesIcon,
-  Home,
   Settings,
-  HandshakeIcon,
+  UsersRound,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -42,38 +39,43 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const menuItems: MenuItem[] = [
-    {
-      title: "Dashboard",
-      icon: Home,
-      path: "/admin",
-    },
-    {
-      title: "Features",
-      icon: BarChart2,
-      submenu: [
-        { title: "Clients", path: "/admin/features/clients" },
-        { title: "Deposits", path: "/admin/features/deposits" },
-        { title: "Withdrawals", path: "/admin/features/withdrawals" },
-        { title: "Transactions", path: "/admin/features/transactions" },
-      ],
-    },
+    // {
+    //   title: "Dashboard",
+    //   icon: Home,
+    //   path: "/superadmin",
+    // },
+    // {
+    //   title: "Features",
+    //   icon: BarChart2,
+    //   submenu: [
+    //     { title: "Clients", path: "/superadmin/features/clients" },
+    //     { title: "Deposits", path: "/superadmin/features/deposits" },
+    //     { title: "Withdrawals", path: "/superadmin/features/withdrawals" },
+    //     { title: "Transactions", path: "/superadmin/features/transactions" },
+    //   ],
+    // },
     {
       title: "Configure",
       icon: Settings,
-      path: "/admin/configure",
+      path: "/superadmin/configure",
     },
+    // {
+    //   title: "IB Partners",
+    //   icon: HandshakeIcon,
+    //   submenu: [
+    //     { title: "IB Partners", path: "/superadmin/partner/ib-partners" },
+    //     { title: "IB Withdrawals", path: "/superadmin/partner/ib-withdrawals" },
+    //   ],
+    // },
+    // {
+    //   title: "Support",
+    //   icon: HeadphonesIcon,
+    //   path: "/superadmin/support/portal",
+    // },
     {
-      title: "IB Partners",
-      icon: HandshakeIcon,
-      submenu: [
-        { title: "IB Partners", path: "/admin/partner/ib-partners" },
-        { title: "IB Withdrawals", path: "/admin/partner/ib-withdrawals" },
-      ],
-    },
-    {
-      title: "Support",
-      icon: HeadphonesIcon,
-      path: "/admin/support/portal",
+      title: "Admin Registration",
+      icon: UsersRound,
+      path: "/superadmin/admin-registration",
     },
   ]
 
@@ -183,7 +185,7 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
       <div className="flex h-16 items-center justify-center border-gray-200 dark:border-gray-700 transition-all duration-500 ease-in-out flex-shrink-0">
         <div className={`transition-all duration-500 ease-in-out ${shouldShowExpanded ? 'opacity-100 scale-100' : 'opacity-100 scale-100'}`}>
           {shouldShowExpanded ? (
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white whitespace-nowrap transition-all duration-500 ease-in-out">TestCRM Admin</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white whitespace-nowrap transition-all duration-500 ease-in-out">TestCRM</h2>
           ) : (
             <Settings className="h-8 w-8 text-gray-800 dark:text-white transition-all duration-500 ease-in-out" />
           )}

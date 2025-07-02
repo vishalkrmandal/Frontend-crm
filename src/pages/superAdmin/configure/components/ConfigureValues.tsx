@@ -75,8 +75,8 @@ export default function ConfigureValues() {
     return (
         <div className="space-y-8">
             {/* Details Table */}
-            <div className="rounded-md border">
-                <div className="p-4 bg-muted/50">
+            <div className="rounded-md border bg-card">
+                <div className="p-4 rounded-md bg-muted/50">
                     <h2 className="text-xl font-semibold">List of Details</h2>
                 </div>
 
@@ -109,8 +109,8 @@ export default function ConfigureValues() {
             </div>
 
             {/* Files Table */}
-            <div className="rounded-md border">
-                <div className="p-4 bg-muted/50">
+            <div className="rounded-md border bg-card">
+                <div className="p-4 rounded-md bg-muted/50">
                     <h2 className="text-xl font-semibold">List of Files</h2>
                 </div>
 

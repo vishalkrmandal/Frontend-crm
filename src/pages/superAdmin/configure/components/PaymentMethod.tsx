@@ -919,7 +919,7 @@ export default function PaymentMethod() {
                 </div>
 
                 {/* exchanges Table */}
-                <div className="rounded-md border">
+                <div className="rounded-md bg-card border">
                     <div className="p-4 bg-muted/50 flex justify-between items-center">
                         <h2 className="text-xl font-semibold">List of Exchanges</h2>
                         <Button

@@ -13,6 +13,7 @@ import {
   Home,
   Settings,
   HandshakeIcon,
+  UsersRound,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -74,6 +75,11 @@ export default function Sidebar({ open, isMobile = false, onItemClick }: Sidebar
       title: "Support",
       icon: HeadphonesIcon,
       path: "/admin/support/portal",
+    },
+    {
+      title: "Agents Registration",
+      icon: UsersRound,
+      path: "/admin/agents-registration",
     },
   ]
 

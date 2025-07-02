@@ -50,7 +50,7 @@ export default function SignInCard() {
 
         // Priority order: superadmin > admin > agent > client
         if (superadminToken) {
-            navigate('/admin');
+            navigate('/superadmin');
         } else if (adminToken) {
             navigate('/admin');
         } else if (agentToken) { // ADD THIS
@@ -91,10 +91,12 @@ export default function SignInCard() {
 
                     setTimeout(() => {
                         // FIX: Add proper agent role handling
-                        if (userRole === 'admin' || userRole === 'superadmin') {
-                            window.location.href = '/admin';
+                        if (userRole === 'superadmin') {
+                            window.location.href = '/superadmin';
                         } else if (userRole === 'agent') { // ADD THIS
                             window.location.href = '/agent';
+                        } else if (userRole === 'admin') { // ADD THIS
+                            window.location.href = '/admin';
                         } else {
                             window.location.href = '/client';
                         }

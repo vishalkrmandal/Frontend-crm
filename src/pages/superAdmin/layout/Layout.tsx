@@ -10,7 +10,7 @@ import Header from "./Header"
 import { NotificationProvider } from "@/context/NotificationContext"
 import ImpersonationBanner from '@/pages/auth/ImpersonationBanner'
 
-export default function AdminLayout() {
+export default function SuperadminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const location = useLocation()

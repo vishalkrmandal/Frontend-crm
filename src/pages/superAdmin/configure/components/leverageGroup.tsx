@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { PlusCircle, Pencil, Trash2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import axios from "axios"
-import { toast } from "react-hot-toast"
+import { toast } from "sonner"
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -35,7 +35,7 @@ export default function LeverageAndGroup() {
     }, [])
     const fetchLeverages = async () => {
         try {
-            const token = localStorage.getItem("adminToken");
+            const token = localStorage.getItem("superadminToken");
             if (!token) {
                 toast.error("Authentication token not found");
                 return;
@@ -59,7 +59,7 @@ export default function LeverageAndGroup() {
 
     const handleSave = async () => {
         try {
-            const token = localStorage.getItem("adminToken");
+            const token = localStorage.getItem("superadminToken");
             if (!token) {
                 toast.error("Authentication token not found");
                 return;
@@ -114,7 +114,7 @@ export default function LeverageAndGroup() {
 
     const fetchGroups = async () => {
         try {
-            const token = localStorage.getItem("adminToken");
+            const token = localStorage.getItem("superadminToken");
             if (!token) {
                 toast.error("Authentication token not found");
                 return;
@@ -134,7 +134,7 @@ export default function LeverageAndGroup() {
 
     const fetchMt5Groups = async () => {
         try {
-            const token = localStorage.getItem("adminToken");
+            const token = localStorage.getItem("superadminToken");
             if (!token) {
                 toast.error("Authentication token not found");
                 return;
@@ -168,7 +168,7 @@ export default function LeverageAndGroup() {
                 // Update existing group
                 await axios.put(`${API_BASE_URL}/api/groups/${currentGroup._id}`, currentGroup, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                        Authorization: `Bearer ${localStorage.getItem('superadminToken')}`
                     }
                 })
                 toast.success('Group updated successfully')
@@ -176,7 +176,7 @@ export default function LeverageAndGroup() {
                 // Create new group
                 await axios.post(`${API_BASE_URL}/api/groups`, currentGroup, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                        Authorization: `Bearer ${localStorage.getItem('superadminToken')}`
                     }
                 })
                 toast.success('Group created successfully')
@@ -201,7 +201,7 @@ export default function LeverageAndGroup() {
         try {
             await axios.delete(`${API_BASE_URL}/api/groups/${currentGroup._id}`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+                    Authorization: `Bearer ${localStorage.getItem('superadminToken')}`
                 }
             })
             toast.success('Group deleted successfully')
@@ -221,8 +221,8 @@ export default function LeverageAndGroup() {
 
     return (
         <div className="space-y-8">
-            <div className="rounded-md border">
-                <div className="flex justify-between items-center p-4 bg-muted/50">
+            <div className="rounded-md border bg-card">
+                <div className="flex justify-between rounded-md items-center p-4 bg-muted/50">
                     <h2 className="text-xl font-semibold">List of Leverages</h2>
                     <Button onClick={handleAddNew} className="flex items-center gap-1">
                         <PlusCircle className="h-4 w-4" /> Add New
@@ -352,8 +352,8 @@ export default function LeverageAndGroup() {
             </div>
 
             {/* Groups Table */}
-            <div className="rounded-md border">
-                <div className="flex justify-between items-center p-4 bg-muted/50">
+            <div className="rounded-md border bg-card">
+                <div className="flex justify-between rounded-md items-center p-4 bg-muted/50">
                     <h2 className="text-xl font-semibold">List of Groups</h2>
                     <Button onClick={handleGroupAddNew} className="flex items-center gap-1">
                         <PlusCircle className="h-4 w-4" /> Add New
