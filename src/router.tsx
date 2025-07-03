@@ -1,7 +1,7 @@
 // router.tsx - Updated with referral signup routes
 import { createBrowserRouter, RouteObject } from 'react-router-dom';
 import Layout from "./pages/client/layout/Layout"
-import Dashboard from "./pages/client/Dashboard/Dashboard"
+import Dashboard from "./pages/client/Dashboard/ClientDashboard"
 import Deposit from "./pages/client/financial/Deposit"
 import Withdrawal from "./pages/client/financial/Withdrawal"
 import Transfer from "./pages/client/financial/Transfer"
@@ -34,7 +34,7 @@ import AdminTicketDetail from './pages/admin/support/admin/ticket/AdminTicketDet
 import AdminNewTicket from './pages/admin/support/admin/CreateTicket';
 import AdminClientDetail from './pages/admin/support/admin/ticket/ClientDetail';
 import AdminLayout from './pages/admin/layout/Layout';
-import AdminDashboard from './pages/admin/dashboard/AdminDashboard';
+import AdminDashboard from './pages/admin/dash/Dashboard';
 import ClientsPage from './pages/admin/features/ClientsPage';
 import DepositsPage from './pages/admin/features/DepositsPage';
 import WithdrawalsPage from './pages/admin/features/WithdrawalsPage';
@@ -51,10 +51,11 @@ import ProtectedRoute from './ProtectedRoute';
 import { Navigate } from 'react-router-dom';
 
 
-import AgentRegistration from './pages/agent/AgentRegistration';
+import AgentRegistration from './pages/admin/agent/AgentRegistration';
 import SuperadminLayout from './pages/superAdmin/layout/Layout';
 import AdminRegistration from './pages/superAdmin/AdminRegistration';
 import SuperadminConfigurationPage from './pages/superAdmin/configure/ConfigurePage';
+import AgentLayout from './pages/agent/layout/Layout';
 
 const routes: RouteObject[] = [
   {
@@ -348,6 +349,58 @@ const routes: RouteObject[] = [
   },
 
   // Agent routes (protected)
+  {
+    element: <ProtectedRoute allowedRoles={['agent', 'admin', 'superadmin']} />,
+    children: [
+      {
+        path: '/agent',
+        element: <AgentLayout />,
+        children: [
+          // FIXED: Add explicit redirect from /agent to /agent/dashboard
+          {
+            index: true,
+            element: <Navigate to="/agent/dashboard" replace />
+          },
+
+          // FIXED: Add explicit agent dashboard route
+          {
+            path: 'dashboard',
+            element: <AdminPortal />
+          },
+
+          // Agent Support
+          {
+            path: 'support',
+            children: [
+              {
+                path: 'portal',
+                element: <AdminPortal />
+              },
+              {
+                path: 'ticket/:id',
+                element: <AdminTicketDetail />
+              },
+              {
+                path: 'new-ticket',
+                element: <AdminNewTicket />
+              },
+              {
+                path: 'client/:id',
+                element: <AdminClientDetail />
+              },
+              {
+                path: 'client/:id/tickets',
+                element: <ClientTickets />
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+
+  // superadmin routes (protected)
   {
     element: <ProtectedRoute allowedRoles={['superadmin']} />,
     children: [

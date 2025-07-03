@@ -24,7 +24,7 @@ interface DashboardData {
   activeAccounts: any[];
 }
 
-const Dashboard: React.FC = () => {
+const ClientDashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -239,4 +239,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default ClientDashboard;

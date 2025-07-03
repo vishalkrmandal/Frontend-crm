@@ -64,7 +64,7 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     // Redirect based on available roles - use specific dashboard routes
     // PRIORITY ORDER: superadmin > admin > agent > client
     if ((superadminToken) && (userRole === 'superadmin')) {
-      return <Navigate to="/admin/dashboard" replace />;
+      return <Navigate to="/superadmin/configure" replace />;
     } else if ((adminToken) && (userRole === 'admin')) {
       return <Navigate to="/admin/dashboard" replace />;
     } else if (agentToken && userRole === 'agent') { // ADD THIS

@@ -1,4 +1,4 @@
-// Frontend/src/pages/auth/sign-in/SignUp.tsx - Fixed for mobile scrolling
+// Frontend\src\pages\agent\AgentRegistration.tsx
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
