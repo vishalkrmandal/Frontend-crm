@@ -1,6 +1,6 @@
 // Frontend/src/components/admin/dashboard/ClientDistributionChart.tsx
 import React, { useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Users, Eye, EyeOff } from 'lucide-react';
 
 interface ClientDistributionChartProps {
@@ -123,7 +123,7 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
                                 onMouseEnter={onPieEnter}
                                 onMouseLeave={onPieLeave}
                             >
-                                {filteredData.map((entry, index) => (
+                                {filteredData.map((_, index) => (
                                     <Cell
                                         key={`cell-${index}`}
                                         fill={COLORS[index % COLORS.length]}
