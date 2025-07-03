@@ -102,11 +102,11 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ transactions })
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                <div className="flex flex-col-1 sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     <select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value as any)}
-                        className="px-3 py-2 bg-background rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent border border-gray-200 dark:border-gray-700"
+                        className="px-3 py-2 bg-background w-full rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent border border-gray-200 dark:border-gray-700"
                     >
                         <option value="all">All Types</option>
                         <option value="deposit">Deposits</option>
@@ -117,7 +117,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ transactions })
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="px-3 py-2 rounded-lg bg-background text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent border border-gray-200 dark:border-gray-700"
+                        className="px-3 py-2 rounded-lg w-full bg-background text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent border border-gray-200 dark:border-gray-700"
                     >
                         <option value="date">Sort by Date</option>
                         <option value="amount">Sort by Amount</option>

@@ -1,5 +1,5 @@
 // Frontend/src/components/admin/dashboard/ClientDistributionChart.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Users, Eye, EyeOff } from 'lucide-react';
 
@@ -14,6 +14,16 @@ interface ClientDistributionChartProps {
 const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data }) => {
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     const COLORS = [
         '#3B82F6', // Blue
@@ -91,8 +101,8 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
     const totalAccounts = data.reduce((sum, item) => sum + item.value, 0);
 
     return (
-        <div className="bg-card rounded-xl shadow-sm  p-6">
-            <div className="flex items-center gap-3 mb-6">
+        <div className="bg-card rounded-xl shadow-sm p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
                     <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
@@ -106,9 +116,9 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 md:gap-6">
                 {/* Pie Chart */}
-                <div className="h-80">
+                <div className="h-60">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -117,7 +127,7 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
                                 cy="50%"
                                 labelLine={false}
                                 label={renderCustomizedLabel}
-                                outerRadius={120}
+                                outerRadius={isMobile ? 100 : 120}
                                 fill="#8884d8"
                                 dataKey="value"
                                 onMouseEnter={onPieEnter}
@@ -142,14 +152,14 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
                 </div>
 
                 {/* Legend and Stats */}
-                <div className="space-y-4">
-                    <div className="space-y-3">
+                <div className="space-y-3 sm:space-y-4 order-2 lg:order-none">
+                    <div className="space-y-2 sm:space-y-3">
                         {data.map((entry, index) => {
                             const isHidden = hiddenItems.has(entry.name);
                             return (
                                 <div
                                     key={entry.name}
-                                    className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200 ${isHidden
+                                    className={`flex items-center justify-between p-2 sm:p-3 rounded-lg border transition-all duration-200 ${isHidden
                                         ? 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 opacity-50'
                                         : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900'
                                         }`}
@@ -190,7 +200,7 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
 
                     {/* Summary Stats */}
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
                             <div className="text-center">
                                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {data.length}

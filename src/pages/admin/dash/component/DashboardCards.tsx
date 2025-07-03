@@ -172,28 +172,28 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ stats }) => {
     ];
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-6">
             {cards.map((card, index) => (
                 <div
                     key={index}
-                    className="bg-card rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer"
+                    className="bg-card rounded-xl shadow-sm p-3 sm:p-4 lg:p-6 hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer"
                     onClick={() => handleCardClick(card.title)}
                 >
-                    <div className="flex items-center justify-between mb-4">
-                        <div className={`p-3 rounded-xl ${card.lightBg}`}>
-                            <card.icon className={`w-6 h-6 ${card.color.replace('bg-', 'text-')}`} />
+                    <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
+                        <div className={`p-1.5 sm:p-2 lg:p-3 rounded-xl ${card.lightBg}`}>
+                            <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 ${card.color.replace('bg-', 'text-')}`} />
                         </div>
-                        <div className={`flex items-center gap-1 text-sm font-medium ${getGrowthColor(card.changeValue)}`}>
+                        <div className={`flex items-center gap-1 text-xs sm:text-sm font-medium ${getGrowthColor(card.changeValue)}`}>
                             {getGrowthIcon(card.changeValue)}
                             {card.change}
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    <div className="space-y-1 sm:space-y-2">
+                        <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                             {card.title}
                         </h3>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
                             {card.value}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -202,16 +202,16 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ stats }) => {
                     </div>
 
                     {/* Progress indicator */}
-                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div className="mt-2 sm:mt-3 lg:mt-4 pt-2 sm:pt-3 lg:pt-4 border-t border-gray-100 dark:border-gray-700">
                         <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
                             <span>Growth this month</span>
                             <span className={`font-medium ${getGrowthColor(card.changeValue)}`}>
                                 {Math.abs(card.changeValue)}%
                             </span>
                         </div>
-                        <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div className="mt-1 sm:mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 sm:h-2">
                             <div
-                                className={`h-2 rounded-full transition-all duration-300 ${card.changeValue >= 0 ? 'bg-green-500' : 'bg-red-500'
+                                className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${card.changeValue >= 0 ? 'bg-green-500' : 'bg-red-500'
                                     }`}
                                 style={{ width: `${Math.min(Math.abs(card.changeValue), 100)}%` }}
                             />
