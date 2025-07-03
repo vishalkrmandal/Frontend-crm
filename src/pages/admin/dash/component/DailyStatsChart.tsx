@@ -445,8 +445,8 @@ const DailyStatsChart: React.FC<DailyStatsChartProps> = ({ data }) => {
             </div>
 
             {/* Chart */}
-            <div className="h-64 sm:h-80 md:h-96 w-full sm:w-full md:w-full -mx-10">
-                <ResponsiveContainer width="120%" height="100%">
+            <div className="h-64 sm:h-80 md:h-96">
+                <ResponsiveContainer width="100%" height="100%">
                     {renderChart()}
                 </ResponsiveContainer>
             </div>
