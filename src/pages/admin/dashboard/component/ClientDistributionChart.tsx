@@ -62,7 +62,7 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
         if (active && payload && payload.length) {
             const data = payload[0].payload;
             return (
-                <div className="bg-card p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                <div className="bg-card p-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
                     <p className="font-semibold text-gray-900 dark:text-white mb-1">{data.name}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                         Accounts: {data.value}
@@ -101,7 +101,7 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
     const totalAccounts = data.reduce((sum, item) => sum + item.value, 0);
 
     return (
-        <div className="bg-card rounded-xl shadow-sm p-3 sm:p-4 lg:p-6">
+        <div className="bg-card rounded-xl shadow-sm p-3 sm:p-4 lg:p-6 h-full flex flex-col">
             <div className="flex items-center gap-3 mb-4 sm:mb-6">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
                     <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -118,7 +118,7 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
 
             <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 md:gap-6">
                 {/* Pie Chart */}
-                <div className="h-60">
+                <div className="h-60 sm:h-96">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -127,7 +127,7 @@ const ClientDistributionChart: React.FC<ClientDistributionChartProps> = ({ data 
                                 cy="50%"
                                 labelLine={false}
                                 label={renderCustomizedLabel}
-                                outerRadius={isMobile ? 100 : 120}
+                                outerRadius={isMobile ? 110 : 110}
                                 fill="#8884d8"
                                 dataKey="value"
                                 onMouseEnter={onPieEnter}

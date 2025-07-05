@@ -4,6 +4,7 @@ import { AlertCircle, Check, ChevronLeft, ChevronRight, Loader2, Info, TrendingU
 import { useEffect, useState, useCallback } from "react"
 import axios from "axios"
 import { toast } from "sonner";
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -36,6 +37,7 @@ export default function OpenNewAccount() {
     accountType: "",
     platform: "MetaTrader 5"
   });
+  const navigate = useNavigate();
 
   // Fetch data with better error handling
   const fetchData = useCallback(async () => {
@@ -128,7 +130,6 @@ export default function OpenNewAccount() {
   };
 
   const handleSubmit = async () => {
-
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -145,6 +146,10 @@ export default function OpenNewAccount() {
 
       toast.success("Account created successfully!");
       resetForm();
+
+      // Redirect to account list page
+      navigate('/client/account/list');
+
     } catch (error) {
       console.error("Error creating account:", error);
       toast.error("Failed to create account. Please try again.");
@@ -475,7 +480,7 @@ export default function OpenNewAccount() {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !formValues.accountType || !formValues.leverage}
-              className="flex-1 rounded-md bg-primary px-6 py-3 text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+              className="flex-1 rounded-md bg-primary px-6 py-3 text-primary-foreground font-medium hover:bg-primary/90 bg-blue-900 disabled:opacity-90 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>

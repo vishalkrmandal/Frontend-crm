@@ -176,11 +176,11 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ stats }) => {
             {cards.map((card, index) => (
                 <div
                     key={index}
-                    className="bg-card rounded-xl shadow-sm p-3 sm:p-4 lg:p-6 hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer"
+                    className="bg-card rounded-xl shadow-sm p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer"
                     onClick={() => handleCardClick(card.title)}
                 >
-                    <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-                        <div className={`p-1.5 sm:p-2 lg:p-3 rounded-xl ${card.lightBg}`}>
+                    <div className="flex items-center justify-between mb-1">
+                        <div className={`p-1.5 rounded-xl ${card.lightBg}`}>
                             <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 ${card.color.replace('bg-', 'text-')}`} />
                         </div>
                         <div className={`flex items-center gap-1 text-xs sm:text-sm font-medium ${getGrowthColor(card.changeValue)}`}>
@@ -202,7 +202,7 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ stats }) => {
                     </div>
 
                     {/* Progress indicator */}
-                    <div className="mt-2 sm:mt-3 lg:mt-4 pt-2 sm:pt-3 lg:pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                         <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
                             <span>Growth this month</span>
                             <span className={`font-medium ${getGrowthColor(card.changeValue)}`}>

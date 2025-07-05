@@ -184,7 +184,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
     const netRevenue = totalDeposits - totalWithdrawals;
 
     return (
-        <div className="bg-card rounded-xl shadow-sm p-6">
+        <div className="bg-card rounded-xl shadow-sm p-3 lg:p-8 h-full flex flex-col">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
                 <div className="flex items-center gap-3 mb-4 sm:mb-0">
                     <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
@@ -205,7 +205,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
                         onClick={() => setChartType('line')}
                         className={`p-2 rounded-lg transition-colors ${chartType === 'line'
                             ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            : 'bg-background text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                             }`}
                     >
                         <LineChartIcon className="w-4 h-4" />
@@ -232,7 +232,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2 p-0.5">
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                     <p className="text-sm text-green-600 dark:text-green-400 font-medium">Total Deposits</p>
                     <p className="text-2xl font-bold text-green-700 dark:text-green-300">
@@ -256,7 +256,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
             </div>
 
             {/* Chart */}
-            <div className="h-80">
+            <div className="h-80 -ml-10 -mr-3 lg:-ml-6">
                 <ResponsiveContainer width="100%" height="100%">
                     {renderChart()}
                 </ResponsiveContainer>

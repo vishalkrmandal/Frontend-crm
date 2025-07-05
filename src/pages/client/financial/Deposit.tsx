@@ -728,7 +728,7 @@ export default function Deposit() {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full bg-blue-800 hover:bg-blue-800 disabled:bg-blue-600 disabled:opacity-100 disabled:pointer-events-auto disabled:cursor-not-allowed text-white"
                 disabled={
                   isSubmitting ||
                   !selectedAccount ||
