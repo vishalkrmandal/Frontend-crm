@@ -34,7 +34,7 @@ const WalletDetailsForm: React.FC<WalletDetailsFormProps> = ({ initialData, setP
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('clientToken');
 
             if (!token) {
                 toast.error("Please login to update your wallet details");
@@ -69,7 +69,7 @@ const WalletDetailsForm: React.FC<WalletDetailsFormProps> = ({ initialData, setP
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-card p-6 rounded-lg shadow">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Tether Wallet Address */}
                 <div className="space-y-2">

@@ -152,38 +152,6 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
         }
     };
 
-    // const openCamera = (ref: React.RefObject<HTMLInputElement>) => {
-    //     // First check if the browser supports mediaDevices API
-    //     if (!('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices)) {
-    //         toast.error("Your browser doesn't support camera access");
-    //         return;
-    //     }
-
-    //     // Request camera permission explicitly before opening the camera input
-    //     navigator.mediaDevices.getUserMedia({ video: true })
-    //         .then(() => {
-    //             // If permission granted, open the camera input
-    //             if (ref.current) {
-    //                 ref.current.click();
-    //             }
-    //         })
-    //         .catch(error => {
-    //             console.error("Camera access error:", error);
-    //             toast.error("Camera access denied or not available");
-
-    //             // Fall back to file upload if camera access fails
-    //             if (error.name === 'NotAllowedError') {
-    //                 toast.info("Please enable camera permission in your browser settings");
-    //             } else if (error.name === 'NotFoundError') {
-    //                 toast.error("No camera detected on your device");
-    //             }
-    //         });
-    // };
-    // Function to determine if camera is available
-    // const isCameraAvailable = () => {
-    //     return 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices;
-    // };
-
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
@@ -427,7 +395,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
 
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 p-6 border rounded-lg shadow">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-card p-6 border rounded-lg shadow">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* First Name - Read only */}
                 <div className="space-y-2">
@@ -545,330 +513,238 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ initialData, setPro
                 </div>
             </div>
 
-            <div className=" grid grid-cols-2 gap-4 ">
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Document Uploads</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-                {/* ID Document Upload - Enhanced with camera and preview */}
-                <div className="space-y-2 ">
-                    <Label htmlFor="idDocument">ID Document (Image/PDF)</Label>
+                    {/* ID Document Upload - Enhanced with camera and preview */}
+                    <div className="space-y-2 p-4 border rounded-lg bg-card shadow-md">
+                        <Label htmlFor="idDocument">ID Document (Image/PDF)</Label>
 
-                    <div className="flex flex-wrap gap-2">
-                        {/* Hidden file input */}
-                        <Input
-                            ref={idDocumentRef}
-                            id="idDocument"
-                            name="idDocument"
-                            type="file"
-                            accept=".jpg,.jpeg,.png,.pdf"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            {/* Hidden file input */}
+                            <Input
+                                ref={idDocumentRef}
+                                id="idDocument"
+                                name="idDocument"
+                                type="file"
+                                accept=".jpg,.jpeg,.png,.pdf"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
 
-                        {/* Hidden front camera input - works on all devices */}
-                        <Input
-                            ref={idFrontCameraRef}
-                            id="idFrontCamera"
-                            name="idDocument"
-                            type="file"
-                            accept="image/*"
-                            capture="user"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
+                            {/* Hidden front camera input - works on all devices */}
+                            <Input
+                                ref={idFrontCameraRef}
+                                id="idFrontCamera"
+                                name="idDocument"
+                                type="file"
+                                accept="image/*"
+                                capture="user"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
 
-                        {/* Hidden rear camera input - works on all devices */}
-                        <Input
-                            ref={idRearCameraRef}
-                            id="idRearCamera"
-                            name="idDocument"
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
+                            {/* Hidden rear camera input - works on all devices */}
+                            <Input
+                                ref={idRearCameraRef}
+                                id="idRearCamera"
+                                name="idDocument"
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
 
-                        {/* Upload button */}
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openFileSelector(idDocumentRef)}
-                            className="flex items-center"
-                        >
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload
-                        </Button>
+                            {/* Upload button */}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => openFileSelector(idDocumentRef)}
+                                className="flex items-center"
+                            >
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload
+                            </Button>
 
-                        {/* Front Camera button */}
-                        {/* <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openCamera(idFrontCameraRef)}
-                            className="flex items-center"
-                            disabled={!isCameraAvailable()}
-                        >
-                            <UserCircle className="mr-2 h-4 w-4" />
-                            Front Camera
-                        </Button> */}
+                            <WebcamCapture
+                                onCapture={(file: File, fieldName: string) => {
+                                    // Handle the captured image
+                                    setFiles(prev => ({
+                                        ...prev,
+                                        [fieldName]: file
+                                    }));
 
-                        {/* Rear Camera button */}
-                        {/* <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openCamera(idRearCameraRef)}
-                            className="flex items-center"
-                            disabled={!isCameraAvailable()}
-                        >
-                            <Camera className="mr-2 h-4 w-4" />
-                            Rear Camera
-                        </Button> */}
-                        <WebcamCapture
-                            onCapture={(file: File, fieldName: string) => {
-                                // Handle the captured image
-                                setFiles(prev => ({
-                                    ...prev,
-                                    [fieldName]: file
-                                }));
+                                    // Update form data to show file name
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        [fieldName]: file.name
+                                    }));
 
-                                // Update form data to show file name
-                                setFormData(prev => ({
-                                    ...prev,
-                                    [fieldName]: file.name
-                                }));
+                                    // Generate preview
+                                    generatePreview(file, fieldName);
+                                }}
+                                fieldName="idDocument" // Change this for each form field
+                            />
+                        </div>
 
-                                // Generate preview
-                                generatePreview(file, fieldName);
-                            }}
-                            fieldName="idDocument" // Change this for each form field
-                        />
-
-                        {/* Display file name */}
-                        {/* {formData.idDocument && typeof formData.idDocument === 'string' && (
-                            <span className="flex items-center text-sm text-muted-foreground">
-                                {formData.idDocument.includes('/') ?
-                                    `Current: ${formData.idDocument.split('/').pop()}` :
-                                    `Selected: ${formData.idDocument}`}
-                            </span>
-                        )} */}
+                        {/* Preview */}
+                        {renderDocumentPreview('idDocument')}
                     </div>
 
-                    {/* Preview */}
-                    {renderDocumentPreview('idDocument')}
-                </div>
+                    {/* Address1 Document Upload - Enhanced with camera and preview */}
+                    <div className="space-y-2 p-4 border rounded-lg bg-card shadow-md">
+                        <Label htmlFor="address1Document">Address 1 Document (Image/PDF)</Label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            {/* Hidden file input */}
+                            <Input
+                                ref={address1DocumentRef}
+                                id="address1Document"
+                                name="address1Document"
+                                type="file"
+                                accept=".jpg,.jpeg,.png,.pdf"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
 
-                {/* Address1 Document Upload - Enhanced with camera and preview */}
-                <div className="space-y-2 ">
-                    <Label htmlFor="address1Document">Address 1 Document (Image/PDF)</Label>
+                            {/* Hidden front camera input */}
+                            <Input
+                                ref={address1FrontCameraRef}
+                                id="address1FrontCamera"
+                                name="address1Document"
+                                type="file"
+                                accept="image/*"
+                                capture="user"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
 
-                    <div className="flex flex-wrap gap-2">
-                        {/* Hidden file input */}
-                        <Input
-                            ref={address1DocumentRef}
-                            id="address1Document"
-                            name="address1Document"
-                            type="file"
-                            accept=".jpg,.jpeg,.png,.pdf"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
+                            {/* Hidden rear camera input */}
+                            <Input
+                                ref={address1RearCameraRef}
+                                id="address1RearCamera"
+                                name="address1Document"
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
 
-                        {/* Hidden front camera input */}
-                        <Input
-                            ref={address1FrontCameraRef}
-                            id="address1FrontCamera"
-                            name="address1Document"
-                            type="file"
-                            accept="image/*"
-                            capture="user"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
+                            {/* Upload button */}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => openFileSelector(address1DocumentRef)}
+                                className="flex items-center"
+                            >
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload
+                            </Button>
 
-                        {/* Hidden rear camera input */}
-                        <Input
-                            ref={address1RearCameraRef}
-                            id="address1RearCamera"
-                            name="address1Document"
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
+                            <WebcamCapture
+                                onCapture={(file: File, fieldName: string) => {
+                                    // Handle the captured image
+                                    setFiles(prev => ({
+                                        ...prev,
+                                        [fieldName]: file
+                                    }));
 
-                        {/* Upload button */}
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openFileSelector(address1DocumentRef)}
-                            className="flex items-center"
-                        >
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload
-                        </Button>
+                                    // Update form data to show file name
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        [fieldName]: file.name
+                                    }));
 
-                        {/* Front Camera button */}
-                        {/* <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openCamera(address1FrontCameraRef)}
-                            className="flex items-center"
-                            disabled={!isCameraAvailable()}
-                        >
-                            <UserCircle className="mr-2 h-4 w-4" />
-                            Front Camera
-                        </Button> */}
+                                    // Generate preview
+                                    generatePreview(file, fieldName);
+                                }}
+                                fieldName="address1Document" // Change this for each form field
+                            />
 
-                        {/* Rear Camera button */}
-                        {/* <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openCamera(address1RearCameraRef)}
-                            className="flex items-center"
-                            disabled={!isCameraAvailable()}
-                        >
-                            <Camera className="mr-2 h-4 w-4" />
-                            Rear Camera
-                        </Button> */}
-                        <WebcamCapture
-                            onCapture={(file: File, fieldName: string) => {
-                                // Handle the captured image
-                                setFiles(prev => ({
-                                    ...prev,
-                                    [fieldName]: file
-                                }));
+                        </div>
 
-                                // Update form data to show file name
-                                setFormData(prev => ({
-                                    ...prev,
-                                    [fieldName]: file.name
-                                }));
-
-                                // Generate preview
-                                generatePreview(file, fieldName);
-                            }}
-                            fieldName="address1Document" // Change this for each form field
-                        />
-
-                        {/* Display file name */}
-                        {/* {formData.address1Document && typeof formData.address1Document === 'string' && (
-                            <span className="flex items-center text-sm text-muted-foreground">
-                                {formData.address1Document.includes('/') ?
-                                    `Current: ${formData.address1Document.split('/').pop()}` :
-                                    `Selected: ${formData.address1Document}`}
-                            </span>
-                        )} */}
+                        {/* Preview */}
+                        {renderDocumentPreview('address1Document')}
                     </div>
 
-                    {/* Preview */}
-                    {renderDocumentPreview('address1Document')}
-                </div>
+                    {/* Address2 Document Upload - Enhanced with camera and preview */}
+                    <div className="space-y-2 p-4 border rounded-lg bg-card shadow-md">
+                        <Label htmlFor="address2Document">Address 2 Document (Image/PDF)</Label>
 
-                {/* Address2 Document Upload - Enhanced with camera and preview */}
-                <div className="space-y-2 ">
-                    <Label htmlFor="address2Document">Address 2 Document (Image/PDF)</Label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            {/* Hidden file input */}
+                            <Input
+                                ref={address2DocumentRef}
+                                id="address2Document"
+                                name="address2Document"
+                                type="file"
+                                accept=".jpg,.jpeg,.png,.pdf"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
 
-                    <div className="flex flex-wrap gap-2">
-                        {/* Hidden file input */}
-                        <Input
-                            ref={address2DocumentRef}
-                            id="address2Document"
-                            name="address2Document"
-                            type="file"
-                            accept=".jpg,.jpeg,.png,.pdf"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
+                            {/* Hidden front camera input */}
+                            <Input
+                                ref={address2FrontCameraRef}
+                                id="address2FrontCamera"
+                                name="address2Document"
+                                type="file"
+                                accept="image/*"
+                                capture="user"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
 
-                        {/* Hidden front camera input */}
-                        <Input
-                            ref={address2FrontCameraRef}
-                            id="address2FrontCamera"
-                            name="address2Document"
-                            type="file"
-                            accept="image/*"
-                            capture="user"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
+                            {/* Hidden rear camera input */}
+                            <Input
+                                ref={address2RearCameraRef}
+                                id="address2RearCamera"
+                                name="address2Document"
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
 
-                        {/* Hidden rear camera input */}
-                        <Input
-                            ref={address2RearCameraRef}
-                            id="address2RearCamera"
-                            name="address2Document"
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
+                            {/* Upload button */}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => openFileSelector(address2DocumentRef)}
+                                className="flex items-center"
+                            >
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload
+                            </Button>
 
-                        {/* Upload button */}
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openFileSelector(address2DocumentRef)}
-                            className="flex items-center"
-                        >
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload
-                        </Button>
 
-                        {/* Front Camera button */}
-                        {/* <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openCamera(address2FrontCameraRef)}
-                            className="flex items-center"
-                            disabled={!isCameraAvailable()}
-                        >
-                            <UserCircle className="mr-2 h-4 w-4" />
-                            Front Camera
-                        </Button> */}
+                            <WebcamCapture
+                                onCapture={(file: File, fieldName: string) => {
+                                    // Handle the captured image
+                                    setFiles(prev => ({
+                                        ...prev,
+                                        [fieldName]: file
+                                    }));
 
-                        {/* Rear Camera button */}
-                        {/* <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openCamera(address2RearCameraRef)}
-                            className="flex items-center"
-                            disabled={!isCameraAvailable()}
-                        >
-                            <Camera className="mr-2 h-4 w-4" />
-                            Rear Camera
-                        </Button> */}
-                        <WebcamCapture
-                            onCapture={(file: File, fieldName: string) => {
-                                // Handle the captured image
-                                setFiles(prev => ({
-                                    ...prev,
-                                    [fieldName]: file
-                                }));
+                                    // Update form data to show file name
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        [fieldName]: file.name
+                                    }));
 
-                                // Update form data to show file name
-                                setFormData(prev => ({
-                                    ...prev,
-                                    [fieldName]: file.name
-                                }));
+                                    // Generate preview
+                                    generatePreview(file, fieldName);
+                                }}
+                                fieldName="address2Document" // Change this for each form field
+                            />
+                        </div>
 
-                                // Generate preview
-                                generatePreview(file, fieldName);
-                            }}
-                            fieldName="address2Document" // Change this for each form field
-                        />
-
-                        {/* Display file name */}
-                        {/* {formData.address2Document && typeof formData.address2Document === 'string' && (
-                            <span className="flex items-center text-sm text-muted-foreground">
-                                {formData.address2Document.includes('/') ?
-                                    `Current: ${formData.address2Document.split('/').pop()}` :
-                                    `Selected: ${formData.address2Document}`}
-                            </span>
-                        )} */}
+                        {/* Preview */}
+                        {renderDocumentPreview('address2Document')}
                     </div>
-
-                    {/* Preview */}
-                    {renderDocumentPreview('address2Document')}
                 </div>
             </div>
 

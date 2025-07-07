@@ -108,9 +108,9 @@ const ProfilePage = () => {
             ) : (
                 <Tabs defaultValue="personal">
                     <TabsList className="grid w-full grid-cols-3 mb-8">
-                        <TabsTrigger value="personal">Personal Info</TabsTrigger>
-                        <TabsTrigger value="account">Account Details</TabsTrigger>
-                        <TabsTrigger value="wallet">Wallet Details</TabsTrigger>
+                        <TabsTrigger value="personal" className="data-[state=active]:bg-card">Personal Info</TabsTrigger>
+                        <TabsTrigger value="account" className="data-[state=active]:bg-card">Account Details</TabsTrigger>
+                        <TabsTrigger value="wallet" className="data-[state=active]:bg-card">Wallet Details</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="personal">

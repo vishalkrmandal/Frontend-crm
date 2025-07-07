@@ -70,7 +70,7 @@ const AccountDetailsForm: React.FC<AccountDetailsFormProps> = ({ initialData, se
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-card p-6 rounded-lg shadow">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Bank Name */}
                 <div className="space-y-2">

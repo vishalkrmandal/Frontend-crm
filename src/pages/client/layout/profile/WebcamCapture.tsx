@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Camera, X } from "lucide-react";
+import { Camera } from "lucide-react";
 import { toast } from 'sonner';
 
 interface WebcamCaptureProps {
@@ -132,13 +132,13 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, fieldName }) =
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Capture Image</DialogTitle>
-                        <Button
+                        {/* <Button
                             variant="ghost"
                             className="absolute right-4 top-4"
                             onClick={closeWebcam}
                         >
                             <X className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                     </DialogHeader>
 
                     <div className="flex flex-col items-center">

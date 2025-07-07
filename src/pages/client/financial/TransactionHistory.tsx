@@ -36,6 +36,7 @@ export default function TransactionHistory() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   // Function to fetch transactions from backend
   const fetchTransactions = async () => {
@@ -120,7 +121,6 @@ export default function TransactionHistory() {
       if (startDate) params.append("startDate", startDate)
       if (endDate) params.append("endDate", endDate)
       if (search) params.append("search", search)
-      params.append("format", "excel")
 
       const token = localStorage.getItem("clientToken")
       const response = await axios.get(`${API_BASE_URL}/api/transactions/export?${params.toString()}`, {
@@ -196,6 +196,8 @@ export default function TransactionHistory() {
   // Export transactions to PDF
   const exportToPDF = async () => {
     try {
+      console.log("Starting PDF export...") // Debug log
+
       // Build query parameters for export (without pagination)
       const params = new URLSearchParams()
       if (transactionType !== "all") params.append("type", transactionType)
@@ -203,20 +205,25 @@ export default function TransactionHistory() {
       if (startDate) params.append("startDate", startDate)
       if (endDate) params.append("endDate", endDate)
       if (search) params.append("search", search)
-      params.append("format", "pdf")
 
       const token = localStorage.getItem("clientToken")
+      console.log("Making API request...") // Debug log
+
       const response = await axios.get(`${API_BASE_URL}/api/transactions/export?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       })
 
+      console.log("API response:", response.data) // Debug log
+
       if (response.data.success) {
         const transactions = response.data.data
+        console.log("Transactions data:", transactions) // Debug log
 
         // Create PDF document
         const doc = new jsPDF()
+        console.log("Created PDF document") // Debug log
 
         // Add title
         doc.setFontSize(16)
@@ -244,13 +251,15 @@ export default function TransactionHistory() {
         // Create table
         const tableColumn = ["Date & Time", "Type", "Description", "Amount", "Account", "Status"]
         const tableRows = transactions.map((transaction: Transaction) => [
-          transaction.formattedDate,
+          transaction.formattedDate || transaction.date,
           transaction.type,
           transaction.description,
           transaction.amount,
           transaction.account,
           transaction.status
         ])
+
+        console.log("Table data prepared:", tableRows) // Debug log
 
         // @ts-ignore - TypeScript doesn't know about autoTable
         doc.autoTable({
@@ -261,15 +270,22 @@ export default function TransactionHistory() {
           headStyles: { fillColor: [66, 66, 66] }
         })
 
+        console.log("AutoTable created") // Debug log
+
         // Generate filename with current date
         const fileName = `transaction_history_${dateStr.replace(/\//g, '-')}.pdf`
 
         // Download file
+        console.log("Saving PDF with filename:", fileName) // Debug log
         doc.save(fileName)
+        console.log("PDF saved successfully") // Debug log
+      } else {
+        console.error("API response not successful:", response.data)
+        setError("Failed to fetch transaction data for PDF export")
       }
     } catch (err) {
       console.error("Error exporting to PDF:", err)
-      setError("Failed to export transactions. Please try again.")
+      setError("Failed to export transactions to PDF. Please try again.")
     }
   }
 
@@ -331,27 +347,36 @@ export default function TransactionHistory() {
 
             <div className="relative">
               <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
                 className="inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </button>
-              <div className="absolute right-0 mt-2 w-48 rounded-md border border-input bg-background shadow-lg z-10 hidden">
-                <ul className="py-1">
-                  <li
-                    className="px-4 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                    onClick={exportToExcel}
-                  >
-                    Export to Excel
-                  </li>
-                  <li
-                    className="px-4 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                    onClick={exportToPDF}
-                  >
-                    Export to PDF
-                  </li>
-                </ul>
-              </div>
+              {showExportMenu && (
+                <div className="absolute right-0 mt-2 w-48 rounded-md border border-input bg-background shadow-lg z-10">
+                  <ul className="py-1">
+                    <li
+                      className="px-4 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                      onClick={() => {
+                        exportToExcel()
+                        setShowExportMenu(false)
+                      }}
+                    >
+                      Export to Excel
+                    </li>
+                    <li
+                      className="px-4 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                      onClick={() => {
+                        exportToPDF()
+                        setShowExportMenu(false)
+                      }}
+                    >
+                      Export to PDF
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -61,6 +61,10 @@ export default function Withdrawal() {
     withdrawals: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasOpenTrades, setHasOpenTrades] = useState(false);
+  const [profilePaymentMethods, setProfilePaymentMethods] = useState<any>(null);
+  const [availableWallets, setAvailableWallets] = useState<any[]>([]);
+  const [selectedWallet, setSelectedWallet] = useState<any>(null);
 
   // Bank details state
   const [bankDetails, setBankDetails] = useState<BankDetails>({
@@ -99,7 +103,7 @@ export default function Withdrawal() {
         }
       } catch (error) {
         console.error("Error fetching accounts:", error);
-        toast.error("Failed to fetch accounts");
+        // toast.error("Failed to fetch accounts");
       } finally {
         setIsLoading(prev => ({ ...prev, accounts: false }));
       }
@@ -117,7 +121,7 @@ export default function Withdrawal() {
         setWithdrawalHistory(response.data.data || []);
       } catch (error) {
         console.error("Error fetching withdrawal history:", error);
-        toast.error("Failed to fetch withdrawal history");
+        // toast.error("Failed to fetch withdrawal history");
       } finally {
         setIsLoading(prev => ({ ...prev, withdrawals: false }));
       }
@@ -132,7 +136,16 @@ export default function Withdrawal() {
       try {
         const response = await axios.get(`${API_BASE_URL}/api/withdrawals/last-method`, getAuthHeaders());
         if (response.data.data) {
-          setLastPaymentMethod(response.data.data);
+          if (response.data.data.source === 'profile') {
+            setProfilePaymentMethods(response.data.data.paymentMethods);
+            // Find ewallet methods
+            const ewalletMethod = response.data.data.paymentMethods.find((method: any) => method.type === 'ewallet');
+            if (ewalletMethod) {
+              setAvailableWallets(ewalletMethod.wallets);
+            }
+          } else {
+            setLastPaymentMethod(response.data.data);
+          }
         }
       } catch (error) {
         console.error("Error fetching last payment method:", error);
@@ -145,8 +158,18 @@ export default function Withdrawal() {
   const selectPaymentMethod = (methodType: string) => {
     setMethod(methodType);
 
-    // If this method was used before, pre-fill the details
-    if (lastPaymentMethod && lastPaymentMethod.paymentMethod === methodType) {
+    if (profilePaymentMethods) {
+      // Handle profile-based payment methods
+      if (methodType === "bank") {
+        const bankMethod = profilePaymentMethods.find((method: any) => method.type === 'bank');
+        if (bankMethod) {
+          setBankDetails(bankMethod.details);
+        }
+      } else if (methodType === "ewallet") {
+        // Don't pre-fill anything for ewallet, let user select wallet type first
+      }
+    } else if (lastPaymentMethod && lastPaymentMethod.paymentMethod === methodType) {
+      // Handle withdrawal history based payment methods (existing logic)
       if (methodType === "bank" && "bankName" in lastPaymentMethod.paymentDetails) {
         setBankDetails(lastPaymentMethod.paymentDetails as BankDetails);
       } else if ((methodType === "ewallet") &&
@@ -162,10 +185,23 @@ export default function Withdrawal() {
 
   const selectEWalletType = (type: string) => {
     setEWalletType(type);
-    setEWalletDetails({
-      ...eWalletDetails,
-      type: type
-    });
+
+    if (profilePaymentMethods && availableWallets.length > 0) {
+      // Find the selected wallet and pre-fill the address
+      const selectedWallet = availableWallets.find(wallet => wallet.type === type);
+      if (selectedWallet) {
+        setEWalletDetails({
+          walletId: selectedWallet.address,
+          type: type
+        });
+        setSelectedWallet(selectedWallet);
+      }
+    } else {
+      setEWalletDetails({
+        ...eWalletDetails,
+        type: type
+      });
+    }
   };
 
   const handleBankDetailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,8 +265,8 @@ export default function Withdrawal() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!amount || parseFloat(amount) < 100) {
-      toast.error("Minimum withdrawal amount is $100");
+    if (!amount || Number(amount) < 1) {
+      toast.error("Minimum withdrawal amount is $1");
       return;
     }
 
@@ -244,7 +280,7 @@ export default function Withdrawal() {
         return;
       }
 
-      if (parseFloat(amount) > selectedAccObj.balance) {
+      if (Number(amount) > selectedAccObj.balance) {
         toast.error("Withdrawal amount exceeds available balance");
         setIsSubmitting(false);
         return;
@@ -254,11 +290,13 @@ export default function Withdrawal() {
         accountId: selectedAccount,
         accountNumber: selectedAccObj.mt5Account,
         accountType: selectedAccObj.accountType,
-        amount: parseFloat(amount),
+        amount: amount,
         paymentMethod: method === "ewallet" ? eWalletType : method,
         bankDetails: method === "bank" ? bankDetails : undefined,
         eWalletDetails: method === "ewallet" ? eWalletDetails : undefined
       };
+
+      console.log("Submitting withdrawal request:", withdrawalData);
 
       await axios.post(`${API_BASE_URL}/api/withdrawals`, withdrawalData, getAuthHeaders());
 
@@ -270,10 +308,17 @@ export default function Withdrawal() {
       setAmount("");
       setMethod("");
       setEWalletType("");
+      setHasOpenTrades(false);
       setStep(1);
       toast.success("Withdrawal request submitted successfully!");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to submit withdrawal request");
+      const errorMessage = error.response?.data?.message || "Failed to submit withdrawal request";
+      toast.error(errorMessage);
+
+      // If there are open trades, also update the warning message
+      if (error.response?.data?.hasOpenTrades) {
+        setHasOpenTrades(true);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -482,34 +527,54 @@ export default function Withdrawal() {
                       className="space-y-4 overflow-hidden"
                     >
                       <div className="grid grid-cols-3 gap-3">
-                        <div
-                          className={`p-3 border rounded-md text-center cursor-pointer hover:border-primary ${eWalletType === "bitcoin" ? "border-primary bg-primary/10" : ""}`}
-                          onClick={() => selectEWalletType("bitcoin")}
-                        >
-                          Bitcoin
-                        </div>
-                        <div
-                          className={`p-3 border rounded-md text-center cursor-pointer hover:border-primary ${eWalletType === "ethereum" ? "border-primary bg-primary/10" : ""}`}
-                          onClick={() => selectEWalletType("ethereum")}
-                        >
-                          Ethereum
-                        </div>
-                        <div
-                          className={`p-3 border rounded-md text-center cursor-pointer hover:border-primary ${eWalletType === "usdt" ? "border-primary bg-primary/10" : ""}`}
-                          onClick={() => selectEWalletType("usdt")}
-                        >
-                          USDT
-                        </div>
+                        {profilePaymentMethods && availableWallets.length > 0 ? (
+                          // Show wallets from profile
+                          availableWallets.map((wallet) => (
+                            <div
+                              key={wallet.type}
+                              className={`p-3 border rounded-md text-center cursor-pointer hover:border-primary ${eWalletType === wallet.type ? "border-primary bg-primary/10" : ""}`}
+                              onClick={() => selectEWalletType(wallet.type)}
+                            >
+                              {wallet.name}
+                            </div>
+                          ))
+                        ) : (
+                          // Show default wallets (existing logic)
+                          <>
+                            <div
+                              className={`p-3 border rounded-md text-center cursor-pointer hover:border-primary ${eWalletType === "bitcoin" ? "border-primary bg-primary/10" : ""}`}
+                              onClick={() => selectEWalletType("bitcoin")}
+                            >
+                              Bitcoin
+                            </div>
+                            <div
+                              className={`p-3 border rounded-md text-center cursor-pointer hover:border-primary ${eWalletType === "ethereum" ? "border-primary bg-primary/10" : ""}`}
+                              onClick={() => selectEWalletType("ethereum")}
+                            >
+                              Ethereum
+                            </div>
+                            <div
+                              className={`p-3 border rounded-md text-center cursor-pointer hover:border-primary ${eWalletType === "usdt" ? "border-primary bg-primary/10" : ""}`}
+                              onClick={() => selectEWalletType("usdt")}
+                            >
+                              USDT
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       {eWalletType && (
                         <div>
-                          <Label htmlFor="walletId">Wallet ID</Label>
+                          <Label htmlFor="walletId">
+                            {profilePaymentMethods && selectedWallet ? `${selectedWallet.name} Address` : 'Wallet ID'}
+                          </Label>
                           <Input
                             id="walletId"
                             name="walletId"
                             value={eWalletDetails.walletId}
                             onChange={handleEWalletDetailChange}
+                            placeholder={profilePaymentMethods && selectedWallet ? selectedWallet.address : ''}
+                            readOnly={profilePaymentMethods && selectedWallet ? true : false}
                             required
                           />
                         </div>
@@ -569,18 +634,59 @@ export default function Withdrawal() {
                 <div>
                   <Label>Withdrawal Method</Label>
                   <div className="p-3 rounded-lg border mt-2">
-                    {method === "bank" ? (
-                      <div className="space-y-1">
-                        <p><strong>Bank Name:</strong> {bankDetails.bankName}</p>
-                        <p><strong>Account Holder:</strong> {bankDetails.accountHolderName}</p>
-                        <p><strong>Account Number:</strong> {bankDetails.accountNumber}</p>
-                        <p><strong>IFSC Code:</strong> {bankDetails.ifscCode}</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        <p><strong>E-Wallet Type:</strong> {eWalletType}</p>
-                        <p><strong>Wallet ID:</strong> {eWalletDetails.walletId}</p>
-                      </div>
+                    {method === "bank" && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-3 overflow-hidden"
+                      >
+                        <div>
+                          <Label htmlFor="bankName">Bank Name</Label>
+                          <Input
+                            id="bankName"
+                            name="bankName"
+                            value={bankDetails.bankName}
+                            onChange={handleBankDetailChange}
+                            readOnly={profilePaymentMethods ? true : false}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                          <Input
+                            id="accountHolderName"
+                            name="accountHolderName"
+                            value={bankDetails.accountHolderName}
+                            onChange={handleBankDetailChange}
+                            readOnly={profilePaymentMethods ? true : false}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="accountNumber">Account Number</Label>
+                          <Input
+                            id="accountNumber"
+                            name="accountNumber"
+                            value={bankDetails.accountNumber}
+                            onChange={handleBankDetailChange}
+                            readOnly={profilePaymentMethods ? true : false}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="ifscCode">IFSC Code</Label>
+                          <Input
+                            id="ifscCode"
+                            name="ifscCode"
+                            value={bankDetails.ifscCode}
+                            onChange={handleBankDetailChange}
+                            readOnly={profilePaymentMethods ? true : false}
+                            required
+                          />
+                        </div>
+                      </motion.div>
                     )}
                   </div>
                 </div>
@@ -593,7 +699,7 @@ export default function Withdrawal() {
                       id="amount"
                       type="number"
                       placeholder="Enter amount"
-                      min="100"
+                      min="1"
                       value={amount}
                       onChange={handleAmountChange}
                       className="pl-8"
@@ -601,19 +707,22 @@ export default function Withdrawal() {
                     />
                   </div>
                   <div className="mt-1 flex justify-between">
-                    <p className="text-xs text-muted-foreground">Minimum withdrawal: $100</p>
+                    <p className="text-xs text-muted-foreground">Minimum withdrawal: $1</p>
                     {selectedAccountDetails && (
                       <p className="text-xs text-muted-foreground">Available: ${selectedAccountDetails.balance.toFixed(2)}</p>
                     )}
                   </div>
                 </div>
 
-                <div className="rounded-md bg-amber-50 p-3 dark:bg-amber-900/20">
+                <div className={`rounded-md p-3 ${hasOpenTrades ? 'bg-red-50 dark:bg-red-900/20' : 'bg-amber-50 dark:bg-amber-900/20'}`}>
                   <div className="flex">
-                    <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    <AlertCircle className={`h-5 w-5 ${hasOpenTrades ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`} />
                     <div className="ml-3">
-                      <p className="text-sm text-amber-600 dark:text-amber-400">
-                        Withdrawals are processed within 1-3 business days. Bank transfers may take additional time.
+                      <p className={`text-sm ${hasOpenTrades ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                        {hasOpenTrades
+                          ? "Your trade is open. If you want to withdraw money, first close all your trades."
+                          : "Withdrawals are processed within 1-3 business days. Bank transfers may take additional time."
+                        }
                       </p>
                     </div>
                   </div>
@@ -622,7 +731,7 @@ export default function Withdrawal() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isSubmitting || !amount || parseFloat(amount) < 100 || !selectedAccount}
+                  disabled={isSubmitting || !amount || Number(amount) < 1 || !selectedAccount}
                 >
                   {isSubmitting ? "Processing..." : "Request Withdrawal"}
                 </Button>

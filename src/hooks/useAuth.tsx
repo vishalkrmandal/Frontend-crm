@@ -1,4 +1,4 @@
-// Frontend\src\hooks\useAuth.tsx
+// Frontend\src\hooks\useAuth.tsx --> Authentication context and hooks for managing user roles in a React application
 import { useState, useEffect, createContext, useContext } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import { isImpersonationActive, getImpersonationInfo, endImpersonation as endImpersonationUtil } from '@/utils/impersonation';

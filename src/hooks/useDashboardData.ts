@@ -1,4 +1,4 @@
-// Frontend/src/hooks/useDashboardData.ts
+// Frontend/src/hooks/useDashboardData.ts  --> admin dashboard data fetching hook
 import { useState, useEffect, useCallback } from 'react';
 import adminDashboardApi from '../services/adminDashboardApi';
 
