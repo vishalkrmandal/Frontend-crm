@@ -8,6 +8,8 @@ import axios from "axios"
 import ExcelJS from 'exceljs'
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -37,6 +39,7 @@ export default function TransactionHistory() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Function to fetch transactions from backend
   const fetchTransactions = async () => {
@@ -59,7 +62,7 @@ export default function TransactionHistory() {
       if (endDate) params.append("endDate", endDate)
       if (search) params.append("search", search)
       params.append("page", currentPage.toString())
-      params.append("limit", "10")
+      params.append("limit", itemsPerPage.toString())
 
       const response = await axios.get(`${API_BASE_URL}/api/transactions?${params.toString()}`, {
         headers: {
@@ -85,7 +88,7 @@ export default function TransactionHistory() {
   // Initial fetch and fetch when filters change
   useEffect(() => {
     fetchTransactions()
-  }, [transactionType, status, currentPage])
+  }, [transactionType, status, currentPage, itemsPerPage])
 
   // Handle search input submission
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -248,26 +251,136 @@ export default function TransactionHistory() {
         doc.setFontSize(10)
         doc.text(`Generated on: ${dateStr}`, 14, yPos)
 
-        // Create table
-        const tableColumn = ["Date & Time", "Type", "Description", "Amount", "Account", "Status"]
-        const tableRows = transactions.map((transaction: Transaction) => [
-          transaction.formattedDate || transaction.date,
-          transaction.type,
-          transaction.description,
-          transaction.amount,
-          transaction.account,
-          transaction.status
-        ])
+        // Create table with proper structure including serial numbers
+        let currentY = yPos + 15
+        const lineHeight = 6 // Increased line height
+        const pageHeight = doc.internal.pageSize.height
+        const marginLeft = 10 // Reduced left margin
+        const tableWidth = 182 // Increased table width
+        const colWidths = [12, 38, 18, 35, 22, 35, 22] // Adjusted column widths
+        let colPositions = [marginLeft]
 
-        console.log("Table data prepared:", tableRows) // Debug log
+        // Calculate column positions
+        for (let i = 0; i < colWidths.length - 1; i++) {
+          colPositions.push(colPositions[i] + colWidths[i])
+        }
 
-        // @ts-ignore - TypeScript doesn't know about autoTable
-        doc.autoTable({
-          startY: yPos + 5,
-          head: [tableColumn],
-          body: tableRows,
-          theme: 'striped',
-          headStyles: { fillColor: [66, 66, 66] }
+        // Function to draw table borders
+        const drawTableBorders = (startY: number, endY: number) => {
+          // Vertical lines
+          colPositions.forEach(pos => {
+            doc.line(pos, startY, pos, endY)
+          })
+          doc.line(colPositions[colPositions.length - 1] + colWidths[colWidths.length - 1], startY,
+            colPositions[colPositions.length - 1] + colWidths[colWidths.length - 1], endY)
+
+          // Horizontal lines
+          doc.line(marginLeft, startY, marginLeft + tableWidth, startY)
+          doc.line(marginLeft, endY, marginLeft + tableWidth, endY)
+        }
+
+        // Draw table header
+        doc.setFillColor(66, 66, 66)
+        doc.rect(marginLeft, currentY, tableWidth, lineHeight, 'F')
+
+        doc.setTextColor(255, 255, 255)
+        doc.setFontSize(8) // Reduced font size
+        doc.setFont('', 'bold')
+
+        const headers = ['S.No', 'Date & Time', 'Type', 'Description', 'Amount', 'Account', 'Status']
+        headers.forEach((header, index) => {
+          doc.text(header, colPositions[index] + 1, currentY + 5) // Better positioning
+        })
+
+        const headerEndY = currentY + lineHeight
+        currentY = headerEndY
+
+        // Draw header borders
+        drawTableBorders(headerEndY - lineHeight, headerEndY)
+
+        // Draw table rows
+        doc.setTextColor(0, 0, 0)
+        doc.setFont('', 'normal')
+        doc.setFontSize(7) // Smaller font for data
+
+        transactions.forEach((transaction: Transaction, index: number) => {
+          if (currentY > pageHeight - 30) {
+            // Add page break
+            doc.addPage()
+            currentY = 20
+
+            // Redraw header on new page
+            doc.setFillColor(66, 66, 66)
+            doc.rect(marginLeft, currentY, tableWidth, lineHeight, 'F')
+
+            doc.setTextColor(255, 255, 255)
+            doc.setFontSize(8)
+            doc.setFont('', 'bold')
+
+            headers.forEach((header, index) => {
+              doc.text(header, colPositions[index] + 1, currentY + 5)
+            })
+
+            drawTableBorders(currentY, currentY + lineHeight)
+            currentY += lineHeight
+
+            doc.setTextColor(0, 0, 0)
+            doc.setFont('', 'normal')
+            doc.setFontSize(7)
+          }
+
+          // Alternate row colors
+          if (index % 2 === 0) {
+            doc.setFillColor(248, 249, 250)
+            doc.rect(marginLeft, currentY, tableWidth, lineHeight, 'F')
+          }
+
+          // Format date and time properly
+          let formattedDateTime = ''
+          if (transaction.formattedDate) {
+            formattedDateTime = transaction.formattedDate
+          } else if (transaction.date) {
+            const date = new Date(transaction.date)
+            formattedDateTime = date.toLocaleString('en-US', {
+              month: 'short',
+              day: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            })
+          }
+
+          // Add row data including serial number
+          const rowData = [
+            (index + 1).toString(),
+            formattedDateTime,
+            transaction.type || '',
+            transaction.description || '',
+            transaction.amount || '',
+            transaction.account || '',
+            transaction.status || ''
+          ]
+
+          rowData.forEach((data, colIndex) => {
+            let text = data.toString()
+
+            // Better text truncation based on actual column width
+            const maxWidth = colWidths[colIndex] - 2 // Leave 2 units padding
+            const charWidth = 1.2 // Approximate character width for font size 7
+            const maxChars = Math.floor(maxWidth / charWidth)
+
+            if (text.length > maxChars) {
+              text = text.substring(0, maxChars - 3) + '...'
+            }
+
+            // Better text positioning - center vertically in cell
+            doc.text(text, colPositions[colIndex] + 1, currentY + 5)
+          })
+
+          // Draw row borders
+          drawTableBorders(currentY, currentY + lineHeight)
+          currentY += lineHeight
         })
 
         console.log("AutoTable created") // Debug log
@@ -289,18 +402,6 @@ export default function TransactionHistory() {
     }
   }
 
-  // Pagination handlers
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
-    }
-  }
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -462,98 +563,266 @@ export default function TransactionHistory() {
 
         {/* Transactions Table */}
         {!loading && !error && (
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full whitespace-nowrap">
-              <thead>
-                <tr className="border-b">
-                  <th className="pb-2 text-left font-medium">Date & Time</th>
-                  <th className="pb-2 text-left font-medium">Type</th>
-                  <th className="pb-2 text-left font-medium">Description</th>
-                  <th className="pb-2 text-left font-medium">Amount</th>
-                  <th className="pb-2 text-left font-medium">Account</th>
-                  <th className="pb-2 text-left font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.length > 0 ? (
-                  transactions.map((transaction) => (
-                    <tr key={transaction._id} className="border-b last:border-0">
-                      <td className="p-3 text-sm ">{transaction.date}</td>
-                      <td className="p-3 text-sm">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.type === "Deposit"
-                            ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
-                            : transaction.type === "Withdrawal"
-                              ? "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400"
-                              : "bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-400"
-                            }`}
-                        >
-                          {transaction.type}
-                        </span>
-                      </td>
-                      <td className="p-3 text-sm">{transaction.description}</td>
-                      <td
-                        className={`p-3 text-sm font-medium ${transaction.amount.startsWith("+") ? "text-green-600" : "text-red-600"
+          <div className="mt-6">
+            {/* Desktop Table View */}
+            <div className="hidden md:block pb-4">
+              <div className="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg">
+                <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 dark:text-gray-400 uppercase tracking-wider">
+                        Date & Time
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 dark:text-gray-400 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 dark:text-gray-400 uppercase tracking-wider">
+                        Description
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 dark:text-gray-400 uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 dark:text-gray-400 uppercase tracking-wider">
+                        Account
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 dark:text-gray-400 uppercase tracking-wider">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-card">
+                    {transactions.length > 0 ? (
+                      transactions.map((transaction) => (
+                        <tr key={transaction._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                            {new Date(transaction.date).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.type === "Deposit"
+                                ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
+                                : transaction.type === "Withdrawal"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400"
+                                  : "bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-400"
+                                }`}
+                            >
+                              {transaction.type}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 max-w-xs">
+                            <div className="truncate" title={transaction.description}>
+                              {transaction.description}
+                            </div>
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${transaction.amount.startsWith("+") ? "text-green-600" : "text-red-600"
+                            }`}>
+                            {transaction.amount}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                            {transaction.account}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.status === "Completed"
+                                ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
+                                : transaction.status === "Pending"
+                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-400"
+                                  : transaction.status === "Approved"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
+                                    : "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400"
+                                }`}
+                            >
+                              {transaction.status}
+                            </span>
+                          </td>
+
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-12 text-center text-gray-800 dark:text-gray-400">
+                          <div className="flex flex-col items-center">
+                            <svg className="w-12 h-12 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p className="text-lg font-medium">No transactions found</p>
+                            <p className="text-sm">Try adjusting your search or filter criteria</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4 -my-2 -mx-4">
+              {transactions.length > 0 ? (
+                transactions.map((transaction) => (
+                  <div key={transaction._id} className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.type === "Deposit"
+                          ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
+                          : transaction.type === "Withdrawal"
+                            ? "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-400"
                           }`}
                       >
-                        {transaction.amount}
-                      </td>
-                      <td className="p-3 text-sm">{transaction.account}</td>
-                      <td className="p-3 text-sm">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.status === "Completed"
-                            ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
-                            : transaction.status === "Pending"
-                              ? "bg-amber-100 text-amber-800 dark:bg-amber-800/20 dark:text-amber-400"
-                              : transaction.status === "Approved"
-                                ? "bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-400"
-                                : "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400"
-                            }`}
-                        >
-                          {transaction.status}
+                        {transaction.type}
+                      </span>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.status === "Completed"
+                          ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
+                          : transaction.status === "Pending"
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-400"
+                            : transaction.status === "Approved"
+                              ? "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400"
+                              : "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400"
+                          }`}
+                      >
+                        {transaction.status}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Amount</span>
+                        <span className={`text-sm font-semibold ${transaction.amount.startsWith("+") ? "text-green-600" : "text-red-600"
+                          }`}>
+                          {transaction.amount}
                         </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="py-6 text-center text-muted-foreground">
-                      No transactions found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Account</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{transaction.account}</span>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Description</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400 text-right max-w-[60%]">
+                          {transaction.description}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(transaction.date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </span>
+
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-gray-800 dark:text-gray-400">
+                  <svg className="w-12 h-12 mb-4 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-lg font-medium">No transactions found</p>
+                  <p className="text-sm">Try adjusting your search or filter criteria</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* Pagination */}
         {!loading && !error && transactions.length > 0 && (
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Showing {transactions.length} of {totalCount} transactions
-            </p>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1}
-                className={`rounded-md border border-input bg-background px-3 py-2 text-sm font-medium ${currentPage === 1
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-accent hover:text-accent-foreground"
-                  }`}
-              >
-                Previous
-              </button>
-              <button
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
-                className={`rounded-md border border-input bg-background px-3 py-2 text-sm font-medium ${currentPage === totalPages
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-accent hover:text-accent-foreground"
-                  }`}
-              >
-                Next
-              </button>
+          <div className="border-t mt-6 md:mt-0 pt-4 ">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-muted-foreground">
+                Showing <strong>{Math.min((currentPage - 1) * itemsPerPage + 1, totalCount)}</strong> to{" "}
+                <strong>{Math.min(currentPage * itemsPerPage, totalCount)}</strong> of{" "}
+                <strong>{totalCount}</strong> transactions
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm whitespace-nowrap">Rows per page:</span>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-[70px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center space-x-1 sm:space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1 || loading}
+                    className="text-xs sm:text-sm"
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      let pageToShow;
+                      if (totalPages <= 5) {
+                        pageToShow = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageToShow = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageToShow = totalPages - 4 + i;
+                      } else {
+                        pageToShow = currentPage - 2 + i;
+                      }
+
+                      if (pageToShow > 0 && pageToShow <= totalPages) {
+                        return (
+                          <Button
+                            key={i}
+                            variant={pageToShow === currentPage ? "default" : "outline"}
+                            size="sm"
+                            className="w-8 h-8 p-0 text-xs"
+                            onClick={() => setCurrentPage(pageToShow)}
+                            disabled={loading}
+                          >
+                            {pageToShow}
+                          </Button>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages || loading}
+                    className="text-xs sm:text-sm"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         )}

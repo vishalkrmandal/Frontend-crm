@@ -1,3 +1,5 @@
+// Frontend\src\pages\admin\Ibpartner\IBPartnersPage.tsx
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -25,7 +27,8 @@ import {
     getGroups,
     getIBConfigurationsByGroup,
     createIBConfiguration,
-    updateIBConfiguration
+    updateIBConfiguration,
+    updateGroupDefaultTime
 } from "@/pages/admin/Ibpartner/ibapi"
 
 const IBPartnersPage = () => {
@@ -42,36 +45,71 @@ const IBPartnersPage = () => {
     const [newLevel, setNewLevel] = useState("")
     const [newBonusPerLot, setNewBonusPerLot] = useState("")
 
+    // Add these state variables after the existing ones
+    const [groupDefaultTime, setGroupDefaultTime] = useState<number>(0)
+    const [groupDefaultTimeInput, setGroupDefaultTimeInput] = useState<string>("")
+
+    // Update the formatTime function
+    const formatTime = (seconds: number): string => {
+        if (seconds === 0 || isNaN(seconds)) return "0 seconds";
+
+        const units = [
+            { name: 'year', seconds: 365 * 24 * 60 * 60 },
+            { name: 'month', seconds: 30 * 24 * 60 * 60 },
+            { name: 'day', seconds: 24 * 60 * 60 },
+            { name: 'hour', seconds: 60 * 60 },
+            { name: 'minute', seconds: 60 },
+            { name: 'second', seconds: 1 }
+        ];
+
+        const parts = [];
+        let remaining = Math.floor(seconds);
+
+        for (const unit of units) {
+            const count = Math.floor(remaining / unit.seconds);
+            if (count > 0) {
+                parts.push(`${count} ${unit.name}${count > 1 ? 's' : ''}`);
+                remaining -= count * unit.seconds;
+            }
+        }
+
+        return parts.length > 0 ? parts.join(', ') : "0 seconds";
+    };
+
     // Fetch data on component mount
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
                 setLoading(true);
 
-                // Fetch groups from backend with error handling
                 const fetchedGroups = await getGroups();
                 console.log("Fetched groups:", fetchedGroups);
 
-                // Ensure we have an array
                 const safeGroups = Array.isArray(fetchedGroups) ? fetchedGroups : [];
                 setGroups(safeGroups);
 
-                // Set the first group as default selected if available
                 if (safeGroups.length > 0) {
                     setSelectedGroup(safeGroups[0]._id);
-                    // Fetch IB configurations for this group
                     const configs = await getIBConfigurationsByGroup(safeGroups[0]._id);
                     const safeConfigs = Array.isArray(configs) ? configs : [];
                     setIbConfigurations(safeConfigs);
+
+                    // Set default time from first configuration or 0
+                    const defaultTime = safeConfigs.length > 0 ? (safeConfigs[0].defaultTimeInSeconds || 0) : 0;
+                    setGroupDefaultTime(defaultTime);
+                    setGroupDefaultTimeInput(defaultTime.toString());
                 } else {
                     console.warn("No groups found");
                     setIbConfigurations([]);
+                    setGroupDefaultTime(0);
+                    setGroupDefaultTimeInput("0");
                 }
             } catch (error: any) {
                 console.error('Error fetching initial data:', error);
-                // Set empty arrays on error
                 setGroups([]);
                 setIbConfigurations([]);
+                setGroupDefaultTime(0);
+                setGroupDefaultTimeInput("0");
                 toast.error("Failed to load initial data");
             } finally {
                 setLoading(false);
@@ -82,6 +120,7 @@ const IBPartnersPage = () => {
     }, []);
 
     // Handle group change
+    // Modify the handleGroupChange function
     const handleGroupChange = async (value: string) => {
         setSelectedGroup(value);
         try {
@@ -89,12 +128,41 @@ const IBPartnersPage = () => {
             const configs = await getIBConfigurationsByGroup(value);
             const safeConfigs = Array.isArray(configs) ? configs : [];
             setIbConfigurations(safeConfigs);
+
+            // Set default time from first configuration or 0
+            const defaultTime = safeConfigs.length > 0 ? (safeConfigs[0].defaultTimeInSeconds || 0) : 0;
+            setGroupDefaultTime(defaultTime);
+            setGroupDefaultTimeInput(defaultTime.toString());
         } catch (error: any) {
             console.error('Error loading configurations:', error);
             setIbConfigurations([]);
             toast.error("Failed to load configurations");
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Add this new function
+    const handleUpdateGroupDefaultTime = async () => {
+        try {
+            const timeInSeconds = parseInt(groupDefaultTimeInput);
+            if (isNaN(timeInSeconds) || timeInSeconds < 0) {
+                toast.error("Please enter a valid number of seconds");
+                return;
+            }
+
+            await updateGroupDefaultTime(selectedGroup, timeInSeconds);
+            setGroupDefaultTime(timeInSeconds);
+
+            // Refresh configurations
+            const updatedConfigs = await getIBConfigurationsByGroup(selectedGroup);
+            const safeConfigs = Array.isArray(updatedConfigs) ? updatedConfigs : [];
+            setIbConfigurations(safeConfigs);
+
+            toast.success("Default time updated successfully");
+        } catch (error: any) {
+            console.error('Error updating default time:', error);
+            toast.error("Failed to update default time");
         }
     };
 
@@ -167,7 +235,7 @@ const IBPartnersPage = () => {
                     <CardTitle>IB Commission Configuration</CardTitle>
                     <CardDescription>Manage commission rates for Introducing Broker partners</CardDescription>
                 </CardHeader>
-                <div className="w-full sm:w-1/3">
+                <div className="border-4 rounded-md w-full sm:w-1/3">
                     <Select value={selectedGroup} onValueChange={handleGroupChange}>
                         <SelectTrigger>
                             <SelectValue placeholder="Select Group" />
@@ -184,9 +252,63 @@ const IBPartnersPage = () => {
                 </div>
             </div>
 
+            {/* Add this section after the existing header section and before the IB Configuration Section */}
+            {selectedGroup && (
+                <div className="rounded-md border bg-card shadow-sm">
+                    <div className="p-4 bg-muted/50 border-b">
+                        <h3 className="text-lg font-semibold">Group Default Time Configuration</h3>
+                    </div>
+                    <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                            <div className="md:col-span-2">
+                                <Label htmlFor="defaultTime" className="text-sm font-medium">
+                                    Default Time (in seconds)
+                                </Label>
+                                <Input
+                                    id="defaultTime"
+                                    type="number"
+                                    min="0"
+                                    value={groupDefaultTimeInput}
+                                    onChange={(e) => setGroupDefaultTimeInput(e.target.value)}
+                                    placeholder="Enter time in seconds"
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div className="flex justify-start md:justify-end">
+                                <Button
+                                    onClick={handleUpdateGroupDefaultTime}
+                                    disabled={loading || !groupDefaultTimeInput.trim()}
+                                    className="w-full md:w-auto"
+                                >
+                                    Update Default Time
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Real-time preview */}
+                        <div className="mt-4 p-3 bg-muted/30 rounded-md">
+                            <div className="text-sm">
+                                <span className="font-medium text-muted-foreground">Current setting: </span>
+                                <span className="text-foreground">
+                                    {formatTime(groupDefaultTime)}
+                                </span>
+                            </div>
+                            {groupDefaultTimeInput.trim() && parseInt(groupDefaultTimeInput) !== groupDefaultTime && (
+                                <div className="text-sm mt-1">
+                                    <span className="font-medium text-muted-foreground">Preview: </span>
+                                    <span className="text-blue-600">
+                                        {formatTime(parseInt(groupDefaultTimeInput) || 0)}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* IB Configuration Section */}
-            <div className="rounded-md border shadow-sm">
-                <div className="flex justify-between items-center p-4 bg-muted/50">
+            <div className="rounded-md border bg-card shadow-sm">
+                <div className="flex justify-between rounded-md items-center p-4 bg-muted/50">
                     <h2 className="text-xl font-semibold">IB Configuration</h2>
                     <Button
                         className="flex items-center gap-1"
@@ -203,6 +325,7 @@ const IBPartnersPage = () => {
                             <TableRow>
                                 <TableHead className="w-1/3 font-semibold">Level</TableHead>
                                 <TableHead className="w-1/3 font-semibold">Bonus/Lot</TableHead>
+                                <TableHead className="w-1/4 font-semibold">Default Time</TableHead>
                                 <TableHead className="w-1/3 text-right font-semibold">Action</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -224,6 +347,7 @@ const IBPartnersPage = () => {
                                     <TableRow key={config._id} className="hover:bg-muted/30">
                                         <TableCell className="font-medium py-4">Level {config.level}</TableCell>
                                         <TableCell className="py-4">${config.bonusPerLot.toFixed(2)}</TableCell>
+                                        <TableCell className="py-4">{formatTime(config.defaultTimeInSeconds || 0)}</TableCell>
                                         <TableCell className="text-right py-4">
                                             <Button
                                                 variant="ghost"
@@ -238,7 +362,7 @@ const IBPartnersPage = () => {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                                         No configurations found for this group.
                                     </TableCell>
                                 </TableRow>

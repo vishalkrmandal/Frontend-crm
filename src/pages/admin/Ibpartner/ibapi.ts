@@ -18,6 +18,7 @@ export interface IBConfiguration {
     groupId: string | Group;
     level: number;
     bonusPerLot: number;
+    defaultTimeInSeconds?: number;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -94,19 +95,36 @@ export const getIBConfigurationsByGroup = async (groupId: string): Promise<IBCon
     }
 };
 
+export const updateGroupDefaultTime = async (
+    groupId: string,
+    defaultTimeInSeconds: number
+): Promise<any> => {
+    try {
+        const response = await axios.put(
+            `${API_BASE_URL}/api/ib-configurations/group/${groupId}/default-time`,
+            { defaultTimeInSeconds },
+            getAuthHeader()
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error updating group default time:", error);
+        throw error;
+    }
+};
+
 export const createIBConfiguration = async (
     groupId: string,
     level: number,
-    bonusPerLot: number
+    bonusPerLot: number,
+    defaultTimeInSeconds?: number
 ): Promise<IBConfiguration> => {
     try {
         const response = await axios.post(
             `${API_BASE_URL}/api/ib-configurations`,
-            { groupId, level, bonusPerLot },
+            { groupId, level, bonusPerLot, defaultTimeInSeconds },
             getAuthHeader()
         );
 
-        // Handle different response structures
         if (response.data && response.data.data) {
             return response.data.data;
         } else if (response.data) {
